@@ -10,7 +10,10 @@ Rules kept here:
   * a figure is copied only from that day's own report; a day without it is a gap (null), never carried over;
   * value_num from the sidecar wins, even when null (= ambiguous);
   * Muthoot Finance (key "muthoot") is a listed peer; Muthoot Fincorp items live only in mfl_market;
-  * nothing here invents a sentiment, an impact note, an issuer or a date: absent stays absent.
+  * nothing here invents a sentiment, an impact note, an issuer or a date: absent stays absent;
+  * optional seed: DIR/data/history.json = { "<item key>": { "YYYY-MM-DD": number|null } } adds older
+    figures to `series` for dates that are NOT live editions. A live edition always wins (even its gap),
+    a bad or missing seed is ignored, and nothing is carried forward: a date without a figure stays null.
 """
 from __future__ import annotations
 
@@ -143,6 +146,49 @@ def public_day(day: dict, extra: dict) -> dict:
     return out
 
 
+ISO = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+SEED_FILE = "history.json"
+
+
+def load_seed(site: Path) -> dict:
+    """{key: {date: float|None}} from data/history.json; {} when absent or unreadable (never fatal)."""
+    p = site / "data" / SEED_FILE
+    if not p.exists():
+        return {}
+    try:
+        raw = json.loads(p.read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            raise ValueError("top level is not an object")
+        out = {}
+        for k, ser in raw.items():
+            if k.startswith("_") or not isinstance(ser, dict):
+                continue  # "_meta" and friends are notes for people, not figures
+            out[k] = {d: _clean_num(v) for d, v in ser.items() if isinstance(d, str) and ISO.match(d)}
+        return out
+    except Exception as exc:  # a bad seed never stops publishing
+        print(f"export_json: ignored {p}: {exc}", file=sys.stderr)
+        return {}
+
+
+def build_series(days: list, seed: dict, limit: int = SERIES_DAYS) -> dict:
+    """Last `limit` dates up to the newest edition. Live editions win; seed fills only non-edition dates."""
+    by_id = {d["id"]: d for d in days}
+    newest = max(by_id)
+    seed_dates = {dt for ser in seed.values() for dt in ser if dt < newest and dt not in by_id}
+    dates = sorted(set(by_id) | seed_dates)[-limit:]
+    keys = sorted({it["key"] for d in days for it in d["key_numbers"].get("items", [])} | set(seed))
+    series = {}
+    for k in keys:
+        series[k] = {}
+        for i in dates:
+            if i in by_id:
+                hit = [it for it in by_id[i]["key_numbers"].get("items", []) if it["key"] == k]
+                series[k][i] = series_value(hit[0]) if hit else None
+            else:
+                series[k][i] = seed.get(k, {}).get(i)
+    return series
+
+
 def _index_entry(d: dict) -> dict:
     return {
         "id": d["id"], "label": d["label"], "weekday": d["weekday"], "is_monday": d["is_monday"],
@@ -162,18 +208,16 @@ def export(site: Path) -> Path:
     data.mkdir(exist_ok=True)
     for d in days:
         (data / f"{d['id']}.json").write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
-    recent = sorted(d["id"] for d in days)[-SERIES_DAYS:]
-    by_id = {d["id"]: d for d in days}
-    keys = sorted({it["key"] for d in days for it in d["key_numbers"].get("items", [])})
-    series = {k: {} for k in keys}
-    for k in keys:
-        for i in recent:
-            hit = [it for it in by_id[i]["key_numbers"].get("items", []) if it["key"] == k]
-            series[k][i] = series_value(hit[0]) if hit else None
+    seed = load_seed(site)
+    series = build_series(days, seed)
     latest = {"schema": SCHEMA, "schema_version": SCHEMA_VERSION, "generated": payload["generated"],
               "latest": days[0]["id"], "days": [_index_entry(d) for d in days], "series": series, "today": days[0]}
+    seeded = sorted({dt for ser in series.values() for dt in ser} - {d["id"] for d in days})
+    if seeded:  # tells the app a seed exists, so the data.js path fetches it and the JSON path need not
+        latest["series_seed"] = {"file": f"data/{SEED_FILE}", "dates": len(seeded), "first": seeded[0], "last": seeded[-1]}
     (data / "latest.json").write_text(json.dumps(latest, ensure_ascii=False), encoding="utf-8")
-    print(f"export_json: {len(days)} day file(s) + data/latest.json ({SCHEMA} v{SCHEMA_VERSION})")
+    print(f"export_json: {len(days)} day file(s) + data/latest.json ({SCHEMA} v{SCHEMA_VERSION})"
+          + (f", series seeded with {len(seeded)} earlier date(s) from data/{SEED_FILE}" if seeded else ""))
     return data
 
 

@@ -198,13 +198,39 @@ function legacy(){return loadScript('/data.js').then(function(){fromLegacy(windo
 function loadData(){
   var q=location.search;if(/[?&]src=legacy/.test(q))return legacy();
   var force=/[?&]src=json/.test(q);
-  var js=fetch('/data/latest.json',{cache:'no-cache'}).then(function(r){if(!r.ok)throw 0;return r.json();});
+  var js=fetch('/data/latest.json',{cache:'no-cache'}).then(function(r){if(!r.ok)throw 0;return r.json();})
+    .then(function(j){M.seedHint=!!(j&&j.series_seed);return j;});
   var gen=force?Promise.resolve(null):headGenerated().then(function(g){return {g:g};},function(){return {none:true};});
   return Promise.all([js,gen]).then(function(v){var j=v[0],g=v[1];
     if(!j||j.schema!=='nbfc-brief'||j.schema_version!==1||!j.today)throw 0;
     /* no data.js on the site: the JSON contract is the only source */
     if(!force&&!(g&&g.none)&&(!g||!g.g||j.generated<g.g))throw 0; /* stale or unverifiable: use data.js */
     M.hasLegacy=!(g&&g.none);fromJson(j);}).catch(function(){return legacy();});}
+/* optional seed: /data/history.json = {key:{"YYYY-MM-DD":number|null}} adds earlier figures to the sparklines.
+   It fills only dates that are not live editions (a live edition always wins, even its gap), is ignored if
+   missing, slow (>2.5 s) or malformed, and never carries a value forward. See docs/DATA_FORMAT.md. */
+var ISO_RE=/^\d{4}-\d{2}-\d{2}$/,SERIES_MAX=30;
+/* fetched only when needed: latest.json carries "series_seed" when the exporter used a seed. On the JSON path the
+   series is already merged, so only the data.js path fetches it (no blind request, so no 404 in the console). */
+function loadSeed(){var q=location.search;
+  if(/[?&]seed=0/.test(q)||!(/[?&]seed=1/.test(q)||(M.seedHint&&M.source==='data.js')))return Promise.resolve(null);
+  var t=new Promise(function(r){setTimeout(function(){r(null);},2500);});
+  var f=fetch('/data/history.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});
+  return Promise.race([f,t]);}
+function mergeSeed(seed){
+  if(!seed||typeof seed!=='object'||Array.isArray(seed)||!M.days.length)return;
+  var live={},newest=M.days[0].id,dates={};M.days.forEach(function(d){live[d.id]=1;});
+  Object.keys(M.series).forEach(function(k){M.series[k].forEach(function(p){dates[p.d]=1;});});
+  var clean={};Object.keys(seed).forEach(function(k){var ser=seed[k];if(k.charAt(0)==='_'||!ser||typeof ser!=='object')return;clean[k]={};
+    Object.keys(ser).forEach(function(d){if(!ISO_RE.test(d)||live[d]||d>=newest)return;var v=ser[d];
+      clean[k][d]=typeof v==='number'&&isFinite(v)?v:null;dates[d]=1;});});
+  var axis=Object.keys(dates).sort().slice(-SERIES_MAX);
+  var keys={};Object.keys(M.series).concat(Object.keys(clean)).forEach(function(k){keys[k]=1;});
+  var out={};Object.keys(keys).forEach(function(k){var have={};(M.series[k]||[]).forEach(function(p){have[p.d]=p.v;});
+    out[k]=axis.map(function(d){var v=live[d]?(Object.prototype.hasOwnProperty.call(have,d)?have[d]:null)
+      :(clean[k]&&Object.prototype.hasOwnProperty.call(clean[k],d)?clean[k][d]:(Object.prototype.hasOwnProperty.call(have,d)?have[d]:null));
+      return {d:d,v:v==null?null:v};});});
+  M.series=out;M.seeded=true;}
 function getDay(id){var d=M.byId[id];if(!d)return Promise.resolve(null);if(!d.stub)return Promise.resolve(d);
   return fetch('/data/'+id+'.json').then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(full){
     pubDay(full);M.byId[id]=full;M.days[M.days.indexOf(d)]=full;return full;}).catch(function(){return d;});}
@@ -242,20 +268,34 @@ function chg(it){var c=it.change;if(!c||/^[—–-]$/.test(String(c).trim()))ret
 function mins(w){return Math.max(1,Math.round((w||0)/220));}
 function wordsOf(r){return r.words||stripMd(r.content||'').split(/\s+/).filter(Boolean).length;}
 
-/* sparkline: inline SVG, gaps where a day had no figure */
+/* sparkline: inline SVG, gaps where a day had no figure.
+   2+ figures: line + end dot; fewer than 4 slots are right-aligned so a short history reads as short, not stretched.
+   1 figure: a faint dashed baseline, a quiet dot and "new", so the column never looks broken. */
+function sparkPts(k,uptoId){return (M.series[k]||[]).filter(function(p){return p.d<=uptoId;}).slice(-14);}
 function spark(k,uptoId,w,h,dir){
-  var pts=(M.series[k]||[]).filter(function(p){return p.d<=uptoId;}).slice(-14);
+  var pts=sparkPts(k,uptoId),pad=3;
+  while(pts.length&&pts[0].v==null)pts.shift(); /* leading gaps: the trend starts at its first figure */
   var vals=pts.map(function(p){return p.v;}).filter(function(v){return v!=null;});
-  if(vals.length<2)return '<svg width="'+w+'" height="'+h+'" aria-hidden="true"></svg>';
-  var lo=Math.min.apply(0,vals),hi=Math.max.apply(0,vals),rg=hi-lo||1,n=pts.length,pad=3;
-  var X=function(i){return pad+(w-2*pad)*i/(n-1);},Y=function(v){return pad+(h-2*pad)*(1-(v-lo)/rg);};
+  var box='width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'"';
+  if(vals.length<2){var my=(h/2).toFixed(1),lbl=vals.length?'Trend builds as editions accumulate':'No figure yet; trend builds as editions accumulate';
+    return '<span class="spk spk-new" role="img" aria-label="'+lbl+'"><svg '+box+' aria-hidden="true" focusable="false">'+
+      '<line x1="'+pad+'" y1="'+my+'" x2="'+(w-pad-(vals.length?4:0))+'" y2="'+my+'" class="spk-base"/>'+
+      (vals.length?'<circle cx="'+(w-pad-1.5)+'" cy="'+my+'" r="2.4" class="spk-dot"/>':'')+
+      '</svg><span class="spk-l" aria-hidden="true">'+(vals.length?'new':'—')+'</span></span>';}
+  var lo=Math.min.apply(0,vals),hi=Math.max.apply(0,vals),rg=hi-lo,n=pts.length,slots=Math.max(n,4);
+  var X=function(i){return pad+(w-2*pad)*(slots-n+i)/(slots-1);},Y=function(v){return rg?pad+(h-2*pad)*(1-(v-lo)/rg):h/2;};
   var segs=[],cur=[];pts.forEach(function(p,i){if(p.v==null){if(cur.length)segs.push(cur);cur=[];}else cur.push([X(i),Y(p.v)]);});if(cur.length)segs.push(cur);
+  if(dir!=='up'&&dir!=='dn'){var a=vals[0],b=vals[vals.length-1];dir=b>a?'up':b<a?'dn':'';}
   var col=dir==='dn'?'var(--down)':dir==='up'?'var(--up)':'var(--text-3)';
   var path=segs.map(function(s){return 'M'+s.map(function(q){return q[0].toFixed(1)+' '+q[1].toFixed(1);}).join('L');}).join('');
+  var dots=segs.filter(function(s){return s.length===1;}).map(function(s){return '<circle cx="'+s[0][0].toFixed(1)+'" cy="'+s[0][1].toFixed(1)+'" r="1.3" fill="'+col+'" opacity=".7"/>';}).join('');
   var last=segs[segs.length-1],lp=last[last.length-1];
   var first=pts.filter(function(p){return p.v!=null;})[0];
   var label='Trend over '+vals.length+' editions from '+dm(first.d)+': low '+lo.toLocaleString('en-IN')+', high '+hi.toLocaleString('en-IN');
-  return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" role="img" aria-label="'+esc(label)+'"><path d="'+path+'" fill="none" stroke="'+col+'" stroke-width="1.7" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/><circle cx="'+lp[0].toFixed(1)+'" cy="'+lp[1].toFixed(1)+'" r="2.4" fill="'+col+'"/></svg>';}
+  return '<svg class="spk" '+box+' role="img" aria-label="'+esc(label)+'"><path d="'+path+'" fill="none" stroke="'+col+'" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>'+dots+'<circle cx="'+lp[0].toFixed(1)+'" cy="'+lp[1].toFixed(1)+'" r="2.4" fill="'+col+'"/></svg>';}
+/* column header: "14d" only when a full 14-edition window exists for some row, else "Trend" */
+function trendHead(keys,uptoId){var n=0;keys.forEach(function(k){var p=sparkPts(k,uptoId);while(p.length&&p[0].v==null)p.shift();n=Math.max(n,p.length);});
+  return n>=14?'<span class="sr">Trend, last </span>14d':'Trend';}
 
 /* top stories: structured day.stories[] if the publisher sends them, else parsed from the URGENT block */
 function stories(day){
@@ -353,7 +393,7 @@ function marketsTable(day,keys,cap){
     return '<tr><td><span class="nm">'+esc(SHORT[k]||it.name)+'</span><span class="meta">'+itemWhen(it,day.id)+'</span><span class="meta s">'+itemSrc(it)+'</span></td>'+
       '<td><span class="vc"><span class="v num">'+esc(it.value)+'</span>'+chg(it)+'</span></td><td class="sp">'+spark(k,day.id,72,28,d)+'</td></tr>';}).join('');
   if(!rows)return '';
-  return '<table class="tc num"><caption>'+cap+'</caption><thead><tr><th scope="col">Item</th><th scope="col">Value · chg</th><th scope="col" class="sp"><span class="sr">Trend, last </span>14d</th></tr></thead><tbody>'+rows+'</tbody></table>';}
+  return '<table class="tc num"><caption>'+cap+'</caption><thead><tr><th scope="col">Item</th><th scope="col">Value · chg</th><th scope="col" class="sp">'+trendHead(keys,day.id)+'</th></tr></thead><tbody>'+rows+'</tbody></table>';}
 function missingLine(day,keys){var miss=keys.filter(function(k){return CORE.indexOf(k)>=0&&!item(day,k);});
   return miss.length?'<div class="missing"><b>Not in today\u2019s report:</b> '+miss.map(function(k){return esc(FULL[k]);}).join(', ')+'. Shown as missing, never an older number.</div>':'';}
 function flowsBlock(day){
@@ -778,7 +818,7 @@ window.addEventListener('hashchange',route);
 window.addEventListener('online',function(){toast('Back online');});
 window.addEventListener('offline',function(){toast('Offline · showing the last saved edition');});
 
-loadData().then(route).catch(function(err){
+loadData().then(loadSeed).then(function(seed){try{mergeSeed(seed);}catch(e){}}).then(route).catch(function(err){
   APP.setAttribute('aria-busy','false');
   dropStage();if(CUR)park(CUR);CUR=null;
   APP.innerHTML='<div class="g card empty" style="margin-top:60px"><h2>Could not load the brief</h2><p>'+(navigator.onLine===false?'You are offline and no edition is saved on this device yet.':'The data file did not load. Try again in a minute.')+'</p><a class="cta press" href="">Retry</a></div>';

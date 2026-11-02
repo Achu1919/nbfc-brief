@@ -33,6 +33,32 @@ So a stale `data/` folder can never show an old edition. Publish both sources in
 - `generated` is an IST timestamp without an offset (`YYYY-MM-DDTHH:MM:SS`).
 - `days` has one index entry per edition, newest first: `id, label, weekday, is_monday, due, filed, core_found, reports[{key, section, title, missing, expected, words, sources}]`.
 - `series` covers up to the last 30 editions. `null` is a gap: the figure was not in that day's report. A gap is never filled from another day.
+- `series_seed` (optional) is written only when an optional seed file was merged: `{"file": "data/history.json", "dates": n, "first": "YYYY-MM-DD", "last": "YYYY-MM-DD"}`. See "Optional history seed" below.
+
+## Optional history seed: `data/history.json`
+
+Sparklines draw from `series`. A new edition has one point per figure, so the app shows a quiet "new" placeholder until two editions exist. To start with a history, the publisher may commit a seed of earlier figures:
+
+```json
+{ "_meta": "optional note for people, ignored",
+  "<item key>": { "YYYY-MM-DD": number|null, ... } }
+```
+
+- Numbers keyed by edition date only: no text, labels, sources or notes. Keys starting with `_` are ignored.
+- The seed fills only dates that are **not** live editions and are older than the newest one. A live edition always wins, including its gaps (`null`).
+- Nothing is carried forward. A date without a figure stays `null` and is drawn as a gap.
+- `export_json.py` merges it into `series` (the last 30 dates across seed and live editions) and sets `series_seed`. When the app falls back to `data.js`, it fetches `data/history.json` only if `latest.json` has `series_seed`, with a 2.5 s limit, and merges it with the same rules.
+- A missing, malformed or slow seed is ignored: the export still succeeds and the app still renders.
+- `?seed=0` disables the app-side seed fetch and `?seed=1` forces it (for testing).
+
+### Sparkline states (app)
+
+| Figures in the 14-date window | Shown | Column header |
+|---|---|---|
+| 0 | faint dashed baseline and "—" (label: "No figure yet; trend builds as editions accumulate") | Trend |
+| 1 | faint dashed baseline, a quiet end dot and "new" (label: "Trend builds as editions accumulate") | Trend |
+| 2–13 dates | line with an end dot, coloured by the day's direction; fewer than 4 dates are drawn right-aligned and short | Trend |
+| 14 dates | full 14-date sparkline | 14d |
 - `today` is the full day for `latest`. Older days load on demand from `data/<id>.json`, which has the same `<day>` shape.
 
 ## `<day>`

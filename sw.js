@@ -4,7 +4,7 @@
    Data (data.js, data/*.json, days/*): network-first; if a saved copy exists and the network takes
    over 3 s (or is down), the saved copy is shown and the app offers "New edition available — Refresh". Fonts: cache-first. */
 const NS = 'nbfc-brief-';
-const VERSION = 'v2-2026-11-02-navfix';
+const VERSION = 'v3-2026-11-02-sparkline';
 const SHELL = `${NS}shell-${VERSION}`;
 const DATA = `${NS}data-v1`;
 const FONTS = `${NS}fonts-v1`;

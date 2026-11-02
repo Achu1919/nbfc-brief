@@ -46,6 +46,17 @@ for i in ids:
 for k, ser in (j.get("series") or {}).items():
     for day, v in ser.items():
         if v is not None and not isinstance(v, (int, float)): err(f"series {k} {day}")
+hp = D / "history.json"
+if hp.exists():
+    h = json.loads(hp.read_text(encoding="utf-8"))
+    if not isinstance(h, dict): err("history.json: not an object")
+    else:
+        for k, ser in h.items():
+            if k.startswith("_"): continue
+            if not isinstance(ser, dict): err(f"history.json {k}: not an object"); continue
+            for day, v in ser.items():
+                if not ISO.match(day): err(f"history.json {k}: bad date {day}")
+                if v is not None and (isinstance(v, bool) or not isinstance(v, (int, float))): err(f"history.json {k} {day}: not a number")
 print(f"{len(ids)} day(s) checked, {len(errs)} problem(s)")
 for e in errs[:50]: print(" -", e)
 sys.exit(1 if errs else 0)
