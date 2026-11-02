@@ -246,3 +246,10 @@ if __name__ == "__main__":
         encoding="utf-8",
     )
     print(f"Published {len(payload['days'])} day(s) to {OUT}")
+    # Additive: the public JSON contract (data/latest.json + data/<date>.json, docs/DATA_FORMAT.md).
+    # data.js above is already written and unchanged; a failure here never stops publishing.
+    try:
+        from export_json import export
+        export(ROOT)
+    except Exception as exc:
+        print(f"export_json: skipped ({exc})")

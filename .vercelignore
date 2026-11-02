@@ -3,3 +3,11 @@
 !/reader.html
 !/data.js
 !/vercel.json
+!/app.js
+!/app.css
+!/sw.js
+!/manifest.webmanifest
+!/icons
+!/icons/**
+!/data
+!/data/**
