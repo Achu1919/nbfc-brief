@@ -1,0 +1,169 @@
+# 📊 NBFC Daily Watch — Thursday, October 29, 2026
+
+*Thursday, Oct 29, 2026 edition. Indian prices are Wednesday's (28 Oct) close. MCX gold is this morning's 07:04 IST print, spot gold is the New York afternoon print after the Fed, and Brent is Wednesday's settlement. Muthoot Fincorp Ltd is a separate company from Muthoot Finance Ltd; Muthoot Finance appears here as a listed lender.*
+
+## 🔴 URGENT / High Impact
+
+**1. Chola is building a gold-loan network at speed, and it lends almost entirely on bullet terms.**
+- Cholamandalam's Q2 FY27 PAT was **₹1,630 cr (+41%)** on AUM of **₹2,68,009 cr (+25%)** and record disbursements of **₹35,872 cr (+47%)**. The board approved raising up to **₹5,000 cr** through a QIP. ([BusinessLine](https://www.thehindubusinessline.com/companies/cholamandalam-investment-and-finance-q2-net-up-41-board-approves-fundraise-up-to-5000-cr-via-qip/article71635199.ece), [Zee Business](https://www.zeebiz.com/companies/news-cholamandalam-investment-q2-results-pat-rises-41-to-rs-1630-crore-beats-estimates-board-approves-rs-5000-crore-qip-404700))
+- On the call, gold-loan AUM was **₹3,446 cr** and gold disbursements were up **320%**. Management said less than 1% of the gold book is EMI-based; the rest is bullet. It is adding roughly **360–380 gold branches this year**, and its first-phase branches average about **₹21 cr** of AUM. ([AlphaStreet transcript](https://alphastreet.com/india/cholamandalam-investment-and-finance-company-ltd-cholafin-q2-2027-earnings-call-transcript/))
+- The stock closed **+5.19% at ₹1,545.20**. ([exa.ai CHOLAFIN](https://exa.ai/library/markets/stock/CHOLAFIN?exchange=XNSE&date=2026-10-28&view=daily))
+> **Possible impact on Muthoot Fincorp:** Another large, well-funded lender is opening gold branches in the hundreds, alongside L&T Finance, Aditya Birla Capital, Tata Capital and Godrej Capital (see NPA section), which may add pricing pressure for established gold lenders including Muthoot Fincorp in towns where the new branches open.
+
+**2. The Fed held, oil kept climbing, and the rupee slipped. Funding costs aren't easing.**
+- The Fed held at **3.75–4.00%** on a **10–2** vote, with two members wanting a hike. TD's Bart Melek called it "a somewhat hawkish hold". ([Business Times](https://www.businesstimes.com.sg/companies-markets/energy-commodities/gold-cuts-losses-fed-pauses-and-stays-silent-future-hikes), [Moneycontrol/Reuters](https://www.moneycontrol.com/news/business/markets/global-stocks-hold-gains-after-fed-decision-oil-prices-rise-14062882.html))
+- Brent settled at **$115.32 (+1.3%)** after a Houthi strike on Saudi Arabia's Ras Tanura refinery and a WSJ report that the US told Gulf states to prepare for strikes on Iran. ([CNBC](https://www.cnbc.com/2026/10/28/oil-price-today-wti-brent-hormuz.html))
+- The rupee closed at **95.28/$, down 21 paise** (provisional). ([BusinessLine/PTI](https://www.thehindubusinessline.com/markets/forex/rupee-falls-21-paise-to-close-at-9528-against-us-dollar/article71635467.ece))
+- Chola's CFO said a 50 bp rate move in H2 would add about **15–20 bp** to its full-year cost of funds, and it will reprice its floating book by about **25 bp**. ([AlphaStreet transcript](https://alphastreet.com/india/cholamandalam-investment-and-finance-company-ltd-cholafin-q2-2027-earnings-call-transcript/))
+> **Possible impact on Muthoot Fincorp:** Large lenders are now quantifying the rate hit. With oil above $115 and a weaker rupee, NBFC funding costs, including Muthoot Fincorp's, are unlikely to ease soon.
+
+
+**3. Gold is heading for its second monthly fall.**
+- Spot gold was **$4,070.86/oz (+0.3%)** in New York after the Fed, and is **down 2.1% for October**. ([Business Times](https://www.businesstimes.com.sg/companies-markets/energy-commodities/gold-cuts-losses-fed-pauses-and-stays-silent-future-hikes))
+- MCX gold was **₹1,43,600/10g (−0.07%)** at 07:04 IST today. ([Makro](https://makro.live/mcx-gold-silver-price))
+> **Possible impact on Muthoot Fincorp:** A softer collateral price, while peers flag stress (see NPA section), reduces loan-to-value headroom on renewals and top-ups for gold lenders including Muthoot Fincorp.
+
+## 🏢 Muthoot Fincorp in the market
+
+- **Tranche I public NCD issue (open 23 Oct – 5 Nov 2026).** Bids stood at 1.45 times the ₹200 cr base issue at 17:00 on 28 Oct, up from 1.25× a day earlier: retail 1.22×, HNI 2.05×, non-institutional 0.92×, institutional 0.00×. The issue is ₹200 cr base plus ₹300 cr green shoe, allotted first come, first served, and closes Thu 5 Nov. ([Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/))
+- **Subsidiary.** Muthoot Microfin, Muthoot Fincorp's listed microfinance subsidiary, holds its Q2 board meeting on 5 Nov. ([StockFin](https://www.stockfin.ai/news/MUTHOOTMF/2026-10-23/board-meeting))
+
+## 📈 Market & Stock Summary
+
+- **Wednesday 28 Oct close:** Sensex **73,246.03 (−352.64, −0.48%)**, Nifty **22,698.85 (−50.90, −0.22%)**. IT fell 1.98% and Auto rose 1.45%. ([BusinessLine](https://www.thehindubusinessline.com/markets/sensex-nifty50-today-stock-market-highlights-28-october-2026/article71631075.ece), [NSE index closes](https://nsearchives.nseindia.com/content/indices/ind_close_all_28102026.csv))
+- **Financials outperformed:** Nifty Financial Services **24,418.25 (+0.47%)** and Nifty Bank 54,267.40 (+0.54%). ([NSE index closes](https://nsearchives.nseindia.com/content/indices/ind_close_all_28102026.csv))
+- **NBFC peers (NSE close):**
+  - Manappuram Finance **₹288.75 (+0.80%)**
+  - Muthoot Finance **₹2,392.70 (−0.61%)**
+  - IIFL Finance **₹533.20 (+1.07%)**
+  - Shriram Finance **₹832.55 (+1.09%)**
+  - Bajaj Finance **₹917.25 (+0.58%)**
+  - Cholamandalam **₹1,545.20 (+5.19%)**
+  - ([exa.ai NSE closes](https://exa.ai/library/markets/stock/MANAPPURAM?exchange=XNSE&date=2026-10-28&view=daily))
+- **Flows (28 Oct, provisional):** FII **+₹871.83 cr**, DII **+₹643.35 cr**. Both were net buyers. Jio Platforms listed and closed at ₹1,419. ([CNBC-TV18](https://www.cnbctv18.com/market/fiis-diis-turn-net-buyers-of-indian-equities-on-october-28-sensex-falls-353-points-20021735.htm))
+- **Rupee, oil, gold:** see #2 and #3.
+
+## 🏛️ RBI & Regulatory — Headlines Only
+
+- **RBI:** no new notification after the 27 Oct UAPA circulars. Wednesday's press releases were routine: Section 35A extensions for two co-operative banks, T-bill results and money-market operations. ([RBI notifications](https://www.rbi.org.in/Scripts/NotificationUser.aspx), [RBI press releases](https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx))
+- **RBI drafts:** nothing new after 11 Sep. The revolving-credit draft (6 Aug) and the interest-rate draft (12 Aug) are still pending. ([Drafts](https://www.rbi.org.in/Scripts/DraftNotificationsGuildelines.aspx))
+- **SEBI:** no new circular after 27 Oct. Its 28 Oct press release is an MoU with the Bank of England on clearing corporations, which does not touch NBFCs. ([SEBI press releases](https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=6&ssid=23&smid=0))
+- **IBBI:** nothing since 24 Sep. ([IBBI](https://ibbi.gov.in/en/legal-framework/circulars))
+- More detail on the Rules page.
+
+## 💰 Financial Results & Performance
+
+- **Cholamandalam, Q2 FY27:** see #1. Asset quality: GS3 **3.25%** (3.29% in Q1). Capital: CRAR **20.62%**, Tier 1 16.02%. ROE 19.4%. ([BusinessLine](https://www.thehindubusinessline.com/companies/cholamandalam-investment-and-finance-q2-net-up-41-board-approves-fundraise-up-to-5000-cr-via-qip/article71635199.ece), [AlphaStreet transcript](https://alphastreet.com/india/cholamandalam-investment-and-finance-company-ltd-cholafin-q2-2027-earnings-call-transcript/))
+- **PNB Housing, Q2 FY27:** PAT **₹617 cr (+6%)**, disbursements **₹9,609 cr (+60%)**, AUM **₹98,210 cr (+17%)**. NIM 3.67%, GNPA 0.91%, CRAR 27.03%. ([company press release](https://nsearchives.nseindia.com/corporate/PNBHOUSING_28102026171006_PressRelease_28_October_2026_R.pdf))
+  - One TV outlet reported PAT of ₹627 cr (+33%). The company's own release says ₹617 cr, and that is the figure used here.
+- **Results calendar:**
+  - **30 Oct**: LIC Housing Finance.
+  - **5 Nov**: **Muthoot Microfin**, Muthoot Fincorp's subsidiary. ([StockFin](https://www.stockfin.ai/news/MUTHOOTMF/2026-10-23/board-meeting))
+  - Manappuram has not yet announced its date.
+
+## ⚠️ Credit Rating Actions
+
+- No significant developments today.
+- **Muthoot Fincorp ratings unchanged:**
+  - CRISIL AA/Stable and Brickwork AA+/Stable on Tranche I ([Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/)).
+  - CARE AA/Stable from 5 Oct ([CARE PR](https://www.careratings.com/upload/CompanyFiles/PR/202610121058_Muthoot_Fincorp_Limited.pdf)).
+
+## 🔄 Deals & M&A
+
+- **Chola QIP:** the board approved raising up to ₹5,000 cr (see #1).
+- **Context, not new today:** Premji Invest, Norwest and Lok Capital put **₹1,000 cr** into Vegafin, an MSME-lending platform, which is taking a majority stake in Bizloan (announced 21 Oct). See the deep dive. ([Moneycontrol](https://www.moneycontrol.com/news/business/premji-invest-norwest-lok-capital-invest-rs-1-000-crore-in-vegafin-to-acquire-majority-stake-in-bizloan-14056813.html))
+
+## 💻 Digital & Fintech
+
+- No significant developments today.
+
+## 📉 NPA & Asset Quality
+
+- **Gold-loan stress is now a sector story.** A Moneycontrol explainer (26 Oct) collects the warnings:
+  - Shriram flagged rising bad loans in gold on 23 Oct.
+  - Bajaj Finance's Rajeev Jain argued for a longer-tenor bullet model.
+  - Piramal's Jairam Sridharan estimated that **15–23%** of FY26 industry gold disbursements, about **₹4.7 lakh cr**, went to borrowers already 90+ days overdue elsewhere.
+  - ([Moneycontrol](https://www.moneycontrol.com/news/business/commodities/why-are-nbfcs-flagging-stress-in-gold-loans-despite-a-rush-to-expand-14060075.html))
+- **The new entrants are listed in ET (22 Oct):** Tata Capital (Yogakshemam), Godrej Capital (Kanakadurga's gold business), Aditya Birla Capital (200–300 gold branches by March 2027) and L&T Finance (500 this year). NBFC gold loans grew **69% to ₹3.6 lakh cr** as of 31 Aug, per Reuters. ([ET](https://economictimes.indiatimes.com/industry/banking/finance/india-gold-loan-boom-rbi-regulations-borrower-stress-default-risks-nbfc-growth/articleshow/135113574.cms))
+- **Chola:** RBI-norm GNPA fell to **4.4%** from 4.5%. On the call, management said only its secured MSME loans under ₹5 lakh are under strain, and those are improving. ([AlphaStreet transcript](https://alphastreet.com/india/cholamandalam-investment-and-finance-company-ltd-cholafin-q2-2027-earnings-call-transcript/))
+> **Possible impact on Muthoot Fincorp:** Piramal's measure of borrowers with a 90+ DPD tradeline elsewhere is likely to come up on gold-lender calls this season, including for Muthoot Fincorp.
+
+## 👤 Personnel & Leadership
+
+- No significant developments today.
+
+## 🏭 Sector Deep Dive — Thursday: MSME & commercial lending
+
+### MSME lenders are growing again, and two of them also lend against gold.
+
+**1. The Q2 numbers so far:**
+
+| Lender | MSME / AUM | Growth | Other details | Source |
+|---|---|---|---|---|
+| Cholamandalam | MSME AUM ₹72,356 cr (LAP ₹57,447 cr, SME ₹10,943 cr, SBPL ₹3,966 cr) | +27% (SME +45%, SBPL +35%) | Secured SME disbursements ₹9,345 cr (+42%) | [AlphaStreet](https://alphastreet.com/india/cholamandalam-investment-and-finance-company-ltd-cholafin-q2-2027-earnings-call-transcript/) |
+| Five Star Business Finance | AUM ₹14,639.6 cr | +14% | Record disbursements ₹2,077.8 cr (+74%); PAT ₹299.3 cr (+5%); GS3 3.48%; yield 22.26% | [Quartr](https://quartr.com/events/five-star-business-finance-fivestar-q2-26-27_FLLICozI) |
+| SBFC Finance | Secured MSME AUM ₹9,669 cr; total AUM ₹12,592 cr | +18% MSME; +27% total | Gold-loan AUM ₹2,906 cr (23% of AUM, in 236 of 257 branches); PAT ₹138.9 cr (+27%) | [Quartr](https://quartr.com/events/sbfc-finance-sbfc-q2-26-27_F44RkmAL) |
+
+**2. Funding costs are the open question.** Five Star expects its cost of funds to reach about **8.90%** by the end of FY27, with H2 incremental borrowing at **8.70–8.75%**. Chola's CFO put the full-year hit from a 50 bp rate move at 15–20 bp. ([Quartr – Five Star](https://quartr.com/events/five-star-business-finance-fivestar-q2-26-27_FLLICozI), [AlphaStreet – Chola](https://alphastreet.com/india/cholamandalam-investment-and-finance-company-ltd-cholafin-q2-2027-earnings-call-transcript/))
+
+**3. Private capital is still coming in.** Vegafin's ₹1,000 cr raise (21 Oct) to buy into Bizloan, a small MSME lender with AUM above ₹235 cr and 35+ branches, shows investors are still willing to fund new small-business platforms. ([Moneycontrol](https://www.moneycontrol.com/news/business/premji-invest-norwest-lok-capital-invest-rs-1-000-crore-in-vegafin-to-acquire-majority-stake-in-bizloan-14056813.html))
+
+**4. The stress is at the small end.** Chola says its pressure is in secured MSME loans under ₹5 lakh. That is the same ticket range where many small traders take gold loans for working capital.
+
+> **Possible impact on Muthoot Fincorp:** MSME lenders increasingly treat gold as a cross-sell to small-business customers: SBFC gets 23% of its AUM from gold, and Chola is building a gold network beside its MSME branches. That puts them in competition with gold lenders such as Muthoot Fincorp for the same customers. Chola places its stress in secured MSME loans under ₹5 lakh, a ticket range where many small traders also take gold loans for working capital.
+
+## 🔢 Key numbers
+
+| Item | Value | Change | As of | Basis | Source |
+|---|---|---|---|---|---|
+| Sensex | 73,246.03 | −352.64 (−0.48%) | 2026-10-28 | close | [BusinessLine](https://www.thehindubusinessline.com/markets/sensex-nifty50-today-stock-market-highlights-28-october-2026/article71631075.ece) |
+| Nifty 50 | 22,698.85 | −50.90 (−0.22%) | 2026-10-28 | close | [NSE index closes](https://nsearchives.nseindia.com/content/indices/ind_close_all_28102026.csv) |
+| Nifty Financial Services | 24,418.25 | +114.50 (+0.47%) | 2026-10-28 | close | [NSE index closes](https://nsearchives.nseindia.com/content/indices/ind_close_all_28102026.csv) |
+| Manappuram Finance | ₹288.75 | +2.30 (+0.80%) | 2026-10-28 | NSE close | [exa.ai MANAPPURAM](https://exa.ai/library/markets/stock/MANAPPURAM?exchange=XNSE&date=2026-10-28&view=daily) |
+| Muthoot Finance | ₹2,392.70 | −14.80 (−0.61%) | 2026-10-28 | NSE close | [exa.ai MUTHOOTFIN](https://exa.ai/library/markets/stock/MUTHOOTFIN?exchange=XNSE&date=2026-10-28&view=daily) |
+| IIFL Finance | ₹533.20 | +5.65 (+1.07%) | 2026-10-28 | NSE close | [exa.ai IIFL](https://exa.ai/library/markets/stock/IIFL?exchange=XNSE&date=2026-10-28&view=daily) |
+| Shriram Finance | ₹832.55 | +8.95 (+1.09%) | 2026-10-28 | NSE close | [exa.ai SHRIRAMFIN](https://exa.ai/library/markets/stock/SHRIRAMFIN?exchange=XNSE&date=2026-10-28&view=daily) |
+| Bajaj Finance | ₹917.25 | +5.25 (+0.58%) | 2026-10-28 | NSE close | [exa.ai BAJFINANCE](https://exa.ai/library/markets/stock/BAJFINANCE?exchange=XNSE&date=2026-10-28&view=daily) |
+| USD/INR | 95.28 | −21 paise | 2026-10-28 | close, provisional | [BusinessLine/PTI](https://www.thehindubusinessline.com/markets/forex/rupee-falls-21-paise-to-close-at-9528-against-us-dollar/article71635467.ece) |
+| Gold (₹/10g) | ₹1,43,600 | −0.07% | 2026-10-29 | MCX, 07:04 IST | [Makro](https://makro.live/mcx-gold-silver-price) |
+| Brent ($/bbl) | $115.32 | +1.3% | 2026-10-28 | Dec futures settlement | [CNBC](https://www.cnbc.com/2026/10/28/oil-price-today-wti-brent-hormuz.html) |
+| Gold spot ($/oz) | $4,070.86 | +0.3% | 2026-10-28 | spot, 16:09 New York | [Business Times](https://www.businesstimes.com.sg/companies-markets/energy-commodities/gold-cuts-losses-fed-pauses-and-stays-silent-future-hikes) |
+| FII net (₹ cr) | +871.83 | — | 2026-10-28 | provisional | [CNBC-TV18](https://www.cnbctv18.com/market/fiis-diis-turn-net-buyers-of-indian-equities-on-october-28-sensex-falls-353-points-20021735.htm) |
+| DII net (₹ cr) | +643.35 | — | 2026-10-28 | provisional | [CNBC-TV18](https://www.cnbctv18.com/market/fiis-diis-turn-net-buyers-of-indian-equities-on-october-28-sensex-falls-353-points-20021735.htm) |
+
+### Muthoot Fincorp in the market
+
+| Item | Value | As of | Source |
+|---|---|---|---|
+| Tranche I NCD status | Open, 23 Oct – 5 Nov 2026; first come, first served | 2026-10-28 | [Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/) |
+| Tranche I NCD bids vs base | 1.45× (retail 1.22×, HNI 2.05×, NII 0.92×, QIB 0.00×) at 17:00 IST | 2026-10-28 | [Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/) |
+| Tranche I NCD size | ₹200 cr base + ₹300 cr green shoe = ₹500 cr | 2026-10-28 | [Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/) |
+| Ratings | CRISIL AA/Stable · BWR AA+/Stable | 2026-10-28 | [Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/) |
+| Muthoot Microfin (subsidiary) Q2 board meeting | 5 Nov 2026 | 2026-10-23 | [StockFin](https://www.stockfin.ai/news/MUTHOOTMF/2026-10-23/board-meeting) |
+
+
+## 🔗 Source Links
+
+- BusinessLine — Chola Q2: https://www.thehindubusinessline.com/companies/cholamandalam-investment-and-finance-q2-net-up-41-board-approves-fundraise-up-to-5000-cr-via-qip/article71635199.ece
+- Zee Business — Chola Q2: https://www.zeebiz.com/companies/news-cholamandalam-investment-q2-results-pat-rises-41-to-rs-1630-crore-beats-estimates-board-approves-rs-5000-crore-qip-404700
+- AlphaStreet — Chola Q2 FY27 call transcript: https://alphastreet.com/india/cholamandalam-investment-and-finance-company-ltd-cholafin-q2-2027-earnings-call-transcript/
+- PNB Housing — Q2 press release (NSE): https://nsearchives.nseindia.com/corporate/PNBHOUSING_28102026171006_PressRelease_28_October_2026_R.pdf
+- Business Times — gold and the Fed (28 Oct): https://www.businesstimes.com.sg/companies-markets/energy-commodities/gold-cuts-losses-fed-pauses-and-stays-silent-future-hikes
+- Moneycontrol/Reuters — markets after the Fed: https://www.moneycontrol.com/news/business/markets/global-stocks-hold-gains-after-fed-decision-oil-prices-rise-14062882.html
+- CNBC — oil 28 Oct: https://www.cnbc.com/2026/10/28/oil-price-today-wti-brent-hormuz.html
+- BusinessLine/PTI — rupee close 28 Oct: https://www.thehindubusinessline.com/markets/forex/rupee-falls-21-paise-to-close-at-9528-against-us-dollar/article71635467.ece
+- BusinessLine — market close 28 Oct: https://www.thehindubusinessline.com/markets/sensex-nifty50-today-stock-market-highlights-28-october-2026/article71631075.ece
+- NSE — index closes 28 Oct: https://nsearchives.nseindia.com/content/indices/ind_close_all_28102026.csv
+- exa.ai — NSE peer closes 28 Oct: https://exa.ai/library/markets/stock/MANAPPURAM?exchange=XNSE&date=2026-10-28&view=daily · https://exa.ai/library/markets/stock/MUTHOOTFIN?exchange=XNSE&date=2026-10-28&view=daily · https://exa.ai/library/markets/stock/IIFL?exchange=XNSE&date=2026-10-28&view=daily · https://exa.ai/library/markets/stock/SHRIRAMFIN?exchange=XNSE&date=2026-10-28&view=daily · https://exa.ai/library/markets/stock/BAJFINANCE?exchange=XNSE&date=2026-10-28&view=daily · https://exa.ai/library/markets/stock/CHOLAFIN?exchange=XNSE&date=2026-10-28&view=daily
+- CNBC-TV18 — FII/DII 28 Oct: https://www.cnbctv18.com/market/fiis-diis-turn-net-buyers-of-indian-equities-on-october-28-sensex-falls-353-points-20021735.htm
+- Makro — MCX gold: https://makro.live/mcx-gold-silver-price
+- Chittorgarh — Muthoot Fincorp Tranche I NCD: https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/
+- CARE Ratings — Muthoot Fincorp PR (5 Oct): https://www.careratings.com/upload/CompanyFiles/PR/202610121058_Muthoot_Fincorp_Limited.pdf
+- StockFin — Muthoot Microfin board meeting: https://www.stockfin.ai/news/MUTHOOTMF/2026-10-23/board-meeting
+- Moneycontrol — gold-loan stress explainer (26 Oct): https://www.moneycontrol.com/news/business/commodities/why-are-nbfcs-flagging-stress-in-gold-loans-despite-a-rush-to-expand-14060075.html
+- Economic Times — gold-loan sector risks (22 Oct): https://economictimes.indiatimes.com/industry/banking/finance/india-gold-loan-boom-rbi-regulations-borrower-stress-default-risks-nbfc-growth/articleshow/135113574.cms
+- Quartr — Five Star Q2 FY27: https://quartr.com/events/five-star-business-finance-fivestar-q2-26-27_FLLICozI
+- Quartr — SBFC Q2 FY27: https://quartr.com/events/sbfc-finance-sbfc-q2-26-27_F44RkmAL
+- Moneycontrol — Vegafin / Bizloan (21 Oct): https://www.moneycontrol.com/news/business/premji-invest-norwest-lok-capital-invest-rs-1-000-crore-in-vegafin-to-acquire-majority-stake-in-bizloan-14056813.html
+- RBI notifications: https://www.rbi.org.in/Scripts/NotificationUser.aspx · press releases: https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx · drafts: https://www.rbi.org.in/Scripts/DraftNotificationsGuildelines.aspx
+- SEBI press releases: https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=6&ssid=23&smid=0 · IBBI circulars: https://ibbi.gov.in/en/legal-framework/circulars
