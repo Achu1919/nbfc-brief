@@ -47,7 +47,7 @@ def _norm(name: str) -> str:
 def match_key(name: str) -> str | None:
     raw = name.lower()
     if "fincorp" in raw or re.search(r"\bmfl\b", raw):
-        return None  # MFL is never a listed peer
+        return None  # Muthoot Fincorp is not a listed peer
     n = _norm(name)
     for key, _, _, aliases, _, _ in ITEMS:
         if n in aliases:
