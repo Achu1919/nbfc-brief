@@ -65,7 +65,7 @@ Headings are 650–700 weight with tight tracking. No gradient text and no emoji
 
 ## Radius
 
-`--r-s` 6 (covers, chips) · `--r-m` 10 (pills, buttons) · `--r-l` 14 (cards) · `--r-pill` 999 (top pill, bottom nav).
+`--r-s` 6 (covers, chips) · `--r-m` 10 (pills, buttons) · `--r-l` 14 (cards) · `--r-pill` 999 (top pill, bottom nav, the Today edition pills: 30px tall, 44px hit area, `--spring` press).
 
 ## Elevation
 

@@ -368,7 +368,7 @@ var S={day:null,view:'today',key:null};
 function builtIST(){var g=String(M.generated||'').match(/T(\d{2}:\d{2})/);return g?g[1]:'';}
 function status(day){var p=[];if(live(day)&&builtIST())p.push('Updated '+builtIST()+' IST');p.push(filedN(day)+'/'+dueN(day)+' desks');return p.join(' \u00b7 ');}
 function header(day,title,o){o=o||{};
-  return '<div class="hd" data-st="h">'+(o.eyebrow?'<p class="greet">'+esc(o.eyebrow)+'</p>':'')+'<h1>'+esc(title)+'</h1>'+(o.sub?'<p class="hsub">'+o.sub+'</p>':'')+'</div>';}
+  return '<div class="hd'+(o.tools?' tools':'')+'" data-st="h">'+(o.eyebrow?'<p class="greet">'+esc(o.eyebrow)+'</p>':'')+(o.tools||'')+'<h1>'+esc(title)+'</h1>'+(o.sub?'<p class="hsub">'+o.sub+'</p>':'')+'</div>';}
 function pct(c){var m=String(c||'').match(/\(\s*([+\-\u2212\u2013]?\d[\d.,]*\s*%)\s*\)/);return m?m[1].replace(/\s+/g,''):String(c||'');}
 function hasChg(it){return it.change&&!/^[\u2014\u2013-]$/.test(String(it.change).trim());}
 var ARW={up:'\u25b2',dn:'\u25bc'};
@@ -388,6 +388,16 @@ function pills(day,suffix){
     return '<a class="pill press" href="#/'+d.id+(suffix||'')+'"'+(d.id===day.id?' aria-current="true"':'')+'>'+(d.id===M.days[0].id?'Today · ':'')+shortDay(d.id)+'</a>';}).join('')+
     '<a class="pill press" href="#/archive">All editions</a></nav>';}
 
+/* Today: two small pills beside the eyebrow. "Yesterday" opens the edition before the one shown (hidden when there is none);
+   "Past editions" opens the archive. An older edition also gets "Latest" so the reader can get back. */
+function dayBefore(id){var d=dt(id);d.setDate(d.getDate()-1);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function edNav(day){
+  var ids=M.days.map(function(d){return d.id;}),i=ids.indexOf(day.id),prev=i>=0?M.days[i+1]:null,latest=i===0,o='';
+  if(!latest&&M.days[0])o+='<a class="epill press" href="#/'+M.days[0].id+'" aria-label="Latest edition, '+esc(shortDay(M.days[0].id))+'">Latest</a>';
+  if(prev){var yd=latest&&prev.id===dayBefore(day.id);
+    o+='<a class="epill press" href="#/'+prev.id+'" aria-label="'+(yd?'Yesterday\u2019s edition, ':'Previous edition, ')+esc(shortDay(prev.id))+'">'+(yd?'Yesterday':'Previous')+'</a>';}
+  o+='<a class="epill press" href="#/archive" aria-label="Past editions: calendar and archive">Past editions</a>';
+  return '<nav class="ednav" aria-label="Editions">'+o+'</nav>';}
 function marketsTable(day,keys,cap){
   var rows=keys.map(function(k){var it=item(day,k);if(!it)return '';var d=dirOf(it);
     return '<tr><td><span class="nm">'+esc(SHORT[k]||it.name)+'</span><span class="meta">'+itemWhen(it,day.id)+'</span><span class="meta s">'+itemSrc(it)+'</span></td>'+
@@ -428,7 +438,7 @@ function viewToday(day){
   var words=(day.reports||[]).filter(ok).reduce(function(a,r){return a+wordsOf(r);},0);
   var latest=day.id===M.days[0].id;
   var h=header(day,latest?'Today\u2019s Brief':shortDay(day.id),{hero:true,eyebrow:latest?'Latest edition':'Edition of '+day.weekday,
-    sub:esc((live(day)?'':day.label+' \u00b7 ')+status(day))})+pills(day,'');
+    sub:esc((live(day)?'':day.label+' \u00b7 ')+status(day)),tools:edNav(day)});
   var main='',side='';
   h+=ticker(day)+glance(day,st);
   if(top){main+='<article class="g card hero" data-st aria-labelledby="h-top"><div class="tagrow"><span class="kick">Top story · News desk</span>'+tags(top)+'</div><h2 id="h-top">'+esc(top.h)+'</h2>'+(top.rest?'<p>'+esc(top.rest)+'</p>':'')+
@@ -892,7 +902,12 @@ function chromeBar(day){
   if(TPA)TPA.href='#/'+M.days[0].id;
   measureHd();
   var tk=$('.tick .tk-list');if(tk){var w=tk.offsetWidth;tk.parentNode.style.setProperty('--tkd',Math.max(20,Math.round(w/38))+'s');obs(tk.closest('.tick'));}}
-function measureHd(){hdEl=$('.hd');var tp=document.getElementById('tp');
+/* Today pills sit beside the eyebrow when both fit on one line; otherwise they drop under the date line */
+function fitEd(){var hd=$('.hd.tools');if(!hd)return;var n=hd.querySelector('.ednav'),g=hd.querySelector('.greet'),gw=0;
+  if(g){var rg=document.createRange();rg.selectNodeContents(g);gw=rg.getBoundingClientRect().width;}
+  var cs=getComputedStyle(hd),w=hd.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
+  hd.classList.toggle('stack',gw+8+n.scrollWidth>w+.5);}
+function measureHd(){fitEd();hdEl=$('.hd');var tp=document.getElementById('tp');
   if(hdEl){hdEl.style.transform='';hdEl.style.opacity='';}
   var h1=hdEl&&hdEl.querySelector('h1');
   if(h1&&tp){var hb=h1.getBoundingClientRect().bottom+scrollY,pb=tp.getBoundingClientRect().bottom;hdRange=Math.max(40,hb-pb);}
