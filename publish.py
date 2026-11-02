@@ -62,7 +62,7 @@ def first_heading(text: str, fallback: str) -> str:
 
 URL_RE = re.compile(r"https?://[^\s<>()\[\]]+")
 META_RE = re.compile(
-    r"^(\*\*)?(date|prepared for|published|covering)\b|\bedition\b\s*·",
+    r"^(\*\*)?(date|published|covering)\b|\bedition\b\s*·",
     re.IGNORECASE,
 )
 
