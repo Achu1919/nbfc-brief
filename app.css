@@ -110,6 +110,25 @@ h1{font-size:var(--t-34);font-weight:700;letter-spacing:-.028em;line-height:1.08
   border:1px solid var(--border);background:transparent}
 .pill[aria-current=true]{background:var(--inv);color:var(--on-inv);border-color:transparent}
 
+/* Today: inline edition pills beside the eyebrow (small to the eye, 44px to the finger) */
+.hd.tools{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:var(--sp-2);align-items:center}
+.hd.tools .greet{grid-area:1/1;margin:0;white-space:nowrap}
+.hd.tools .ednav{grid-area:1/2;display:flex;gap:6px}
+.hd.tools h1{grid-area:2/1/3/3;margin-top:var(--sp-1)}
+.hd.tools .hsub{grid-area:3/1/4/3}
+.hd.tools.stack .ednav{grid-area:4/1/5/3;justify-self:start;margin-top:var(--sp-3)}
+.epill{position:relative;display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:var(--r-pill);
+  font-size:var(--t-13);font-weight:550;line-height:1;color:var(--text-2);text-decoration:none;white-space:nowrap;-webkit-tap-highlight-color:transparent;
+  background:var(--epill-bg);border:1px solid var(--border);box-shadow:inset 0 1px 0 var(--epill-spec),var(--elev-1);
+  transition:transform .5s var(--spring),background-color .15s,color .15s,border-color .15s}
+.epill::before{content:"";position:absolute;inset:-7px -3px}
+.epill:active{transform:scale(.94);transition-duration:.1s;transition-timing-function:var(--ease-out)}
+.epill:focus-visible{border-radius:var(--r-pill);outline-offset:3px}
+@media (hover:hover){.epill:hover{background:var(--surface-2);color:var(--text-1);border-color:var(--border-strong)}}
+:root{--epill-bg:rgba(255,255,255,.62);--epill-spec:rgba(255,255,255,.9);
+  --spring:linear(0,.06 2%,.22 5%,.5 10%,.76 16%,.92 22%,1.01 29%,1.035 36%,1.03 44%,1.01 56%,.998 72%,1)}
+:root[data-theme=dark]{--epill-bg:rgba(255,255,255,.045);--epill-spec:rgba(255,255,255,.07)}
+
 .press{transition:transform .25s var(--ease-out),background-color .15s,color .15s}
 .press:active{transform:scale(.98)}
 
@@ -418,8 +437,8 @@ html[data-vt=theme]::view-transition-old(root){z-index:0}html[data-vt=theme]::vi
 html.tfade body,html.tfade .g,html.tfade .lg,html.tfade .pill{transition:background-color .25s ease,color .25s ease,border-color .25s ease}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}
-  .press:active{transform:none}
+  .press:active{transform:none}.epill:active{transform:none}
   .tk-track{animation:none}.tick .tk-vp{overflow-x:auto;scrollbar-width:none}
   ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
 }
-@media (forced-colors:active){.lg{background:Canvas!important;backdrop-filter:none!important}.g,.tp,.tabbar,.cvi{border:1px solid CanvasText}.tabbar a[aria-current=page],.pill[aria-current=true]{outline:2px solid Highlight}}
+@media (forced-colors:active){.lg{background:Canvas!important;backdrop-filter:none!important}.g,.tp,.tabbar,.cvi{border:1px solid CanvasText}.tabbar a[aria-current=page],.pill[aria-current=true]{outline:2px solid Highlight}.epill{border:1px solid CanvasText}}
