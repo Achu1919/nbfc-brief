@@ -217,16 +217,20 @@ function loadSeed(){var q=location.search;
   var t=new Promise(function(r){setTimeout(function(){r(null);},2500);});
   var f=fetch('/data/history.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});
   return Promise.race([f,t]);}
+var OWN_DATES=/^(ibja999|ibja916|agloc_ltv85|agloc_ltv80|agloc_ltv75|agloc_ref)$/;
 function mergeSeed(seed){
   if(!seed||typeof seed!=='object'||Array.isArray(seed)||!M.days.length)return;
   var live={},newest=M.days[0].id,dates={};M.days.forEach(function(d){live[d.id]=1;});
   Object.keys(M.series).forEach(function(k){M.series[k].forEach(function(p){dates[p.d]=1;});});
   var clean={};Object.keys(seed).forEach(function(k){var ser=seed[k];if(k.charAt(0)==='_'||!ser||typeof ser!=='object')return;clean[k]={};
     Object.keys(ser).forEach(function(d){if(!ISO_RE.test(d)||live[d]||d>=newest)return;var v=ser[d];
-      clean[k][d]=typeof v==='number'&&isFinite(v)?v:null;dates[d]=1;});});
+      clean[k][d]=typeof v==='number'&&isFinite(v)?v:null;if(!OWN_DATES.test(k))dates[d]=1;});});
   var axis=Object.keys(dates).sort().slice(-SERIES_MAX);
   var keys={};Object.keys(M.series).concat(Object.keys(clean)).forEach(function(k){keys[k]=1;});
-  var out={};Object.keys(keys).forEach(function(k){var have={};(M.series[k]||[]).forEach(function(p){have[p.d]=p.v;});
+  var out={};Object.keys(keys).forEach(function(k){var have={};
+    /* gold keys sit on the figure's own date (an AGLOC period may start on a Saturday): merge by date, keep their own axis */
+    if(OWN_DATES.test(k)){(M.series[k]||[]).forEach(function(p){have[p.d]=p.v;});Object.keys(clean[k]||{}).forEach(function(d){if(!Object.prototype.hasOwnProperty.call(have,d))have[d]=clean[k][d];});
+      out[k]=Object.keys(have).sort().slice(-SERIES_MAX).map(function(d){return {d:d,v:have[d]};});return;}(M.series[k]||[]).forEach(function(p){have[p.d]=p.v;});
     out[k]=axis.map(function(d){var v=live[d]?(Object.prototype.hasOwnProperty.call(have,d)?have[d]:null)
       :(clean[k]&&Object.prototype.hasOwnProperty.call(clean[k],d)?clean[k][d]:(Object.prototype.hasOwnProperty.call(have,d)?have[d]:null));
       return {d:d,v:v==null?null:v};});});
@@ -451,6 +455,7 @@ function viewToday(day){
     return '<a class="tile g press" href="#/'+day.id+'/markets"><div class="n">'+esc(SHORT[k2])+'</div><div class="v num">'+esc(it.value)+'</div>'+chg(it)+spark(k2,day.id,124,34,d)+'<span class="src">'+(it.asof?dm(it.asof):'as-of n/s')+' · '+esc((it.source&&it.source.label)||'no source')+'</span></a>';}).join('');
   main+='<section aria-labelledby="h-mk"><div class="sec" data-st><h2 id="h-mk">Markets</h2><a class="aside" href="#/'+day.id+'/markets">All numbers &amp; sources →</a></div>'+
     (tiles?'<div class="tiles" data-st>'+tiles+'</div>':'<div class="g card" data-st><p>No market figures in today\u2019s report.</p></div>')+'</section>';
+  main+=goldCard(day,false);
   /* peers */
   var pt=marketsTable(day,PEER_ORDER,'NSE close. Muthoot Finance is a separate listed company and a peer, not Muthoot Fincorp (MFL).');
   main+='<section aria-labelledby="h-peers"><div class="sec" data-st><h2 id="h-peers">Gold-loan &amp; NBFC peers</h2><span class="aside">listed peers</span></div><div class="g flush" data-st>'+(pt||'<p class="missing">No peer prices in today\u2019s report.</p>')+missingLine(day,PEER_ORDER)+'</div></section>';
@@ -475,7 +480,7 @@ function viewMarkets(day){
   var all=Object.keys(FULL),idx=['nifty','sensex','niftyfin'],mac=['usdinr','gold10g','goldspot','brent'];
   return header(day,'Markets')+pills(day,'/markets')+'<div class="cols"><div>'+
     '<section aria-labelledby="h-ix"><div class="sec" data-st><h2 id="h-ix">Indices</h2><span class="aside">from today\u2019s news report</span></div><div class="g flush" data-st>'+(marketsTable(day,idx,'Each figure links to the source the report used.')||'')+missingLine(day,idx)+'</div></section>'+
-    '<section aria-labelledby="h-mc"><div class="sec" data-st><h2 id="h-mc">Currency &amp; commodities</h2></div><div class="g flush" data-st>'+(marketsTable(day,mac,'MCX gold is the morning print; spot gold and Brent as stated in the report.')||'')+missingLine(day,mac)+'</div></section>'+
+    '<section aria-labelledby="h-mc"><div class="sec" data-st><h2 id="h-mc">Currency &amp; commodities</h2></div><div class="g flush" data-st>'+(marketsTable(day,mac,'MCX gold is the morning print; spot gold and Brent as stated in the report.')||'')+missingLine(day,mac)+'</div></section>'+goldCard(day,true)+
     '<section aria-labelledby="h-pr"><div class="sec" data-st><h2 id="h-pr">Peers</h2></div><div class="g flush" data-st>'+(marketsTable(day,PEER_ORDER,'Muthoot Finance is a listed peer, not Muthoot Fincorp (MFL).')||'')+missingLine(day,PEER_ORDER)+'</div></section>'+
     '</div><div class="side">'+flowsBlock(day)+mflMarket(day)+
     '<p class="note" data-st style="margin-top:14px">Key numbers: '+(kn(day).core_found||0)+' of '+(kn(day).core_total||11)+' core items in this edition. Trends use only figures printed in each day\u2019s own report; a day without a figure is a gap.</p></div></div>'+foot();}
@@ -650,9 +655,104 @@ function foot(){var g=M.generated?new Date(M.generated):null;
     'Every figure links to the source its report used; anything a report did not state is shown as missing. Muthoot Finance appears only as a listed peer, never as Muthoot Fincorp. \u201cPossible impact\u201d notes are neutral context, not investment or financial advice.'+
     (g&&!isNaN(g)?'<br>Data built '+g.toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})+' IST':'')+' · source: '+esc(M.source||'')+(navigator.onLine===false?' · offline copy':'')+'</footer>';}
 
+/* ---------------- gold card (optional day.gold; hidden when absent) ----------------
+   IBJA benchmark (₹/g, AM or PM session), spot ($/oz and ₹/10 g) and AGLOC's maximum loan per gram at 85/80/75% LTV
+   plus its reference price, for the period it applies. Day change = today vs the prev values the publisher sends,
+   never a value carried over from another edition; "—" when either side is missing. History: series ibja999,
+   ibja916, goldspot, agloc_ltv85/80/75, agloc_ref (AGLOC: one point per period, keyed by its start date, drawn as steps). */
+var GSER={ibja999:['ibja','rate_999','prev_999'],ibja916:['ibja','rate_916','prev_916'],goldspot:['spot','usd_oz','prev_usd_oz'],
+  agloc_ltv85:['agloc','ltv_85'],agloc_ltv80:['agloc','ltv_80'],agloc_ltv75:['agloc','ltv_75'],agloc_ref:['agloc','ref_price']};
+function gN(v){return typeof v==='number'&&isFinite(v)?v:null;}
+function gISO(s){return typeof s==='string'&&ISO_RE.test(s)?s:null;}
+function gFmt(v,dp,u){v=gN(v);if(v==null)return '\u2014';return (u||'')+v.toLocaleString(u==='$'?'en-US':'en-IN',{minimumFractionDigits:dp,maximumFractionDigits:dp});}
+function gChg(c,p,dp,u){c=gN(c);p=gN(p);if(c==null||p==null||!p)return '<span class="gch flat" title="No previous figure to compare">\u2014<span class="sr"> change not available</span></span>';
+  var d=c-p,pc=Math.abs(d/p*100).toFixed(2),cls=d>0?'up':d<0?'dn':'flat',sg=d>0?'+':d<0?'\u2212':'',ab=gFmt(Math.abs(d),dp,u);
+  return '<span class="gch '+cls+' num"><span aria-hidden="true">'+(d>0?'\u25b2 ':d<0?'\u25bc ':'')+sg+ab+' \u00b7 '+sg+pc+'%</span><span class="sr">'+(d>0?'up ':d<0?'down ':'unchanged ')+ab+', '+pc+' percent</span></span>';}
+function gDay(id){var d=dt(id);return DOWS[d.getDay()]+' '+d.getDate()+' '+MONS[d.getMonth()];}
+function gPeriod(f,t){f=gISO(f);t=gISO(t);if(!f)return '';return gDay(f)+(t&&t!==f?' \u2013 '+gDay(t):'');}
+/* history: the published series when it has 2+ figures, else what the loaded editions' own gold blocks (and their prev values) give */
+function gSeries(k,upto){var spec=GSER[k],s=(M.series[k]||[]).filter(function(p){return p.d<=upto&&gN(p.v)!=null;});
+  if(s.length>=2||!spec)return s;var m={};
+  M.days.forEach(function(d){var g=!d.stub&&d.gold,x=g&&g[spec[0]];if(!x||typeof x!=='object')return;var v=gN(x[spec[1]]),at;
+    if(spec[0]==='agloc'){at=gISO(x.from);var pv=x.prev;if(pv&&gISO(pv.from)&&gN(pv[spec[1]])!=null&&pv.from<=upto&&!(pv.from in m))m[pv.from]=pv[spec[1]];}
+    else if(spec[0]==='ibja'){at=gISO(x.date)||d.id;if(gISO(x.prev_date)&&gN(x[spec[2]])!=null&&x.prev_date<=upto&&!(x.prev_date in m))m[x.prev_date]=x[spec[2]];}
+    else at=d.id;
+    if(v!=null&&at&&at<=upto)m[at]=v;});
+  var d2=Object.keys(m).sort().map(function(d){return {d:d,v:m[d]};});return d2.length>s.length?d2:s;}
+/* one chart routine for the row sparkline and the expanded chart; x is calendar time, AGLOC draws as steps to the right edge */
+function gChart(k,upto,w,h,big,range){var step=/^agloc/.test(k),pts=gSeries(k,upto);
+  if(range&&pts.length){var cut=new Date(dt(upto)-range*864e5).toISOString().slice(0,10);pts=pts.filter(function(p){return p.d>=cut;});}
+  if(pts.length<2)return big?'<p class="gx-none">Not enough history yet; the chart fills in as editions accumulate.</p>':'<span class="spk spk-new" role="img" aria-label="Trend builds as editions accumulate"><svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" aria-hidden="true" focusable="false"><line x1="3" y1="'+h/2+'" x2="'+(w-7)+'" y2="'+h/2+'" class="spk-base"/>'+(pts.length?'<circle cx="'+(w-4.5)+'" cy="'+h/2+'" r="2.4" class="spk-dot"/>':'')+'</svg><span class="spk-l" aria-hidden="true">'+(pts.length?'new':'\u2014')+'</span></span>';
+  var padL=big?4:3,padR=big?50:3,padT=big?10:3,padB=big?20:3,t0=+dt(pts[0].d),last=pts[pts.length-1].d,t1=+dt(step&&upto>last?upto:last);if(t1===t0)t1=t0+864e5;
+  var vals=pts.map(function(p){return p.v;}),lo=Math.min.apply(0,vals),hi=Math.max.apply(0,vals),rg=hi-lo||Math.abs(hi)*.01||1;
+  var X=function(d){return padL+(w-padL-padR)*(+dt(d)-t0)/(t1-t0);},Y=function(v){return padT+(h-padT-padB)*(1-(v-lo)/rg);};
+  var path='M'+X(pts[0].d).toFixed(1)+' '+Y(pts[0].v).toFixed(1);
+  pts.slice(1).forEach(function(p){path+=step?'H'+X(p.d).toFixed(1)+'V'+Y(p.v).toFixed(1):'L'+X(p.d).toFixed(1)+' '+Y(p.v).toFixed(1);});
+  if(step)path+='H'+(w-padR).toFixed(1);
+  var a=vals[0],b=vals[vals.length-1],dir=b>a?'up':b<a?'dn':'',col=dir==='dn'?'var(--down)':dir==='up'?'var(--up)':'var(--text-3)',lx=step?w-padR:X(last),ly=Y(b);
+  var lbl=(step?'Step chart, one value per AGLOC period, ':'Trend, ')+pts.length+' points from '+dm(pts[0].d)+' to '+dm(last)+': low '+lo.toLocaleString('en-IN')+', high '+hi.toLocaleString('en-IN')+', latest '+b.toLocaleString('en-IN');
+  var svg='<svg class="spk'+(big?' gx-svg':'')+'" width="'+(big?'100%':w)+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" role="img" aria-label="'+esc(lbl)+'">';
+  if(big){svg+='<line x1="'+padL+'" x2="'+(w-padR)+'" y1="'+Y(hi).toFixed(1)+'" y2="'+Y(hi).toFixed(1)+'" class="gx-grid"/><line x1="'+padL+'" x2="'+(w-padR)+'" y1="'+Y(lo).toFixed(1)+'" y2="'+Y(lo).toFixed(1)+'" class="gx-grid"/>';}
+  svg+='<path d="'+path+'" fill="none" stroke="'+col+'" stroke-width="'+(big?2:1.7)+'" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/><circle cx="'+lx.toFixed(1)+'" cy="'+ly.toFixed(1)+'" r="'+(big?3:2.4)+'" fill="'+col+'"/></svg>';
+  if(!big)return svg;
+  return '<div class="gx-plot">'+svg+'<span class="gx-y gx-hi num" style="top:'+(Y(hi)/h*100).toFixed(1)+'%">'+hi.toLocaleString('en-IN')+'</span><span class="gx-y gx-lo num" style="top:'+(Y(lo)/h*100).toFixed(1)+'%">'+lo.toLocaleString('en-IN')+'</span>'+
+    '<span class="gx-x num" style="left:0">'+dm(pts[0].d)+'</span><span class="gx-x num" style="right:'+padR+'px">'+dm(last)+'</span></div>';}
+var GRANGE={};
+function gChartBlock(k,upto){var all=gSeries(k,upto),span=all.length>1?(dt(all[all.length-1].d)-dt(all[0].d))/864e5:0,r=GRANGE[k]||0;
+  var tog=all.length>=8&&span>30?'<div class="gx-r" role="group" aria-label="Chart range">'+[[30,'1M'],[90,'3M'],[0,'All']].filter(function(x){return !x[0]||span>x[0];}).map(function(x){
+    return '<button type="button" class="press" data-gk="'+k+'" data-grange="'+x[0]+'" aria-pressed="'+(r===x[0])+'">'+x[1]+'</button>';}).join('')+'</div>':'';
+  return tog+'<div class="gx-c">'+gChart(k,upto,320,128,true,r||0)+'</div>';}
+function goldRows(day,full){var g=day.gold,I=g.ibja||{},S=g.spot||{},A=g.agloc||{},P=A.prev&&typeof A.prev==='object'?A.prev:{};
+  function srcL(u,l){return u&&/^https?:/.test(u)?'<a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer">'+esc(l)+'</a>':'<span>source not linked</span>';}
+  var ses=I.session==='AM'||I.session==='PM'?I.session+' session':'session not stated';
+  var groups=[
+    {h:'IBJA benchmark \u00b7 \u20b9 per g',m:[ses,gISO(I.date)?gDay(I.date):'',srcL(I.source,'IBJA')],rows:[['ibja999','24K (999)',I.rate_999,I.prev_999,0,'\u20b9'],['ibja916','22K (916)',I.rate_916,I.prev_916,0,'\u20b9']]},
+    {h:'Spot gold',m:[S.as_of?esc(S.as_of):'as-of not stated',srcL(S.source,'spot'),S.inr_source?srcL(S.inr_source,'\u20b9 rate'):''],rows:[['goldspot','$ per oz',S.usd_oz,S.prev_usd_oz,2,'$'],[null,'\u20b9 per 10 g',S.inr_10g,null,0,'\u20b9']]},
+    {h:'AGLOC max loan \u00b7 \u20b9 per g',m:[gPeriod(A.from,A.to)||'period not stated',srcL(A.source||'https://www.agloc.org/','AGLOC')],rows:[['agloc_ltv85','At 85% LTV',A.ltv_85,P.ltv_85,0,'\u20b9'],['agloc_ltv80','At 80% LTV',A.ltv_80,P.ltv_80,0,'\u20b9'],['agloc_ltv75','At 75% LTV',A.ltv_75,P.ltv_75,0,'\u20b9'],['agloc_ref','Reference price',A.ref_price,P.ref_price,0,'\u20b9']]}];
+  return groups.map(function(G,gi){
+    var rows=G.rows.map(function(r){var k=r[0],cur=r[2],sp=k?gChart(k,day.id,72,26,false):'',id='gx-'+k+'-'+day.id;
+      var cell=!k?'':full&&gSeries(k,day.id).length>=2?'<button type="button" class="gsp press" data-gx="'+id+'" aria-expanded="false" aria-controls="'+id+'" aria-label="Show '+esc(r[1])+' chart">'+sp+'</button>':sp;
+      return '<tr><td><span class="nm">'+esc(r[1])+'</span></td><td><span class="vc"><span class="v num">'+gFmt(cur,r[4],r[5])+'</span>'+(k?gChg(cur,r[3],r[4],r[5]):'<span class="gch flat">\u2014<span class="sr"> no change given</span></span>')+'</span></td><td class="sp">'+cell+'</td></tr>'+
+        (full&&k?'<tr class="gx" id="'+id+'" hidden><td colspan="3"><div class="gx-in" data-gk="'+k+'" data-gd="'+day.id+'"></div></td></tr>':'');}).join('');
+    return '<tbody><tr class="gh"><th scope="rowgroup" colspan="3"><span class="gh-t">'+G.h+'</span><span class="meta">'+G.m.filter(Boolean).join(' \u00b7 ')+'</span></th></tr>'+rows+'</tbody>';}).join('');}
+function goldCard(day,full){var g=day&&day.gold;if(!g||typeof g!=='object'||!(g.ibja||g.spot||g.agloc))return '';
+  var id=full?'h-gold':'h-gold-t';
+  return '<section aria-labelledby="'+id+'" class="gold"><div class="sec" data-st><h2 id="'+id+'">Gold</h2>'+(full?'<span class="aside">IBJA \u00b7 spot \u00b7 AGLOC</span>':'<a class="aside" href="#/'+day.id+'/markets?sec=h-gold">Charts &amp; history \u2192</a>')+'</div>'+
+    '<div class="g flush" data-st><table class="tc num gt"><caption>'+(full?'Day change compares each figure with the previous one its source gave. Tap a trend to open its chart. AGLOC rates hold for the whole period shown.':'IBJA benchmark, spot and AGLOC maximum loan per gram. Change is against the previous figure each source gave.')+'</caption>'+
+    '<thead class="sr"><tr><th scope="col">Item</th><th scope="col">Value and change</th><th scope="col">Trend</th></tr></thead>'+goldRows(day,full)+'</table></div></section>';}
+function goldToggle(b){var row=document.getElementById(b.dataset.gx);if(!row)return;var open=b.getAttribute('aria-expanded')!=='true';
+  b.setAttribute('aria-expanded',String(open));row.hidden=!open;
+  if(open){var box=row.querySelector('.gx-in');box.innerHTML=gChartBlock(box.dataset.gk,box.dataset.gd);
+    if(!RM.matches&&box.animate)box.animate([{opacity:0,transform:'translateY(-6px)'},{opacity:1,transform:'none'}],{duration:SPRINGS.Snappy.ms,easing:SPRINGS.Snappy.easing});}}
+function goldRange(b){var k=b.dataset.gk,box=b.closest('.gx-in');GRANGE[k]=+b.dataset.grange;box.innerHTML=gChartBlock(k,box.dataset.gd);var nb=box.querySelector('[data-grange="'+b.dataset.grange+'"]');if(nb)nb.focus();}
+
+/* ---------------- search (optional; search.js loads only when Search is opened) ---------------- */
+var SXP=null;
+function loadSearch(){if(window.NBSearch)return Promise.resolve();if(!SXP)SXP=loadScript('/search.js').catch(function(e){SXP=null;throw e;});return SXP;}
+function searchView(){if(window.NBSearch)return NBSearch.html(PQ);
+  return '<div class="hd" data-st="h"><p class="greet">Search</p><h1>Search editions</h1></div><div class="g card empty" data-st><h2>Search is not available offline yet</h2><p>Open Search once while online and it will work offline after that.</p></div>';}
+window.__NB={ns:'nbfc-brief',get M(){return M;},esc:esc,stripMd:stripMd,noCites:noCites,clip:clip,firstSentence:firstSentence,cleanHead:cleanHead,deEmoji:deEmoji,slug:slug,
+  pub:pubText,pubHead:pubHead,dt:dt,shortDay:shortDay,SPRINGS:SPRINGS,STAGGER:ENTRANCE.StaggerMs,RM:RM,
+  mflItems:function(day){return day.mfl_market||[];},mflLabel:'Muthoot Fincorp in the market',ownDays:function(){return M.days.map(function(d){return d.id;});},legacyOK:false,searchQs:'',lastBuild:null};
+/* deep link from a search result: #/<id>/read/<key>?hl=<letters and digits of the item>&sec=<heading id>.
+   Finds the smallest block whose text contains hl, scrolls it to about a third of the screen and flashes it. */
+function flatT(s){return String(s||'').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]/g,'');}
+function hitLater(root,qs){var tries=0;(function go(){if(!root.isConnected)return;if(hit(root,qs)||++tries>12)return;setTimeout(go,120);})();}
+function hit(root,qs){var q={};qs.split('&').forEach(function(x){var i=x.indexOf('=');if(i>0)q[x.slice(0,i)]=decodeURIComponent(x.slice(i+1).replace(/\+/g,' '));});
+  var hl=flatT(q.hl).slice(0,40),el=null,BLK='p,li,tr,h2,h3,h4,blockquote,dd,dt,a.story,article,.rule,.rl,.tile';
+  if(hl.length>=4){var c=root.querySelectorAll(BLK);for(var i=0;i<c.length;i++){var e=c[i];if(flatT(e.textContent).indexOf(hl)<0)continue;
+      var inner=e.querySelector(BLK),best=e;while(inner){var f=null;[].some.call(best.querySelectorAll(BLK),function(n){if(flatT(n.textContent).indexOf(hl)>=0){f=n;return true;}});if(!f||f===best)break;best=f;inner=f.querySelector(BLK);}
+      el=best;break;}}
+  if(!el&&q.sec){el=document.getElementById(q.sec);if(el&&!root.contains(el))el=null;}
+  if(!el)return !!(hl.length<4&&!q.sec);
+  var y=el.getBoundingClientRect().top+scrollY-innerHeight*.3;window.scrollTo({top:Math.max(0,y),behavior:RM.matches?'auto':'smooth'});
+  el.classList.remove('hit');void el.offsetWidth;el.classList.add('hit');setTimeout(function(){el.classList.remove('hit');},2600);return true;}
+
 /* ---------------- router ---------------- */
+var PQ='';/* the ?query part of the hash: search terms, or hl/sec for a deep link into an edition */
 function parse(){
-  var h=decodeURIComponent(location.hash.replace(/^#\/?/,'')),p=h.split('/').filter(Boolean),id=M.days[0]&&M.days[0].id;
+  var hq=location.hash.replace(/^#\/?/,'').split('?'),h=decodeURIComponent(hq[0]),p=h.split('/').filter(Boolean),id=M.days[0]&&M.days[0].id;PQ=hq.slice(1).join('?');
+  if(p[0]==='search')return {view:'search',day:S.day||id};
   if(p[0]==='archive')return {view:'archive',day:id};
   if(p[0]==='latest')p[0]=id;
   if(p[0]&&/^\d{4}-\d{2}-\d{2}$/.test(p[0])){var d=M.byId[p[0]]?p[0]:id;
@@ -757,14 +857,14 @@ function route(){
   if(pv==='archive'&&r.view!=='archive'&&!flying){if(CF)ARCH.i=CF.i;ARCH.y=scrollY;}
   if(!first&&r.view!==pv)navNow(r.view);
   /* old content stays on screen until the new view is built */
-  return getDay(r.day).then(function(day){
+  return (r.view==='search'?loadSearch().then(function(){return getDay(r.day);},function(){return getDay(r.day);}):getDay(r.day)).then(function(day){
     if(my!==seq)return;
     S.view=r.view;S.day=r.day;S.key=r.key;
     var changed=!first&&(pv!==S.view||pd!==S.day||pk!==S.key),dir=changed?dirFor(pv,pd,pk,S.view,S.day,S.key):0;
     var segFrom=pv==='read'&&S.view==='read'?segInd:null;
     dropStage();
     var oh=APP.offsetHeight;
-    var nv=S.view==='archive'?archView():mkView(S.view==='markets'?viewMarkets(day):S.view==='read'?viewRead(day,S.key):viewToday(day));
+    var nv=S.view==='archive'?archView():mkView(S.view==='search'?searchView():S.view==='markets'?viewMarkets(day):S.view==='read'?viewRead(day,S.key):viewToday(day));
     if(nv===CUR)nv=mkView(viewArchive()),nv._arch=1;
     function post(){
       APP.setAttribute('aria-busy','false');
@@ -777,7 +877,9 @@ function route(){
       syncTabInd(!first);syncSegInd(segFrom);fit(true);
       var pc=$('.pill[aria-current=true]'),pl=pc&&pc.parentNode;
       if(pl&&pl.scrollTo)pl.scrollTo({left:Math.max(0,pc.offsetLeft-(pl.clientWidth-pc.offsetWidth)/2),behavior:first||RM.matches?'auto':'smooth'});
-      cascade(nv,first);}
+      if(S.view==='search'&&window.NBSearch)NBSearch.mount(nv,PQ,true);
+      cascade(nv,first);
+      if(S.view!=='search'&&/(?:^|&)(?:hl|sec)=/.test(PQ))hitLater(nv,PQ);}
     function commit(){var old=CUR;CUR=nv;STG=null;
       if(old&&old!==nv){if(old.parentNode)park(old);}
       [].slice.call(APP.childNodes).forEach(function(n){if(n!==nv)n.remove();});
@@ -812,6 +914,8 @@ APP.addEventListener('click',function(e){
   if(t.dataset.cal){calGo(+t.dataset.cal);return;}
   if(t.dataset.cf){cfStep(+t.dataset.cf);return;}
   if(t.id==='installBtn'&&installEvt){installEvt.prompt();installEvt.userChoice.finally(function(){installEvt=null;t.hidden=true;});}
+  else if(t.dataset.gx)goldToggle(t);
+  else if(t.dataset.grange!=null)goldRange(t);
   else if(t.dataset.jump){e.preventDefault();var el=document.getElementById(t.dataset.jump);if(el)el.scrollIntoView({behavior:RM.matches?'auto':'smooth',block:'start'});}
 });
 APP.addEventListener('keydown',calKey);
@@ -821,10 +925,17 @@ APP.addEventListener('touchend',function(e){var t=e.target.closest('.tick');if(t
 /* top pill: theme toggle + install live outside #app */
 var TPEL=document.getElementById('tp');
 if(TPEL)TPEL.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
-  if(b.id==='themeBtn')themeReveal(b,other());
+  if(b.id==='searchBtn'){if(S.view==='search'){var si=document.getElementById('sxq');if(si){si.focus();si.select();}}else location.hash='#/search';}
+  else if(b.id==='themeBtn')themeReveal(b,other());
   else if(b.id==='installBtn'&&installEvt){installEvt.prompt();installEvt.userChoice.finally(function(){installEvt=null;b.hidden=true;});}});
 (function(){var ib=document.getElementById('installBtn');if(ib)ib.innerHTML=ICON.dl;syncThemeBtn();})();
 window.addEventListener('hashchange',route);
+/* Search: the magnifier in the top pill, or '/' anywhere you are not typing. search.js is fetched on first hover/touch. */
+(function(){var sb=document.getElementById('searchBtn');if(sb){sb.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>';
+  ['pointerenter','touchstart','focus'].forEach(function(ev){sb.addEventListener(ev,function(){loadSearch().catch(function(){});},{once:true,passive:true});});}
+  document.addEventListener('keydown',function(e){if(e.key!=='/'||e.ctrlKey||e.metaKey||e.altKey)return;var a=document.activeElement,tg=a&&a.tagName;
+    if(tg==='INPUT'||tg==='TEXTAREA'||tg==='SELECT'||(a&&a.isContentEditable))return;e.preventDefault();
+    if(S.view==='search'){var si=document.getElementById('sxq');if(si)si.focus();}else location.hash='#/search';});})();
 window.addEventListener('online',function(){toast('Back online');});
 window.addEventListener('offline',function(){toast('Offline · showing the last saved edition');});
 
@@ -891,14 +1002,14 @@ if(LGX){document.documentElement.classList.add('lgx');lgAll();
    The page title (.hd) scrolls up under the floating pill and fades out; only after it is gone does the pill
    swap its brand line (.tp-a) for the compact title + key stat (.tp-b). Never two titles on screen at once. */
 var TPA=document.getElementById('tpA'),TPB=document.getElementById('tpB'),hdEl=null,hdRange=120,tpRaf=0,tpLast=-1;
-var TTL={today:'Today\u2019s Brief',read:'Read',markets:'Markets',archive:'Archive'};
+var TTL={today:'Today\u2019s Brief',read:'Read',markets:'Markets',archive:'Archive',search:'Search'};
 function chromeBar(day){
   var it=item(day,'nifty'),mk='';
   if(it&&it.value){var d=dirOf(it);mk=' \u00b7 Nifty <span class="num">'+esc(it.value)+'</span>'+(hasChg(it)?' <span class="num '+(d||'')+'">'+esc(pct(it.change))+'</span>':'');}
   var h1=$('.hd h1'),cbT=document.getElementById('cbT'),cbS=document.getElementById('cbS'),tpE=document.getElementById('tpE');
   if(cbT)cbT.textContent=h1?h1.textContent:TTL[S.view]||'NBFC Brief';
   if(cbS)cbS.innerHTML=S.view==='archive'?esc(M.days.length+' editions \u00b7 latest '+shortDay(M.days[0].id)):esc(shortDay(day.id))+mk;
-  if(tpE)tpE.textContent=S.view==='archive'?'Archive':shortDay(day.id)+' edition';
+  if(tpE)tpE.textContent=S.view==='archive'?'Archive':S.view==='search'?'Search':shortDay(day.id)+' edition';
   if(TPA)TPA.href='#/'+M.days[0].id;
   measureHd();
   var tk=$('.tick .tk-list');if(tk){var w=tk.offsetWidth;tk.parentNode.style.setProperty('--tkd',Math.max(20,Math.round(w/38))+'s');obs(tk.closest('.tick'));}}
