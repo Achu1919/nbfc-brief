@@ -2,13 +2,14 @@
    deletes only its own old shells, so it can never touch another app's caches.
    Shell: precached, stale-while-revalidate (a new deploy shows on the next open).
    Data (data.js, data/*.json, days/*): network-first; if a saved copy exists and the network takes
-   over 3 s (or is down), the saved copy is shown and the app offers "New edition available — Refresh". Fonts: cache-first. */
+   over 3 s (or is down), the saved copy is shown and the app offers "New edition available — Refresh". Fonts: cache-first.
+   search.js and hubs.js are precached with the shell (it is only executed when Search opens); the search index itself lives in IndexedDB. */
 const NS = 'nbfc-brief-';
-const VERSION = 'v5-2026-11-02-pills';
+const VERSION = 'v7-2026-11-03-topics';
 const SHELL = `${NS}shell-${VERSION}`;
 const DATA = `${NS}data-v1`;
 const FONTS = `${NS}fonts-v1`;
-const SHELL_FILES = ['/', '/index.html', '/app.css', '/app.js', '/manifest.webmanifest',
+const SHELL_FILES = ['/', '/index.html', '/app.css', '/app.js', '/search.js', '/hubs.js', '/manifest.webmanifest',
   '/icons/icon-192.png', '/icons/icon-512.png', '/icons/favicon-64.png', '/icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

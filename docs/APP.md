@@ -27,3 +27,23 @@ python3 -m http.server 8000   # then open http://localhost:8000/
 Testing aids:
 - `?src=json` or `?src=legacy` forces a data source.
 - `?today=YYYY-MM-DD` simulates the IST date.
+
+## Search
+
+- Open it with the search button in the top pill, or press `/` anywhere outside a text field. Route: `#/search?q=…&tp=…&rg=…&co=…` (topic, regulator and company slugs, comma-separated).
+- `search.js` loads only when search first opens. It builds an index from this site's `data/latest.json` and `data/<id>.json` and caches it in IndexedDB (`<namespace>-search`), keyed by `latest.json` → `generated`. The service worker caches `search.js` with the shell and `data/` network-first, so search also works offline once the data has been seen.
+- It covers stories, glance items, circulars, the regulatory calendar, Monday weekly analysis, MFL items and gold rows. Tags come from `story_tags[]`. Editions without them use app-side keyword heuristics. See `docs/DATA_FORMAT.md` → "App-side notes".
+- Filter pills show Gold loan, NCD, Ratings, Results, Circulars and RBI, SEBI, IBBI, plus the top companies. Other tags are under "More".
+- A result opens `#/<id>/read/<key>?hl=…&sec=…`, which scrolls to the item and highlights it. Recent searches are kept in localStorage.
+- Keyboard: arrow keys move through the results, Enter opens one, Esc clears. The result count is announced through an aria-live region.
+
+## Gold card
+
+When a day carries `gold` (IBJA, spot, AGLOC), Today shows a compact card and Markets shows the full card. Each row shows the change as an absolute value and a %. Tap a sparkline to expand it (1M / All). AGLOC is drawn as steps over its period. The card is hidden when the day has no `gold`. Test fixture: `tests/fixtures/gold-day.json`.
+
+
+## Topics hubs
+
+- Bottom bar: Today, Read, Topics, Markets, Archive. Only the active tab is highlighted. Search stays in the top bar.
+- `hubs.js` renders `#/topics` (2-column tile grid; tiles spring in with a 32 ms stagger, no motion under reduced motion) and the hub pages. The service worker caches it with the shell.
+- Data rules for hubs and circulars are in docs/DATA_FORMAT.md, "App-side notes: Topics hubs".

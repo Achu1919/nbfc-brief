@@ -319,3 +319,38 @@ no solicitation or rate card.
 - Fields not in the edition (e.g. `coupon_range`) are `null`.
 
 Public data never has `lessons`, `quiz` or any `teaching` key or category (`tests/test_contract.py` checks this).
+## App-side notes: search and gold card (app only; no data change)
+
+These notes describe how the app reads the fields above. They add no fields and change no existing format. `publish.py` and `export_json.py` need no change.
+
+**Search (`search.js`, loaded only when search opens)**
+
+- Index sources: `data/latest.json` (`days[]` list, `tag_labels`) plus every `data/<id>.json` it lists. The index uses only this site's own `data/` files.
+- Indexed units: report stories and items (the same Markdown units `story_tags[]` describes), key-numbers glance items, `rules[]` / circulars, `reg_calendar[]`, Monday weekly sections, `mfl_market[]`, and the gold rows when a day has `gold`.
+- Tags for each unit, in order: (1) the `story_tags[]` entry with the same `report` + `section` + `title` (a title prefix of 5 or more characters within the same report and section also counts); (2) the same `report` + `n`; (3) app-side keyword heuristics (fallback for editions without `story_tags[]`; such docs are marked internally). Sidecar `stories[]` / `rules[]` / `reg_calendar[]` use their own `tags`.
+- The app skips the same lines the exporter skips: "sources checked" checklists, "No new …" / "No significant …" lines, and table header rows. It merges field lines (What / Issuer / Date / Source / Status / Why it matters / MFL impact …) into the item above them.
+- Labels: `tag_labels[slug]`. If a slug has no label, the app uses title case with acronyms kept (RBI, NCD, IPO …).
+- Cache: IndexedDB `<namespace>-search`, keyed by `latest.json` → `generated`. A new `generated` rebuilds the index. Nothing is written back to `data/`.
+- Route: `#/search?q=…&co=…&rg=…&tp=…`. Filter values are comma-separated slugs. Result links open `#/<id>/read/<key>?hl=<item>&sec=<heading id>` (or the matching edition view) and scroll to and highlight the item.
+
+**Gold card (`gold`, see "Gold and LTV")**
+
+- Reads `gold.ibja`, `gold.spot` and `gold.agloc` (with `agloc.prev`) as documented. Day change is `value − prev_*`, shown as absolute and %. A null value or prev shows "—".
+- The AGLOC period is shown as `from – to` (for example "Fri 31 Oct – Mon 3 Nov"). AGLOC series are drawn as steps.
+- Sparklines use the series keys `ibja999`, `ibja916`, `goldspot`, `agloc_*`. Gold keys keep their own date axis and never add edition dates.
+- The card is hidden when the day has no `gold`. The compact card is on Today and the full card on Markets.
+- The test fixture is `tests/fixtures/gold-day.json` only. It is never in `data/`.
+
+
+## App-side notes: Topics hubs, story cards and latest circulars (app only; no data change)
+
+These notes describe how the app reads data that already exists. They add no fields and change no existing format. `publish.py` and the exporter need no change.
+
+- Topics (`hubs.js`, loaded on first visit to `#/topics`): hubs are Regulation, Muthoot Fincorp, Peers, Gold, Markets, Results, Ratings, Deals, Asset quality. Routes: `#/topics`, `#/topic/<slug>`, `#/peer/<slug>`. Each hub is a filter over the search index (see "Search" above), so it uses only this site's own `data/` files.
+- Hub membership uses `story_tags[]` (topics, companies, regulators) and the report section. Regulation takes circulars, `reg_calendar[]` items and the units of the rules report; a regulator tag alone does not put a news story in Regulation (it still lights the Archive dot for that day).
+- Item titles drop the brief's list numbering ("1. ") and a leading `[CIRCULAR]` / `[DRAFT]` / `[CONTEXT]` label; the label is shown as the kind, and `[DRAFT]` sets the status to draft.
+- Latest circulars (Today strip and Regulation hub): `latest.json` → `latest_circulars[]` and `deadlines[]` when present; otherwise derived from the last 10 days of `rules[]` / rules-report items that carry a `[CIRCULAR]`-style label, a regulator reference number or a `reg` object. Sub-headings and one-word table rows of the rules report are not shown as circulars. Empty fields are hidden.
+- Story cards on Today: `today.cards[]` when present (with `category`, and `reg` on circular cards); otherwise built from the stories in the reports. The impact line is labelled 'Possible impact on Muthoot Fincorp'. "Read full report" opens `#/<id>/read/<key>?hl=<item>`.
+- Muthoot Fincorp hub: `latest.json` → `mfl_ncd` when present, labelled "Status only; not an offer or a recommendation"; otherwise the latest `mfl_market[]` NCD items.
+- Archive: the topic picker dims days without that topic (from the day's `tags`, refined by the search index once it is built).
+- The search index version is 6 (it rebuilds once after this update).

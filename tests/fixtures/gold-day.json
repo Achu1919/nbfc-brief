@@ -1,0 +1,40 @@
+{
+ "_comment": "Test fixture only (never copied into data/). Shape of the optional day-level \"gold\" block, as in docs/DATA_FORMAT.md (Gold and LTV). Used by the local Playwright check to render the card on top of the real gold series.",
+ "gold": {
+  "ibja": {
+   "rate_999": 13752,
+   "rate_916": 12599,
+   "prev_999": 14005,
+   "prev_916": 12829,
+   "session": "PM",
+   "date": "2026-11-02",
+   "prev_date": "2026-10-30",
+   "source": "https://ibjarates.com/"
+  },
+  "spot": {
+   "usd_oz": 3990.4,
+   "prev_usd_oz": 4012.1,
+   "inr_10g": null,
+   "as_of": "2026-11-03 07:10 IST",
+   "source": "https://www.reuters.com/markets/commodities/",
+   "inr_source": null
+  },
+  "agloc": {
+   "ltv_85": 10709,
+   "ltv_80": 10079,
+   "ltv_75": 9449,
+   "ref_price": 12599,
+   "from": "2026-11-03",
+   "to": "2026-11-03",
+   "prev": {
+    "ltv_85": 10904,
+    "ltv_80": 10263,
+    "ltv_75": 9621,
+    "ref_price": 12828,
+    "from": "2026-10-31",
+    "to": "2026-11-02"
+   },
+   "source": "https://www.agloc.org/"
+  }
+ }
+}
