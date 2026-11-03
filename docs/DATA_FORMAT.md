@@ -261,3 +261,17 @@ These notes describe how the app reads the fields above. They add no fields and 
 - Sparklines use the series keys `ibja999`, `ibja916`, `goldspot`, `agloc_*`. Gold keys keep their own date axis and never add edition dates.
 - The card is hidden when the day has no `gold`. The compact card is on Today and the full card on Markets.
 - The test fixture is `tests/fixtures/gold-day.json` only. It is never in `data/`.
+
+
+## App-side notes: Topics hubs, story cards and latest circulars (app only; no data change)
+
+These notes describe how the app reads data that already exists. They add no fields and change no existing format. `publish.py` and the exporter need no change.
+
+- Topics (`hubs.js`, loaded on first visit to `#/topics`): hubs are Regulation, Muthoot Fincorp, Peers, Gold, Markets, Results, Ratings, Deals, Asset quality. Routes: `#/topics`, `#/topic/<slug>`, `#/peer/<slug>`. Each hub is a filter over the search index (see "Search" above), so it uses only this site's own `data/` files.
+- Hub membership uses `story_tags[]` (topics, companies, regulators) and the report section. Regulation takes circulars, `reg_calendar[]` items and the units of the rules report; a regulator tag alone does not put a news story in Regulation (it still lights the Archive dot for that day).
+- Item titles drop the brief's list numbering ("1. ") and a leading `[CIRCULAR]` / `[DRAFT]` / `[CONTEXT]` label; the label is shown as the kind, and `[DRAFT]` sets the status to draft.
+- Latest circulars (Today strip and Regulation hub): `latest.json` → `latest_circulars[]` and `deadlines[]` when present; otherwise derived from the last 10 days of `rules[]` / rules-report items that carry a `[CIRCULAR]`-style label, a regulator reference number or a `reg` object. Sub-headings and one-word table rows of the rules report are not shown as circulars. Empty fields are hidden.
+- Story cards on Today: `today.cards[]` when present (with `category`, and `reg` on circular cards); otherwise built from the stories in the reports. The impact line is labelled 'Possible impact on Muthoot Fincorp'. "Read full report" opens `#/<id>/read/<key>?hl=<item>`.
+- Muthoot Fincorp hub: `latest.json` → `mfl_ncd` when present, labelled "Status only; not an offer or a recommendation"; otherwise the latest `mfl_market[]` NCD items.
+- Archive: the topic picker dims days without that topic (from the day's `tags`, refined by the search index once it is built).
+- The search index version is 6 (it rebuilds once after this update).

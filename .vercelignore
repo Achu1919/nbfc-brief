@@ -5,6 +5,7 @@
 !/vercel.json
 !/app.js
 !/search.js
+!/hubs.js
 !/app.css
 !/sw.js
 !/manifest.webmanifest

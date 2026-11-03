@@ -6,7 +6,7 @@
    that is used instead. Tags: story/circular/calendar "tags" {companies,regulators,topics} win; otherwise
    simple keyword heuristics fill them in. Labels: latest.json "tag_labels", else Title Case with acronyms. */
 (function(){'use strict';
-var NB=window.__NB,esc=NB.esc,IDXV=4,DBN=NB.ns+'-search',RKEY=NB.ns+'-recent';
+var NB=window.__NB,esc=NB.esc,IDXV=6,DBN=NB.ns+'-search',RKEY=NB.ns+'-recent';
 /* ---------- text ---------- */
 var STOP={};'the a an and or of to in on for by with at is are was were be as it its from that this into than has have had not no'.split(' ').forEach(function(w){STOP[w]=1;});
 function norm(s){return String(s==null?'':s).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'');}
@@ -88,12 +88,39 @@ function docsOf(day){var out=[],id=day.id,match=matcher(day);
     if(S.usd_oz!=null)p.push('spot $'+S.usd_oz+'/oz');if(S.inr_10g!=null)p.push('₹'+S.inr_10g+'/10g');
     if(A.ltv_85!=null||A.ref_price!=null)p.push('AGLOC max LTV 85% ₹'+A.ltv_85+'/g, 80% ₹'+A.ltv_80+', 75% ₹'+A.ltv_75+', reference ₹'+A.ref_price);
     if(p.length)push(out,{d:id,k:'Gold',s:'Markets · Gold rates',t:'Gold rates: IBJA, spot and AGLOC loan-to-value',b:p.join('; ')+'. gold price ibja agloc ltv',src:I.source?{l:'IBJA',u:I.source}:null,h:'#/'+id+'/markets?sec=h-gold'},{companies:[],regulators:[],topics:['gold-price','gold-loan']});}
+  /* publisher cards (day.cards[]): category, summary, impact and circular fields win over what the markdown parse found */
+  var CK={story:'Story',circular:'Circular',calendar:'Calendar',analysis:'Weekly'},RK={news:'01-daily-watch',rules:'02-regulation',weekly:'03-weekly-analysis'};
+  (Array.isArray(day.cards)?day.cards:[]).forEach(function(c){if(!c||!c.title)return;var f=flat(NB.stripMd(c.title)).slice(0,36),hit=null,tg=cleanTags(c.tags);
+    for(var i=0;i<out.length&&!hit;i++){var g=out[i]._f||(out[i]._f=flat(out[i].t).slice(0,36));if(g.length>=5&&(g===f||f.indexOf(g)===0||g.indexOf(f)===0))hit=out[i];}
+    var src=c.source&&c.source.url?{l:c.source.name||'source',u:c.source.url}:null;
+    if(!hit){var rk=RK[c.report]||c.report||'01-daily-watch',k=CK[c.kind]||(rk==='02-regulation'?'Rules':rk==='03-weekly-analysis'?'Weekly':'News');
+      hit=push(out,{d:id,k:k,s:(DESK[rk]||'News')+' · '+(c.section||''),t:NB.stripMd(c.title),b:NB.stripMd([c.summary,c.impact].filter(Boolean).join(' ')),src:src,h:NB.readHref?NB.readHref(id,c.report,c.title,c.section):'#/'+id+'/read/'+rk+'?hl='+hlOf(c.title)},tg);}
+    else if(tg){hit.tg=tg;hit.ht=0;}
+    if(c.category)hit.c=c.category;else if(NB.catOf)hit.c=NB.catOf(hit.tg,hit.k,hit.s,null);
+    if(c.summary)hit.sm=String(c.summary).slice(0,300);if(c.impact)hit.imp=String(c.impact).slice(0,300);if(src&&!hit.src)hit.src=src;
+    if(c.reg&&typeof c.reg==='object')hit.reg=c.reg;});
+  out.forEach(function(d){delete d._f;});
   return out;}
+/* "Label: value" fields merged into a body: pull out the impact line and the circular fields for the topic pages */
+var FLAB=/(?:^|\s)(What(?: is it\??)?|Issuer|Date(?: released)?|Dated|Reference|Ref(?:erence)? no\.?|Direction reference|Source|Sources|Link|Status|Deadline|Comment deadline|Feedback deadline|Key dates?|Effective(?: date| from)?|Applies to|Scope|Why it matters(?: for (?:MFL|NBFCs|you|Muthoot Fincorp))?|MFL (?:impact|note|angle|read)|Muthoot Fincorp (?:note|impact|angle)|Possible impact on Muthoot Fincorp|Impact on NBFCs|FP&A (?:impact|action|note|read)|Action|Classification|In plain English|The numbers|Previous position):\s/gi;
+var IMPL=/^(why it matters|mfl |muthoot fincorp |possible impact|fp&a |impact on nbfcs)/i;
+function fields(full){var m,pos=[],f={},lead;FLAB.lastIndex=0;while((m=FLAB.exec(full))){pos.push({l:m[1],i:m.index,e:FLAB.lastIndex});}
+  lead=(pos.length?full.slice(0,pos[0].i):full).trim();
+  pos.forEach(function(p,j){var v=full.slice(p.e,j+1<pos.length?pos[j+1].i:full.length).trim().replace(/[\s·;]+$/,''),l=p.l.toLowerCase();if(!v)return;
+    if(IMPL.test(l)){if(!f.imp||/mfl|muthoot/.test(l))f.imp=v;}else if(/^applies|^scope/.test(l))f.ap=f.ap||v;else if(/^effective/.test(l))f.ef=f.ef||v;
+    else if(/^ref|^direction ref|^reference/.test(l))f.rf=f.rf||v;else if(/deadline|key date/.test(l))f.dl=f.dl||v;else if(l==='status')f.st=f.st||v;
+    else if(/^what|plain english/.test(l)&&!lead)lead=v;});
+  f.lead=lead;return f;}
+function cut(v,n){return v.length>n?v.slice(0,n).replace(/\s+\S*$/,'')+'…':v;}
+function refl(o,full){var F=fields(full);if(F.imp)o.imp=cut(F.imp,260);if(F.lead&&F.lead!==full)o.sm=cut(F.lead,260);
+  if(F.ap||F.ef||F.rf||F.dl||F.st){o.rg={};['ap','ef','rf','dl','st'].forEach(function(x){if(F[x])o.rg[x]=cut(F[x],140);});}}
 function push(out,o,tg){var full=String(o.b||'').replace(/\s+/g,' ').trim();o.b=full.length>420?full.slice(0,420).replace(/\s+\S*$/,'')+'…':full;
+  refl(o,full);
   var w={};toks(o.t+' '+full+' '+o.s+' '+o.k).forEach(function(t){w[t]=1;});o.w=Object.keys(w).join(' ');
   if(tg){o.tg=tg;}else{o.ht=1;o.tg=heur(o.t+' \n'+full,o.k);if(o.k==='MFL'&&o.tg.companies.indexOf('muthoot-fincorp')<0)o.tg.companies.unshift('muthoot-fincorp');if(o.inh)o.tg=inherit(o.tg,o.inh);}
+  if(NB.catOf)o.c=NB.catOf(o.tg,o.k,o.s,o.c);
   delete o.inh;out.push(o);return o;}
-/* weekly items: keyword tags, narrowed to what Guru tagged their section with */
+/* weekly items: keyword tags, narrowed to what the publisher tagged their section with */
 function inherit(h,sec){var o={};['companies','regulators','topics'].forEach(function(g){var a=h[g].filter(function(x){return sec[g].indexOf(x)>=0;});o[g]=a.length?a:h[g];});return o;}
 var CHECK=/sources? checked|checked (?:today|overnight|this morning|live)|sources (?:scanned|reviewed)/i,NOTHING=/^[^A-Za-z]*(no new|no significant|no fresh|nothing (?:new|has been|moved))/i,FIELD=/^(what|what is it\??|issuer|date|date released|dated|reference|ref|source|sources|link|status|deadline|key dates?|comment deadline|feedback deadline|effective(?: date| from)?|applies to|scope(?: \(important\))?|direction reference|classification|in plain english|plain english|the technical details|technical details|the numbers|numbers|why it matters(?: for (?:mfl|nbfcs|you|muthoot fincorp))?|mfl (?:impact|note|angle|read)|muthoot fincorp (?:note|impact|angle)|possible impact on muthoot fincorp|impact on nbfcs|fp&a (?:impact|action|note|read)|previous position|constraints|downgrade trigger|test|but|read|action)$/i;
 function segment(day,r,out,match){
@@ -106,7 +133,7 @@ function segment(day,r,out,match){
   function txt(l){return NB.stripMd(NB.noCites(l));}
   /* "**What:** …", "**Source:** …" and 2-column field tables describe the item above, they are not items themselves */
   function isField(lab,after){lab=txt(lab).replace(/[:.]\s*$/,'').trim();return FIELD.test(lab)&&(cur||last||secDoc)&&(/[:]\s*$/.test(txt(arguments[2]||''))||/^:/.test(after||'')||arguments[3]);}
-  function addField(x){x=txt(x);if(!x)return;if(cur){cur.b.push(x);return;}if(last){var f=(last.b+' '+x);last.b=f.length>420?f.slice(0,420).replace(/\s+\S*$/,'')+'…':f;var w={};last.w.split(' ').concat(toks(x)).forEach(function(t){w[t]=1;});last.w=Object.keys(w).join(' ');return;}if(secDoc)secDoc.b.push(x);}
+  function addField(x){x=txt(x);if(!x)return;if(cur){cur.b.push(x);return;}if(last){var f=(last.b+' '+x);last.b=f.length>420?f.slice(0,420).replace(/\s+\S*$/,'')+'…':f;refl(last,f);var w={};last.w.split(' ').concat(toks(x)).forEach(function(t){w[t]=1;});last.w=Object.keys(w).join(' ');return;}if(secDoc)secDoc.b.push(x);}
   function addTo(c,l){var x=txt(l);if(x)c.b.push(x);if(!c.src)c.src=firstLink(l);if(secDoc&&c!==secDoc&&weekly)secDoc.b.push(x);}
   function open(t,raw,para,k){flush();cur={t:t,b:[],hl:hlOf(raw),src:null,para:para,k:k};return cur;}
   function endSec(){flush();last=null;if(secDoc&&(weekly||secDoc.b.length)){var t=secDoc.t;push(out,{d:id,k:weekly?'Weekly':(key==='02-regulation'?'Rules':'News'),s:desk+' · '+sec,t:t,b:secDoc.b.join(' '),src:secDoc.src,h:base+'?sec='+secId},secDoc.tg);}secDoc=null;}
