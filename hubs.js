@@ -113,7 +113,7 @@ function chips(list,cur,attr,label){return '<div class="pills hf" role="group" a
 var NCDL='Status only; not an offer or a recommendation';
 function ncdCard(){var N=M().ext&&M().ext.mfl_ncd;
   if(N&&typeof N==='object'){var B=Array.isArray(N.bids)?N.bids.filter(function(b){return b&&b.date&&typeof b.times_subscribed==='number';}):[];
-    var facts=[['Issue',N.issue],['Opens',N.open&&NB.shortDay(N.open)],['Closes',N.close&&NB.shortDay(N.close)],['Size',N.size_cr!=null?'\u20b9'+Number(N.size_cr).toLocaleString('en-IN')+' cr':''],['Rating',N.rating],['Coupon',N.coupon_range],['Status',N.status]].filter(function(x){return x[1];});
+    var facts=[['Issue',N.issue],['Opens',N.open&&NB.shortDay(N.open)],['Closes',N.close&&NB.shortDay(N.close)],['Size',N.size_cr!=null?'\u20b9'+Number(N.size_cr).toLocaleString('en-IN')+' cr':''],['Rating',N.rating],['Coupon',N.coupon_range],['Status',N.status&&String(N.status).charAt(0).toUpperCase()+String(N.status).slice(1)]].filter(function(x){return x[1];});
     var ch='';if(B.length){var mx=Math.max.apply(0,B.map(function(b){return b.times_subscribed;}).concat([1])),w=300,hh=96,bw=w/B.length;
       ch='<figure class="ncdc"><svg viewBox="0 0 '+w+' '+(hh+18)+'" width="100%" height="'+(hh+18)+'" role="img" aria-label="Subscription by day: '+esc(B.map(function(b){return NB.dm(b.date)+' '+b.times_subscribed+' times';}).join(', '))+'">'+
         B.map(function(b,i){var h=Math.max(2,Math.round(hh*b.times_subscribed/mx)),x=i*bw+bw*.18;return '<rect x="'+x.toFixed(1)+'" y="'+(hh-h)+'" width="'+(bw*.64).toFixed(1)+'" height="'+h+'" rx="3"/><text x="'+(x+bw*.32).toFixed(1)+'" y="'+(hh+14)+'" text-anchor="middle">'+esc(NB.dm(b.date))+'</text>';}).join('')+'</svg>'+

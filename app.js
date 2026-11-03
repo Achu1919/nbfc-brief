@@ -797,10 +797,12 @@ function storyCards(day){var cs=dayCards(day);if(!cs.length)return '';
     '<div class="scards">'+cs.map(storyCard).join('')+'</div></section>';}
 /* latest circulars: latest.json latest_circulars[] when published, else built from the search index by hubs.js */
 var RSTAT={'new':'New',draft:'Draft','in-force':'In force',deadline:'Deadline'};
+/* drop a leading copy of the ref number ("IBBI/CIRP/109/2026 (30 Oct): ...") since the ref is shown below */
+function ciTitle(t,ref){if(!ref)return t;var i=t.indexOf(ref);if(i<0||i>14)return t;var u=t.slice(i+ref.length).replace(/^\s*(\([^)]{0,20}\))?\s*[:,\u2013\u2014-]\s*/,'');return u.length>12?u.charAt(0).toUpperCase()+u.slice(1):t;}
 function circItem(x){var r=x.reg||{},st=r.status&&RSTAT[r.status],u=r.url||(x.source&&x.source.url)||'',href=x.href||(x.date?readHref(x.date,x.report||'rules',x.title,x.section):u);
   return '<li><a class="circ g press" href="'+esc(href)+'"'+(/^https?:/.test(href)?' target="_blank" rel="noopener noreferrer"':'')+'>'+
     '<span class="ci-t"><span class="rgb">'+esc(String(r.regulator||'Reg').toUpperCase())+'</span>'+(st?'<span class="st st-'+esc(r.status)+'">'+st+'</span>':'')+(x.date?'<span class="ci-d num">'+esc(dm(x.date))+'</span>':'')+'</span>'+
-    '<span class="ci-h">'+esc(noCites(stripMd(x.title)))+'</span>'+(r.ref_no?'<span class="ci-r num">'+esc(r.ref_no)+'</span>':'')+'</a></li>';}
+    '<span class="ci-h">'+esc(ciTitle(noCites(stripMd(x.title)),r.ref_no))+'</span>'+(r.ref_no?'<span class="ci-r num">'+esc(r.ref_no)+'</span>':'')+'</a></li>';}
 function circStrip(list,note){
   return '<div class="sec" data-st><h2 id="h-circ">Latest circulars</h2><a class="aside" href="#/topic/regulation">Regulation \u2192</a></div>'+
     (list&&list.length?'<ul class="circs" data-st role="list">'+list.slice(0,10).map(circItem).join('')+'</ul>':'<div class="g card" data-st><p class="note" style="margin:0">'+esc(note||'No RBI, SEBI or IBBI circulars logged in the last 10 days.')+'</p></div>');}
