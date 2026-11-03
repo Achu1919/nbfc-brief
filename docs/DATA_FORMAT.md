@@ -239,3 +239,83 @@ Columns are `Item | Value | Previous | Change | Effective | Source`. `Change` is
 - Backfill (committed 3 Nov 2026):
   - AGLOC: every published period from 1 Oct 2026, from the historic LTV table on https://www.agloc.org/. All four columns are published for these periods, and nothing is computed.
   - IBJA: trading days from 1 Oct 2026, from the "Previous 30 Days" PDF on https://ibjarates.com/. These are PM rates per 10 g divided by 10, so a figure may have one decimal.
+
+## Cards (`cards[]`, additive)
+
+Every day file (`data/YYYY-MM-DD.json`) and `latest.json` → `today` carry `cards[]`: one card per story, item, circular,
+calendar row or analysis unit, in the same order and with the same `n` as `story_tags[]` (which stays). `data.js` never
+has cards. Units with no usable title (for example a bare table header row) get no card.
+
+| key | type | notes |
+|-----|------|-------|
+| `id` | string | `YYYY-MM-DD-<report>-<n>`, e.g. `2026-11-02-news-1`; seed circulars use `seed-<ref-slug>` |
+| `n` | int | unit number within the edition; matches `story_tags[].n` |
+| `date` | ISO date | edition date |
+| `report` | `news` \| `rules` \| `weekly` | |
+| `section` | string | the `##` heading the unit sits under |
+| `kind` | `story` \| `item` \| `circular` \| `calendar` \| `analysis` | |
+| `category` | string | one of `regulation`, `muthoot-fincorp`, `peers`, `gold`, `markets`, `results`, `ratings`, `deals`, `asset-quality` |
+| `title` | string | heading or lead sentence, bracket tags (`[NEW]`, `[CIRCULAR]` …) and list numbers removed |
+| `summary` | string \| null | at most 2 sentences of plain text; never the impact line |
+| `impact` | string \| null | the "Possible impact on Muthoot Fincorp:" line, text only; null when absent |
+| `source` | `{name, url}` \| null | first cited link; `name` from a domain map (RBI, SEBI, Economic Times …). Links to exa.ai, stockfin.ai, trackliveprice, makro.live and stockwatch.live are never used |
+| `tags` | `{companies, regulators, topics}` | same slugs as `story_tags` |
+| `reg` | object | circular cards only, see below |
+
+Category: rules-report units are `regulation`; news sections map by section name (gold, results, ratings,
+deals, asset quality, peers, markets, Muthoot Fincorp); anything else falls back to tag priority. A tags comment may set it:
+`<!-- tags: category=ratings -->`.
+
+### `reg` (circular cards)
+
+`{ref_no, regulator, applies_to[], issued, effective, status, url}`
+
+- `ref_no`: the reference exactly as published (e.g. `RBI/2026-27/301 DoR.AML.REC.253/14.06.001/2026-27`,
+  `HO/(201)2026-DDHS-POD1/I/24467/2026`, `IBBI/CIRP/109/2026`).
+- `regulator`: `RBI`, `SEBI`, `IBBI`, `NHB`, `FIU-IND`, …
+- `applies_to`: slugs such as `nbfcs`, `banks`, `arcs`, `aifis`, `hfcs`, `debenture-trustees`, `intermediaries`, `fpis`.
+- `issued`, `effective`: ISO dates. `status`: `new` \| `draft` \| `in-force` \| `deadline`. `url`: the official page.
+- Parsed from the markdown (Reference / Addressed to / effective lines). An override comment under the `### ` heading wins:
+  `<!-- reg: ref=RBI/2026-27/301; applies=nbfcs,banks; issued=2026-10-27; effective=2026-10-27; status=new; title=... -->`
+- Unknown fields are `null`, never guessed. A circular card gets `reg` only when it has a ref no., an official link or an
+  override.
+- `<!-- tags: -->`, `<!-- reg: -->` and `<!-- ncd: -->` comments are stripped from `data.js` and from all text fields.
+
+## `latest.json` → `latest_circulars[]`
+
+Circular cards (with `reg`) from the last 10 days of editions (newest edition inclusive), newest `reg.issued` first. The
+first coverage of each instrument is kept (dedup by the first token of `ref_no`). Verified entries from
+`data/circulars_seed.json` are merged in: they fill unknown `reg` fields of a matching card and add instruments the
+editions did not cover.
+
+`data/circulars_seed.json`:
+
+```json
+{"circulars": [{"ref_no": "...", "regulator": "RBI", "title": "...", "summary": "...", "issued": "YYYY-MM-DD",
+                "effective": null, "applies_to": ["nbfcs"], "status": "new", "url": "https://www.rbi.org.in/..."}],
+ "deadlines": [{"date": "YYYY-MM-DD", "title": "...", "regulator": "SEBI", "ref_no": "...", "url": "...", "status": "deadline"}]}
+```
+
+Only official sources (rbi.org.in, sebi.gov.in, ibbi.gov.in, nhb.org.in, fiuindia.gov.in). Entries without `url`,
+`ref_no` or `issued` are ignored.
+
+## `latest.json` → `deadlines[]`
+
+`{date, title, regulator, ref_no, url, status}` from calendar, deadline and watchlist sections, circular `effective`
+dates and the seed. Upcoming first (ascending), then past items newest first; items more than 30 days before the newest
+edition are dropped. Same-date rows that describe the same thing are merged. `regulator`, `ref_no` and `url` may be null.
+
+## `mfl_ncd` (day files and `latest.json`, both levels)
+
+Status of a current Muthoot Fincorp public NCD issue, or `null` when there is none. Never Muthoot Finance. Status only,
+no solicitation or rate card.
+
+`{issue, open, close, size_cr, rating, coupon_range, bids: [{date, times_subscribed}], status, source: {name, url}}`
+
+- `status`: `open` \| `closed` \| `upcoming`. `bids` accumulate across editions for the same issue, oldest first.
+- Parsed from Muthoot Fincorp NCD lines; sources are the exchange, company IR / offer documents, or Chittorgarh for bids.
+- Override: `<!-- ncd: issue=Tranche I; open=2026-10-23; close=2026-11-05; size_cr=500; rating=...; status=open -->`,
+  or `<!-- ncd: none -->` to force `null`.
+- Fields not in the edition (e.g. `coupon_range`) are `null`.
+
+Public data never has `lessons`, `quiz` or any `teaching` key or category (`tests/test_contract.py` checks this).
