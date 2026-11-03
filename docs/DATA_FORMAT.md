@@ -193,3 +193,49 @@ Stories are not separate objects in the reports (the app parses them from Markdo
 ```
 
 Each key given replaces the derived list for that story; keys left out keep the derived tags. `publish.py` removes these lines, so they never reach `data.js`, the report `content` or the page.
+
+## Gold and LTV (`gold`, additive)
+
+When the day's `01-daily-watch` report has a `## 🪙 Gold and LTV` table, the day (in `data/<id>.json` and in `latest.json` → `today`) carries a top-level `gold` object. **If the section is missing, there is no `gold` key, and the app hides the card.** Past editions have no table, so `gold` starts with the first edition that has one. Earlier history comes only from the series (see below).
+
+The table uses fixed row labels; the exporter matches them by their start:
+
+| Item (row label starts with) | → field |
+|---|---|
+| `IBJA 999` | `ibja.rate_999` (Value), `ibja.prev_999` (Previous) |
+| `IBJA 916` | `ibja.rate_916`, `ibja.prev_916` |
+| `Gold spot US$/oz` | `spot.usd_oz`, `spot.prev_usd_oz` |
+| `Gold spot ₹/10g` | `spot.inr_10g` (its Source link → `spot.inr_source`) |
+| `AGLOC max LTV 85%` / `80%` / `75%` | `agloc.ltv_85` / `ltv_80` / `ltv_75` (Previous → `agloc.prev.*`) |
+| `AGLOC jewellery reference` | `agloc.ref_price` |
+
+Columns are `Item | Value | Previous | Change | Effective | Source`. `Change` is not read: the UI works out the change from the current and previous values.
+
+```json
+"gold": {
+  "ibja":  {"rate_999": 13752, "rate_916": 12599, "prev_999": 14005, "prev_916": 12829, "session": "PM",
+            "date": "2026-11-02", "prev_date": "2026-10-30", "source": "https://ibjarates.com/"},
+  "spot":  {"usd_oz": 3990.4, "prev_usd_oz": 4012.1, "inr_10g": null, "as_of": "2026-11-03 07:10 IST",
+            "source": "https://www.reuters.com/markets/commodities/", "inr_source": null},
+  "agloc": {"ltv_85": 10709, "ltv_80": 10079, "ltv_75": 9449, "ref_price": 12599, "from": "2026-11-03", "to": "2026-11-03",
+            "prev": {"ltv_85": 10904, "ltv_80": 10263, "ltv_75": 9621, "ref_price": 12828, "from": "2026-10-31", "to": "2026-11-02"},
+            "source": "https://www.agloc.org/"}
+}
+```
+
+- Numbers: thousands separators (including Indian `1,23,456`), `₹`, `Rs` and `US$` are stripped. `—`, `-`, `n/a` or an empty cell becomes `null`. Any value can be `null`, and nothing is computed or derived.
+- `ibja.session` is `AM` or `PM`, read from Effective (e.g. `2026-11-02 PM`). `ibja.date` is the date in Effective. `prev_date` is a date written in the 999 row's Previous cell (e.g. `14,005 (2026-10-30 PM)`), else `null`.
+- `agloc.from` and `agloc.to` come from Effective (`2026-10-23 to 2026-10-23`); rows marked `same` share them. `agloc.prev` is `null` when no Previous value is given. Its `from` and `to` come from dates written in a Previous cell, else `null`.
+- A group (`ibja`, `spot`, `agloc`) is present only if at least one of its rows is in the table.
+- Failure-safe: a malformed table means no `gold` key for that day, and publishing continues.
+
+### Gold series
+
+`latest.json` → `series` also has `ibja999`, `ibja916` (₹/g, the latest session, normally PM), `agloc_ltv85`, `agloc_ltv80`, `agloc_ltv75` and `agloc_ref` (₹/g). `goldspot` is unchanged and still comes from Key numbers. The format is the same `{ "YYYY-MM-DD": number|null }`, with these differences:
+
+- **Gold points are keyed by the figure's own date, not the edition date**: the IBJA rate date, and for AGLOC the period start (`from`). AGLOC periods often span days, such as Saturday to Monday. `data/history.json` → `_agloc_periods` maps each period start to its end (keys starting with `_` are notes and are ignored as series).
+- Points come from `data/history.json` (the backfill), and an edition's `gold` object wins on the same date. Both the current and `prev` values are used, each on its own date. The series holds only dates up to the newest edition, and the last 30 points per key.
+- These keys do not change the date axis of the other series.
+- Backfill (committed 3 Nov 2026):
+  - AGLOC: every published period from 1 Oct 2026, from the historic LTV table on https://www.agloc.org/. All four columns are published for these periods, and nothing is computed.
+  - IBJA: trading days from 1 Oct 2026, from the "Previous 30 Days" PDF on https://ibjarates.com/. These are PM rates per 10 g divided by 10, so a figure may have one decimal.

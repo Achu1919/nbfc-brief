@@ -499,6 +499,204 @@ def tag_day(day: dict, raw_dir=None) -> dict:
         return day
 
 
+# ---- daily gold and AGLOC LTV block (docs/DATA_FORMAT.md "Gold and LTV"); additive, never fatal ----
+GOLD_HEADING = re.compile(r"^##\s+(?:\W+\s*)?gold\s+and\s+ltv\b", re.I)
+GOLD_SERIES = ("ibja999", "ibja916", "agloc_ltv85", "agloc_ltv80", "agloc_ltv75", "agloc_ref")
+AGLOC_URL = "https://www.agloc.org/"
+ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+GOLD_SEED = "history.json"
+_GOLD_ROWS = (  # fixed row labels -> (group, field)
+    (re.compile(r"^IBJA\s*999", re.I), "ibja999"),
+    (re.compile(r"^IBJA\s*916", re.I), "ibja916"),
+    (re.compile(r"^Gold\s+spot\s+US\$\s*/\s*oz", re.I), "spot_usd"),
+    (re.compile(r"^Gold\s+spot\s+(?:₹|Rs\.?|INR)\s*/\s*10\s*g", re.I), "spot_inr"),
+    (re.compile(r"^AGLOC\s+max\s+LTV\s+85\s*%", re.I), "ltv_85"),
+    (re.compile(r"^AGLOC\s+max\s+LTV\s+80\s*%", re.I), "ltv_80"),
+    (re.compile(r"^AGLOC\s+max\s+LTV\s+75\s*%", re.I), "ltv_75"),
+    (re.compile(r"^AGLOC\s+jewell?ery\s+reference", re.I), "ref_price"),
+)
+_MONTHS = {m: i for i, m in enumerate(("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"), 1)}
+_DATE_RX = re.compile(r"(\d{4})-(\d{2})-(\d{2})|(\d{1,2})/(\d{1,2})/(\d{4})|(\d{1,2})\s+([A-Za-z]{3})[a-z]*\.?\s+(\d{4})")
+
+
+def _gold_dates(cell: str) -> list:
+    """Every date in a cell as YYYY-MM-DD, in order (ISO, DD/MM/YYYY or '23 Oct 2026')."""
+    out = []
+    for m in _DATE_RX.finditer(cell or ""):
+        try:
+            if m.group(1):
+                y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
+            elif m.group(4):
+                d, mo, y = int(m.group(4)), int(m.group(5)), int(m.group(6))
+            else:
+                d, mo, y = int(m.group(7)), _MONTHS[m.group(8).lower()[:3]], int(m.group(9))
+            if 1 <= mo <= 12 and 1 <= d <= 31:
+                out.append(f"{y:04d}-{mo:02d}-{d:02d}")
+        except (KeyError, ValueError):
+            continue
+    return out
+
+
+def _gold_num(cell):
+    """'12,345' -> 12345; '—', '-', 'n/a' or empty -> None. Date text is ignored, never read as a number."""
+    s = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", str(cell or "")).replace("*", "").strip()
+    s = _DATE_RX.sub(" ", s)
+    s = s.replace("\u2212", "-").replace(",", "")
+    s = re.sub(r"(?i)₹|rs\.?|inr|us\$|\$|/\s*(?:g|gm|oz|10\s*g)\b", " ", s).strip()
+    if not s or re.fullmatch(r"[—–\-−]+|n/?a|nil|none|null|tbd|\?", s, re.I):
+        return None
+    m = re.search(r"(?<![\w.])[-+]?\d+(?:\.\d+)?", s)
+    if not m:
+        return None
+    v = float(m.group(0))
+    return int(v) if v.is_integer() else v
+
+
+def _gold_url(cell):
+    m = re.search(r"\]\((https?://[^)\s]+)\)", cell or "")
+    if m:
+        return m.group(1)
+    m = re.search(r"https?://[^\s)|>]+", cell or "")
+    return m.group(0) if m else None
+
+
+def _gold_rows(text: str) -> dict:
+    """The '## 🪙 Gold and LTV' table as {row_id: [cells...]}; {} when the section is absent."""
+    rows, inside = {}, False
+    for line in (text or "").split("\n"):
+        if line.startswith("## "):
+            inside = bool(GOLD_HEADING.match(line.strip()))
+            continue
+        if not inside or not line.strip().startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if not cells or re.fullmatch(r"[:\-\s]*", cells[0]):
+            continue
+        label = re.sub(r"[*_`]", "", cells[0]).strip()
+        for rx, rid in _GOLD_ROWS:
+            if rx.match(label) and rid not in rows:
+                rows[rid] = (cells + [""] * 6)[1:6]  # value, previous, change, effective, source
+    return rows
+
+
+def parse_gold(text: str):
+    """Top-level `gold` object from the report Markdown, or None when the section/table is absent."""
+    rows = _gold_rows(text)
+    if not rows:
+        return None
+    gold = {}
+    i9, i6 = rows.get("ibja999"), rows.get("ibja916")
+    if i9 or i6:
+        lead = i9 or i6
+        eff = lead[3]
+        sess = re.search(r"\b(AM|PM)\b", eff, re.I)
+        dates = _gold_dates(eff)
+        prev_dates = _gold_dates(lead[1])
+        gold["ibja"] = {
+            "rate_999": _gold_num(i9[0]) if i9 else None, "rate_916": _gold_num(i6[0]) if i6 else None,
+            "prev_999": _gold_num(i9[1]) if i9 else None, "prev_916": _gold_num(i6[1]) if i6 else None,
+            "session": sess.group(1).upper() if sess else None,
+            "date": dates[0] if dates else None, "prev_date": prev_dates[0] if prev_dates else None,
+            "source": _gold_url(lead[4]),
+        }
+    su, si = rows.get("spot_usd"), rows.get("spot_inr")
+    if su or si:
+        inr = _gold_num(si[0]) if si else None
+        gold["spot"] = {
+            "usd_oz": _gold_num(su[0]) if su else None, "prev_usd_oz": _gold_num(su[1]) if su else None,
+            "inr_10g": inr, "as_of": (su or si)[3] or None, "source": _gold_url((su or si)[4]),
+            "inr_source": _gold_url(si[4]) if si and inr is not None else None,
+        }
+    tiers = ("ltv_85", "ltv_80", "ltv_75", "ref_price")
+    if any(t in rows for t in tiers):
+        eff = next((rows[t][3] for t in tiers if t in rows and _gold_dates(rows[t][3])), "")
+        prev_eff = next((rows[t][1] for t in tiers if t in rows and _gold_dates(rows[t][1])), "")
+        d, pd = _gold_dates(eff), _gold_dates(prev_eff)
+        cur = {t: _gold_num(rows[t][0]) if t in rows else None for t in tiers}
+        prev = {t: _gold_num(rows[t][1]) if t in rows else None for t in tiers}
+        has_prev = any(v is not None for v in prev.values())
+        gold["agloc"] = {
+            **cur, "from": d[0] if d else None, "to": (d[1] if len(d) > 1 else (d[0] if d else None)),
+            "prev": ({**prev, "from": pd[0] if pd else None, "to": (pd[1] if len(pd) > 1 else (pd[0] if pd else None))}
+                     if has_prev else None),
+            "source": next((_gold_url(rows[t][4]) for t in tiers if t in rows and _gold_url(rows[t][4])), AGLOC_URL),
+        }
+    return gold or None
+
+
+def gold_day(day: dict) -> dict:
+    """Copy of the day with `gold` when its daily watch has the Gold and LTV table; else the day unchanged."""
+    try:
+        rep = next((r for r in day.get("reports") or [] if r.get("key") == "01-daily-watch"), None)
+        g = parse_gold((rep or {}).get("content") or "")
+        if not g:
+            return day
+        out = dict(day)
+        out["gold"] = g
+        return out
+    except Exception as exc:  # a gold-table problem must never stop publishing
+        print(f"export_json: gold skipped for {day.get('id')}: {exc}", file=sys.stderr)
+        return day
+
+
+def gold_points(day: dict) -> dict:
+    """{series key: {date: value}} from one day's `gold`, keyed by each figure's own date (IBJA date, AGLOC from)."""
+    g, pts = day.get("gold") or {}, {}
+
+    def put(k, dt, v):
+        if dt and ISO_DATE.match(dt) and (v is None or isinstance(v, (int, float))):
+            pts.setdefault(k, {})[dt] = v
+    ib = g.get("ibja") or {}
+    put("ibja999", ib.get("date"), ib.get("rate_999")); put("ibja916", ib.get("date"), ib.get("rate_916"))
+    if ib.get("prev_date"):
+        put("ibja999", ib["prev_date"], ib.get("prev_999")); put("ibja916", ib["prev_date"], ib.get("prev_916"))
+    ag = g.get("agloc") or {}
+    for src in ((ag.get("prev") or {}), ag):  # the current period wins over a repeated previous one
+        for k, f in (("agloc_ltv85", "ltv_85"), ("agloc_ltv80", "ltv_80"), ("agloc_ltv75", "ltv_75"), ("agloc_ref", "ref_price")):
+            if src.get("from"):
+                put(k, src["from"], src.get(f))
+    return pts
+
+
+def build_gold_series(days: list, seed: dict, limit: int = SERIES_DAYS) -> dict:
+    """Gold series on their own dates: seed (data/history.json) first, editions' `gold` objects win.
+    Only dates up to the newest edition; the last `limit` points per key. A null is a gap, never filled."""
+    try:
+        newest = max(d["id"] for d in days)
+        out = {}
+        for k in GOLD_SERIES:
+            ser = {dt: v for dt, v in (seed.get(k) or {}).items() if dt <= newest}
+            for d in sorted(days, key=lambda d: d["id"]):
+                for dt, v in gold_points(d).get(k, {}).items():
+                    if dt <= newest:
+                        ser[dt] = v
+            if ser:
+                out[k] = {dt: ser[dt] for dt in sorted(ser)[-limit:]}
+        return out
+    except Exception as exc:  # never fatal
+        print(f"export_json: gold series skipped: {exc}", file=sys.stderr)
+        return {}
+def load_gold_seed(path) -> dict:
+    """Gold keys only from data/history.json ({key: {date: number|null}}); {} when absent or bad (never fatal)."""
+    try:
+        from pathlib import Path as _P
+        p = _P(path)
+        if not p.exists():
+            return {}
+        raw = json.loads(p.read_text(encoding="utf-8"))
+        out = {}
+        for k in GOLD_SERIES:
+            ser = raw.get(k) if isinstance(raw, dict) else None
+            if isinstance(ser, dict):
+                out[k] = {d: (v if isinstance(v, (int, float)) and not isinstance(v, bool) and v == v else None)
+                          for d, v in ser.items() if isinstance(d, str) and ISO_DATE.match(d)}
+        return out
+    except Exception as exc:
+        print(f"export_json: gold seed ignored: {exc}", file=sys.stderr)
+        return {}
+# ---- end gold block ----
+
+
 ISO = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 SEED_FILE = "history.json"
 
@@ -557,6 +755,7 @@ def export(site: Path) -> Path:
     payload = load_payload(site)
     days = sorted((public_day(d, _sidecar(site, d["id"])) for d in payload["days"]), key=lambda d: d["id"], reverse=True)
     days = [tag_day(d, site / "days" / d["id"]) for d in days]  # additive search tags; never fatal
+    days = [gold_day(d) for d in days]  # additive `gold` card from the Gold and LTV table; never fatal
     if not days:
         raise SystemExit("export_json: data.js has no days")
     data = site / "data"
@@ -564,7 +763,8 @@ def export(site: Path) -> Path:
     for d in days:
         (data / f"{d['id']}.json").write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
     seed = load_seed(site)
-    series = build_series(days, seed)
+    series = build_series(days, {k: v for k, v in seed.items() if k not in GOLD_SERIES})
+    series.update(build_gold_series(days, load_gold_seed(data / SEED_FILE)))  # gold keys keep their own dates
     latest = {"schema": SCHEMA, "schema_version": SCHEMA_VERSION, "generated": payload["generated"],
               "latest": days[0]["id"], "days": [_index_entry(d) for d in days], "series": series, "today": days[0]}
     try:
