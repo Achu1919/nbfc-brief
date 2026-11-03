@@ -146,3 +146,50 @@ python3 export_json.py        (publish.py runs it automatically)
 This reads `data.js` plus optional `days/<id>/structured.json` sidecars, which may hold `stories`, `rules`, `rules_note`, `reg_calendar`, `mfl_market`, `items_sources` and `items_value_num`. It writes `data/<id>.json` and `data/latest.json` with the same `generated`.
 
 To check the output: `python3 tests/test_contract.py data`.
+
+## Story tags (search and filters; additive)
+
+Every `data/<id>.json` day (and `latest.json` → `today`) carries three additive fields. `data.js` does not carry them, and no existing field changes.
+
+| Field | Where | Notes |
+|---|---|---|
+| `story_tags[]` | day | one entry per story unit, in report order |
+| `tags` | day, and each `latest.json` → `days[]` index entry | union of the day's story tags |
+| `tag_labels` | day, and `latest.json` top level | `{slug: display name}` for every slug used in that file (latest.json: all days) |
+
+Stories are not separate objects in the reports (the app parses them from Markdown), so tags sit in a parallel list that points back at the text:
+
+```json
+{"n": 1, "report": "01-daily-watch", "section": "URGENT / High Impact", "kind": "story",
+ "title": "Muthoot Finance explains its Stage 3 jump: ...",
+ "tags": {"companies": ["muthoot-finance"], "regulators": ["rbi"], "topics": ["asset-quality", "gold-loan", "results"]}}
+```
+
+- `report` is the report `key`; `section` is the `##` heading without emoji; `title` is the story's bold lead, `###` heading or first sentence (plain text, max ~160 chars).
+- `kind`: `story` (numbered items under "URGENT / High Impact"), `circular` (items under "New Regulatory Updates"), `calendar` ("Regulatory calendar" lines), `analysis` (one per `##` section of the Monday weekly), `item` (every other bullet, paragraph or table row in a news section).
+- Skipped: the preamble, "Key numbers", source lists and "sources checked" checklists, and "No significant developments" / "No new …" lines.
+- `tags` always has all three keys: `companies`, `regulators`, `topics`. Each is a sorted, de-duplicated list of lowercase kebab-case slugs, possibly empty.
+- If a day has structured `stories[]`, `rules[]` or `reg_calendar[]` (sidecar), each of those objects also gets the same `tags` object.
+
+**Vocabulary**
+
+- regulators: `rbi`, `sebi`, `ibbi`, `mca`, `nhb`, `irdai`, `govt`
+- topics: `gold-loan`, `ncd`, `rating`, `results`, `circular`, `funding`, `rates`, `gold-price`, `markets`, `asset-quality`, `microfinance`, `digital-lending`, `ipo`, `m-and-a`, `enforcement`, `macro`, `housing-finance`, `vehicle-finance`, `policy`
+- companies: `muthoot-fincorp`, `muthoot-finance`, `muthoot-microfin`, `manappuram`, `bajaj-finance`, `bajaj-housing-finance`, `shriram-finance`, `iifl-finance`, `lic-housing-finance`, `cholamandalam`, `poonawalla-fincorp`, `l-and-t-finance`, `hdb-financial`, `tata-capital`, `aditya-birla-capital`, `piramal-finance`, `mahindra-finance`, `pnb-housing-finance`, `equitas-sfb`, `navi-finserv`, `sbi`, `hdfc-bank`, `icici-bank`, `axis-bank`, `kotak-mahindra-bank`. The list can grow; read display names from `tag_labels`.
+- **`muthoot-finance` (listed peer) and `muthoot-fincorp` (Muthoot Fincorp Ltd) are separate slugs and never merged.**
+
+**How tags are derived** (`export_json.py`, `tag_day`)
+
+- Word-boundary keyword regexes over the story title and body, read from the repo's own `days/<id>/<key>.md`. URLs are stripped first, so a link alone never adds a tag.
+- "Possible impact on Muthoot Fincorp" / "why it matters" lines are not used for matching, so a story is tagged by what it is about, not by its impact note.
+- Companies and topics named in the section heading apply to every item in it (e.g. "Muthoot Fincorp in the market" → `muthoot-fincorp`, "Credit Rating Actions" → `rating`).
+- Items under "New Regulatory Updates" that name a regulator also get `circular`.
+- Failure-safe: if tagging fails for a day, that day is exported without tag fields and publishing continues.
+
+**Override.** Put an HTML comment on its own line inside the story (right under its first line is clearest):
+
+```
+<!-- tags: companies=muthoot-finance,manappuram; regulators=rbi; topics=gold-loan,results -->
+```
+
+Each key given replaces the derived list for that story; keys left out keep the derived tags. `publish.py` removes these lines, so they never reach `data.js`, the report `content` or the page.
