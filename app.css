@@ -72,8 +72,12 @@ h1[tabindex="-1"]:focus{outline:none}
    during a view's entrance; without this, that slide overflows the screen edge for ~250 ms and Android Chrome
    grows the layout viewport to fit (wider and, keeping the aspect ratio, ~27px taller), so the fixed bottom nav
    dropped below the screen and snapped back up. clip (not hidden) makes no scroll container: sticky, the fixed
-   nav (a body child, outside #main) and vertical overflow are unaffected. */
-#main{overflow-x:clip}
+   nav (a body child, outside #main) and vertical overflow are unaffected.
+   position:relative makes #main the containing block of every absolutely positioned descendant too: without it a
+   visually-hidden .sr label (position:absolute, no positioned ancestor) sat at the right edge of an over-wide table,
+   escaped both the card's overflow:hidden and this clip, widened the document by ~26px and dropped the nav off-screen
+   on Markets until the first scroll. */
+#main{overflow-x:clip;position:relative}
 .wrap{max-width:1180px;margin:0 auto;padding:0 max(var(--gut),env(safe-area-inset-right)) 0 max(var(--gut),env(safe-area-inset-left))}
 /* surfaces: flat cards on a calm background; hairline border, one restrained shadow */
 .g{background:var(--surface-1);border:1px solid var(--hairline);box-shadow:var(--elev-1);border-radius:var(--r-l)}
@@ -218,6 +222,8 @@ a.aside{color:var(--accent);text-decoration:none}
 }
 /* change values are plain coloured figures; tags get one quiet outline */
 .chip{display:inline-block;font-size:var(--t-13);font-weight:600;white-space:nowrap}
+/* a long change line ("−2,530 (−1.81%) vs 30 Oct PM", marked .w by chg()) wraps inside its cell instead of pushing the trend column out of the card */
+.tc .vc .chip.w{white-space:normal;text-align:right;max-width:10em}
 .up{color:var(--up)}.dn{color:var(--down)}
 .chip.flat{color:var(--text-3);font-weight:500}
 .chip.acc{color:var(--accent)}

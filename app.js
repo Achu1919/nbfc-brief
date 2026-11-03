@@ -264,12 +264,15 @@ function dm(id){var d=dt(id);return d.getDate()+' '+MONS[d.getMonth()];}
 function srcA(s){if(!s||!s.url)return '<span>source not linked in report</span>';
   return '<a href="'+esc(s.url)+'" target="_blank" rel="noopener noreferrer">'+esc(s.label||domain(s.url))+'<span class="sr"> (opens in new tab)</span></a>';}
 function itemSrc(it){return it.sources&&it.sources.length?it.sources.map(srcA).join(', '):srcA(it.source);}
+/* a source like "MarketScreener/Reuters" may break after its slash, so a narrow table is not pushed wider than its card (link text only, never the href) */
+function srcBreak(h){return h.replace(/>([^<]*)</g,function(m,t){return '>'+t.replace(/\//g,'/<wbr>')+'<';});}
 function itemWhen(it,dayId){var p=[it.asof?(it.asof===dayId?'today':dm(it.asof)):'as-of not stated'];if(it.basis)p.push(esc(it.basis));return p.join(' · ');}
 function itemMeta(it,dayId){var p=[];p.push(it.asof?(it.asof===dayId?'today':dm(it.asof)):'as-of not stated');if(it.basis)p.push(esc(it.basis));p.push(it.sources&&it.sources.length?it.sources.map(srcA).join(', '):srcA(it.source));return p.join(' · ');}
 function dirOf(it){if(it.dir==='up'||it.dir==='down')return it.dir==='up'?'up':'dn';
   if(GROUP[it.key]==='flows'){var n=num(it.value);return n==null?'':n<0?'dn':'up';}return '';}
 function chg(it){var c=it.change;if(!c||/^[—–-]$/.test(String(c).trim()))return '<span class="chip flat">no change given</span>';
-  var d=dirOf(it);return '<span class="chip '+(d||'flat')+'">'+esc(c)+'</span>';}
+  /* a long change line ("−2,530 (−1.81%) vs 30 Oct PM") may wrap in its cell; short ones stay on one line */
+  var d=dirOf(it);return '<span class="chip '+(d||'flat')+(String(c).length>20?' w':'')+'">'+esc(c)+'</span>';}
 function mins(w){return Math.max(1,Math.round((w||0)/220));}
 function wordsOf(r){return r.words||stripMd(r.content||'').split(/\s+/).filter(Boolean).length;}
 
@@ -405,7 +408,7 @@ function edNav(day){
   return '<nav class="ednav" aria-label="Editions">'+o+'</nav>';}
 function marketsTable(day,keys,cap){
   var rows=keys.map(function(k){var it=item(day,k);if(!it)return '';var d=dirOf(it);
-    return '<tr><td><span class="nm">'+esc(SHORT[k]||it.name)+'</span><span class="meta">'+itemWhen(it,day.id)+'</span><span class="meta s">'+itemSrc(it)+'</span></td>'+
+    return '<tr><td><span class="nm">'+esc(SHORT[k]||it.name)+'</span><span class="meta">'+itemWhen(it,day.id)+'</span><span class="meta s">'+srcBreak(itemSrc(it))+'</span></td>'+
       '<td><span class="vc"><span class="v num">'+esc(it.value)+'</span>'+chg(it)+'</span></td><td class="sp">'+spark(k,day.id,72,28,d)+'</td></tr>';}).join('');
   if(!rows)return '';
   return '<table class="tc num"><caption>'+cap+'</caption><thead><tr><th scope="col">Item</th><th scope="col">Value · chg</th><th scope="col" class="sp">'+trendHead(keys,day.id)+'</th></tr></thead><tbody>'+rows+'</tbody></table>';}
