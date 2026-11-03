@@ -467,7 +467,7 @@ html.tfade body,html.tfade .g,html.tfade .lg,html.tfade .pill{transition:backgro
 .sx-p::before{content:"";position:absolute;inset:-7px -3px}
 .sx-p:active{transform:scale(.94);transition-duration:.1s;transition-timing-function:var(--ease-out)}
 .sx-p[aria-pressed=true]{background:var(--inv);color:var(--on-inv);border-color:var(--inv);box-shadow:none}
-.sx-n{font-size:11px;font-weight:500;opacity:.62}
+.sx-n{font-size:11px;font-weight:600;opacity:.9}
 .sx-more{color:var(--accent)}
 @media (hover:hover){.sx-p:hover:not([aria-pressed=true]){background:var(--surface-2);color:var(--text-1);border-color:var(--border-strong)}}
 .sx-less{justify-self:start;min-height:44px;padding:0 4px;background:none;border:0;font:inherit;font-size:var(--t-13);color:var(--accent);cursor:pointer}

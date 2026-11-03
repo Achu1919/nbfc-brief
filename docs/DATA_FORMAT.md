@@ -239,3 +239,25 @@ Columns are `Item | Value | Previous | Change | Effective | Source`. `Change` is
 - Backfill (committed 3 Nov 2026):
   - AGLOC: every published period from 1 Oct 2026, from the historic LTV table on https://www.agloc.org/. All four columns are published for these periods, and nothing is computed.
   - IBJA: trading days from 1 Oct 2026, from the "Previous 30 Days" PDF on https://ibjarates.com/. These are PM rates per 10 g divided by 10, so a figure may have one decimal.
+
+## App-side notes: search and gold card (app only; no data change)
+
+These notes describe how the app reads the fields above. They add no fields and change no existing format. `publish.py` and `export_json.py` need no change.
+
+**Search (`search.js`, loaded only when search opens)**
+
+- Index sources: `data/latest.json` (`days[]` list, `tag_labels`) plus every `data/<id>.json` it lists. The index uses only this site's own `data/` files.
+- Indexed units: report stories and items (the same Markdown units `story_tags[]` describes), key-numbers glance items, `rules[]` / circulars, `reg_calendar[]`, Monday weekly sections, `mfl_market[]`, and the gold rows when a day has `gold`.
+- Tags for each unit, in order: (1) the `story_tags[]` entry with the same `report` + `section` + `title` (a title prefix of 5 or more characters within the same report and section also counts); (2) the same `report` + `n`; (3) app-side keyword heuristics (fallback for editions without `story_tags[]`; such docs are marked internally). Sidecar `stories[]` / `rules[]` / `reg_calendar[]` use their own `tags`.
+- The app skips the same lines the exporter skips: "sources checked" checklists, "No new …" / "No significant …" lines, and table header rows. It merges field lines (What / Issuer / Date / Source / Status / Why it matters / MFL impact …) into the item above them.
+- Labels: `tag_labels[slug]`. If a slug has no label, the app uses title case with acronyms kept (RBI, NCD, IPO …).
+- Cache: IndexedDB `<namespace>-search`, keyed by `latest.json` → `generated`. A new `generated` rebuilds the index. Nothing is written back to `data/`.
+- Route: `#/search?q=…&co=…&rg=…&tp=…`. Filter values are comma-separated slugs. Result links open `#/<id>/read/<key>?hl=<item>&sec=<heading id>` (or the matching edition view) and scroll to and highlight the item.
+
+**Gold card (`gold`, see "Gold and LTV")**
+
+- Reads `gold.ibja`, `gold.spot` and `gold.agloc` (with `agloc.prev`) as documented. Day change is `value − prev_*`, shown as absolute and %. A null value or prev shows "—".
+- The AGLOC period is shown as `from – to` (for example "Fri 31 Oct – Mon 3 Nov"). AGLOC series are drawn as steps.
+- Sparklines use the series keys `ibja999`, `ibja916`, `goldspot`, `agloc_*`. Gold keys keep their own date axis and never add edition dates.
+- The card is hidden when the day has no `gold`. The compact card is on Today and the full card on Markets.
+- The test fixture is `tests/fixtures/gold-day.json` only. It is never in `data/`.
