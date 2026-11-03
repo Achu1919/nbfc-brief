@@ -18,10 +18,12 @@ Rules kept here:
 from __future__ import annotations
 
 import argparse
+import datetime as _dt
 import json
 import re
 import sys
 from pathlib import Path
+from urllib.parse import urlparse as _urlparse
 
 SCHEMA = "nbfc-brief"
 SCHEMA_VERSION = 1
@@ -284,6 +286,11 @@ def derive_tags(text: str) -> dict:
 
 
 def parse_override(line: str):
+    m = REG_COMMENT.match(line or "")
+    if m:
+        return {"_reg": _kv(m.group(1))}
+    if NCD_COMMENT.match(line or ""):
+        return {}  # day-level; read by parse_ncd
     m = TAG_COMMENT.match(line or "")
     if not m:
         return None
@@ -295,12 +302,14 @@ def parse_override(line: str):
         k = k.strip().lower()
         if k in TAG_KEYS:
             ov[k] = sorted({x.strip().lower() for x in v.split(",") if _SLUG.match(x.strip().lower())})
+        elif k == "category":
+            ov["_category"] = v.strip().lower()
     return ov
 
 
 def strip_tag_comments(text: str) -> str:
     """Remove override comment lines (used by publish.py so they never reach data.js or the page)."""
-    return "\n".join(l for l in (text or "").split("\n") if not TAG_COMMENT.match(l))
+    return "\n".join(l for l in (text or "").split("\n") if not ANY_COMMENT.match(l))
 
 
 def _clip(s: str, n: int = 160) -> str:
@@ -407,7 +416,8 @@ def _units(report_key: str, text: str) -> list:
                 continue
             new_item = bool(re.match(r"^(?:[-*]|\d+[.)]|\|)\s?", s))
             row_kind = "item" if (not_circ and kind == "circular") else kind
-            if cur and (s.startswith(">") or re.match(r"^\s{2,}[-*]\s", l) or (not gap and not new_item)):
+            if cur and (s.startswith(">") or re.match(r"^\s{2,}[-*]\s", l) or (not gap and not new_item)
+                        or not _plain(_BRACKET_TAGS.sub("", s.replace("*", "")))):
                 cur["lines"].append(s)
             elif s.startswith("|") and re.match(r"^\|\s*(?:item|status|what|issuer|date|company|event)\b", s, re.I):
                 pass  # table header row
@@ -430,10 +440,15 @@ def _units(report_key: str, text: str) -> list:
                 tags[k] = sorted(set(tags[k]) | set(ht[k]))
         if u["kind"] == "circular" and "circular" not in tags["topics"] and tags["regulators"]:
             tags["topics"] = sorted(set(tags["topics"]) | {"circular"})
+        card = {}
         for ov in u["ov"]:
             for k, v in ov.items():
-                tags[k] = v
-        out.append({"report": report_key, "section": u["section"], "kind": u["kind"], "title": u["title"], "tags": tags})
+                if k in TAG_KEYS:
+                    tags[k] = v
+                elif k == "_category":
+                    card["category"] = v
+        out.append({"report": report_key, "section": u["section"], "kind": u["kind"], "title": u["title"], "tags": tags,
+                    "_lines": u["lines"], "_reg": [ov["_reg"] for ov in u["ov"] if "_reg" in ov], "_card": card})
     return out
 
 
@@ -497,6 +512,924 @@ def tag_day(day: dict, raw_dir=None) -> dict:
     except Exception as exc:  # a tagging problem must never stop publishing
         print(f"export_json: tags skipped for {day.get('id')}: {exc}", file=sys.stderr)
         return day
+
+
+# ---- cards, reg, latest_circulars, deadlines, mfl_ncd, lessons (docs/DATA_FORMAT.md "Cards"); additive, never fatal ----
+REG_COMMENT = re.compile(r"^\s*<!--\s*reg:(.*?)-->\s*$", re.I)
+NCD_COMMENT = re.compile(r"^\s*<!--\s*ncd:(.*?)-->\s*$", re.I)
+ANY_COMMENT = re.compile(r"^\s*<!--\s*(?:tags|reg|ncd)\s*:.*-->\s*$", re.I)
+CIRCULAR_SEED = "circulars_seed.json"
+CIRCULAR_WINDOW = 10  # days, newest edition inclusive
+DEADLINE_PAST = 30  # drop deadlines more than this many days before the newest edition
+REPORT_SHORT = {"01-daily-watch": "news", "02-regulation": "rules", "03-weekly-analysis": "weekly"}
+CATEGORIES = ("regulation", "muthoot-fincorp", "peers", "gold", "markets", "results", "ratings", "deals",
+              "asset-quality", "teaching")
+REG_STATUS = ("new", "draft", "in-force", "deadline")
+SOURCE_NAMES = (
+    ("rbi.org.in", "RBI"), ("sebi.gov.in", "SEBI"), ("ibbi.gov.in", "IBBI"), ("nhb.org.in", "NHB"),
+    ("fiuindia.gov.in", "FIU-IND"), ("mca.gov.in", "MCA"), ("egazette.gov.in", "e-Gazette"), ("nclt.gov.in", "NCLT"),
+    ("pib.gov.in", "PIB"), ("finmin.nic.in", "Ministry of Finance"), ("irdai.gov.in", "IRDAI"),
+    ("nseindia.com", "NSE"), ("nsearchives.nseindia.com", "NSE"), ("bseindia.com", "BSE"),
+    ("bfsi.economictimes.indiatimes.com", "ETBFSI"), ("economictimes.indiatimes.com", "Economic Times"),
+    ("m.economictimes.com", "Economic Times"), ("thehindubusinessline.com", "BusinessLine"), ("thehindu.com", "The Hindu"),
+    ("livemint.com", "Mint"), ("business-standard.com", "Business Standard"), ("moneycontrol.com", "Moneycontrol"),
+    ("cnbctv18.com", "CNBC-TV18"), ("financialexpress.com", "Financial Express"), ("ndtvprofit.com", "NDTV Profit"),
+    ("reuters.com", "Reuters"), ("bloomberg.com", "Bloomberg"), ("businesstoday.in", "Business Today"),
+    ("hindustantimes.com", "Hindustan Times"), ("timesofindia.indiatimes.com", "Times of India"),
+    ("newindianexpress.com", "New Indian Express"), ("indianexpress.com", "Indian Express"),
+    ("deccanherald.com", "Deccan Herald"), ("zeebiz.com", "Zee Business"), ("outlookbusiness.com", "Outlook Business"),
+    ("chittorgarh.com", "Chittorgarh"), ("groww.in", "Groww"), ("nuvama.com", "Nuvama"),
+    ("crisilratings.com", "CRISIL Ratings"), ("crisil.com", "CRISIL"), ("icra.in", "ICRA"), ("icra.co.in", "ICRA"),
+    ("careratings.com", "CARE Ratings"), ("careedge.in", "CareEdge"), ("indiaratings.co.in", "India Ratings"),
+    ("brickworkratings.com", "Brickwork Ratings"), ("acuite.in", "Acuité"), ("ibjarates.com", "IBJA"),
+    ("ibja.co", "IBJA"), ("agloc.org", "AGLOC"), ("gold.org", "World Gold Council"), ("fbil.org.in", "FBIL"),
+    ("ccilindia.com", "CCIL"), ("muthootfincorp.com", "Muthoot Fincorp"), ("muthootfinance.com", "Muthoot Finance"),
+    ("tradingeconomics.com", "Trading Economics"), ("investing.com", "Investing.com"), ("goodreturns.in", "Goodreturns"),
+    ("screener.in", "Screener"), ("trendlyne.com", "Trendlyne"), ("fidcindia.org.in", "FIDC"),
+    ("sa-dhan.net", "Sa-Dhan"), ("mfinindia.org", "MFIN"), ("cibil.com", "TransUnion CIBIL"),
+)
+EXCLUDED_HOSTS = ("exa.ai", "stockfin.ai", "trackliveprice.com", "makro.live", "stockwatch.live")
+OFFICIAL_HOSTS = ("rbi.org.in", "sebi.gov.in", "ibbi.gov.in", "nhb.org.in", "fiuindia.gov.in", "mca.gov.in",
+                  "egazette.gov.in", "nclt.gov.in")
+_LINK = re.compile(r"\[([^\]]*)\]\((https?://[^)\s]+)\)|<(https?://[^>\s]+)>|(https?://[^\s)|>\]]+)")
+_BRACKET_TAGS = re.compile(r"\[(?:NEW|NEW_REG|CIRCULAR|DRAFT|ENFORCEMENT|CONTEXT|DEADLINE|IN[- ]FORCE|EFFECTIVE:[^\]]*)\]\s*", re.I)
+_ABBR = re.compile(r"(?:\b(?:Rs|No|Nos|vs|Ltd|Co|Pvt|Dr|Mr|Ms|Mrs|St|approx|cf|para|paras|Sr|Jr|Inc|Govt|Dept|Fig|Sec|Cl|Reg|Art|viz|cr|bn|mn|Rev|Ch|Vol|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)|\be\.g|\bi\.e|\b[A-Z])\.$")
+_MON = {m: i for i, m in enumerate(("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"), 1)}
+_DMY = re.compile(r"\b(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?(?:,?\s+(\d{4}))?\b"
+                  r"|\b(\d{4})-(\d{2})-(\d{2})\b", re.I)
+_REF_RX = (
+    ("RBI", re.compile(r"\bRBI/(?:[A-Za-z]+/)?\d{4}-\d{2}/\d+")),
+    ("RBI", re.compile(r"\b(?:DoR|DOR|DoS|DOS|DPSS|CO\.DPSS|FIDD|DCM|FMRD|FED|DNBR|DNBS|DGBA|DoRA|DOC|DoC|CEPD|FMOD|IDMD)"
+                       r"\.[A-Za-z0-9.()]+(?:\s?No\.?\s?\d+)?(?:/[\w.()-]+)*/\d{4}-\d{2}\b")),
+    ("SEBI", re.compile(r"\bSEBI/HO/[\w()./-]*\d")),
+    ("SEBI", re.compile(r"\bHO/[\w()./-]*?\d{4}-[A-Z][\w()./-]*\d")),
+    ("IBBI", re.compile(r"\bIBBI/(?:[A-Z]+/\d+/\d{4}|\d{4}-\d{2}/GN/REG\d+)\b")),
+    ("NHB", re.compile(r"\bNHB/[A-Za-z]+[\w./()-]*\d")),
+    ("FIU-IND", re.compile(r"\bF\.\s?No\.?\s?[\w./-]*FIU[\w./-]*\d")),
+)
+_APPLIES = (
+    ("banks", r"\b(?:commercial |scheduled )?banks\b"), ("nbfcs", r"\bNBFCs?\b(?!-MFI)|non-banking financial compan"), ("hfcs", r"\bHFCs?\b|housing finance compan"),
+    ("arcs", r"\bARCs?\b|asset reconstruction"), ("aifis", r"\bAIFIs?\b|all india financial institutions"),
+    ("cooperative-banks", r"co-?operative banks|\bUCBs?\b|\bStCBs?\b|\bDCCBs?\b"), ("sfbs", r"small finance banks?|\bSFBs?\b"),
+    ("payment-banks", r"payments? banks?"), ("rrbs", r"regional rural banks?|\bRRBs?\b"), ("nbfc-mfis", r"\bNBFC-MFIs?\b|microfinance institutions"),
+    ("cics", r"\bCICs?\b|core investment compan"), ("debt-issuers", r"issuers? of (?:listed )?(?:debt|non-convertible)|debt (?:securities )?issuers?"),
+    ("listed-entities", r"listed entit"), ("intermediaries", r"intermediar"), ("debenture-trustees", r"debenture trustees?"),
+    ("exchanges", r"(?:stock )?exchanges\b"), ("depositories", r"depositor(?:y|ies)\b(?! receipt)"), ("fpis", r"\bFPIs?\b|foreign portfolio"),
+    ("mutual-funds", r"mutual funds?|\bAMCs?\b"), ("research-analysts", r"research analysts?"), ("investment-advisers", r"investment advis[eo]rs?"),
+    ("insolvency-professionals", r"insolvency professionals?|resolution professionals?|\bIPAs?\b"),
+    ("regulated-entities", r"regulated entities|\bREs\b"), ("reporting-entities", r"reporting entities"),
+)
+_APPLIES = tuple((k, re.compile(p, re.I)) for k, p in _APPLIES)
+_SCOPE = re.compile(r"\b(?:addressed to|applies to|applicable to|issued to|directed to|meant for|for all)\b([^.;\n]{3,200})", re.I)
+_SEC_CATS = (
+    (re.compile(r"teach|lesson|quiz|curriculum|refresher", re.I), "teaching"),
+    (re.compile(r"muthoot fincorp|\bMFL\b", re.I), "muthoot-fincorp"),
+    (re.compile(r"gold and ltv|gold price", re.I), "gold"),
+    (re.compile(r"financial results|\bresults\b|earnings", re.I), "results"),
+    (re.compile(r"credit rating|\bratings?\b", re.I), "ratings"),
+    (re.compile(r"\bdeals?\b|m&a|fund-?rais|capital rais", re.I), "deals"),
+    (re.compile(r"\bnpa\b|asset quality", re.I), "asset-quality"),
+    (re.compile(r"\bmarket|\bstock", re.I), "markets"),
+    (re.compile(r"\brbi\b|regulat|\bsebi\b|circular|calendar|deadline", re.I), "regulation"),
+)
+
+
+def _kv(body: str) -> dict:
+    out = {}
+    for part in (body or "").split(";"):
+        if "=" in part:
+            k, v = part.split("=", 1)
+            out[k.strip().lower().replace("-", "_")] = v.strip()
+    return out
+
+
+def _iso_or_none(v):
+    v = (v or "").strip()
+    return v if ISO_DATE.match(v) else None
+
+
+def _ed(edition: str):
+    return _dt.date.fromisoformat(edition)
+
+
+def _mkdate(d, m, y, edition, forward=False):
+    try:
+        if y:
+            return _dt.date(int(y), m, int(d)).isoformat()
+        ed = _ed(edition)
+        c = _dt.date(ed.year, m, int(d))
+        if forward and c < ed - _dt.timedelta(days=180):
+            c = _dt.date(ed.year + 1, m, int(d))
+        elif not forward and c > ed + _dt.timedelta(days=45):
+            c = _dt.date(ed.year - 1, m, int(d))
+        return c.isoformat()
+    except (ValueError, TypeError):
+        return None
+
+
+def _dates(text: str, edition: str, forward=False) -> list:
+    """[(pos, iso)] for every '5 Nov', '5 Nov 2026' or ISO date in the text; a missing year comes from the edition."""
+    out = []
+    for m in _DMY.finditer(text or ""):
+        if m.group(4):
+            iso = _iso_or_none(m.group(0))
+        else:
+            iso = _mkdate(m.group(1), _MON[m.group(2).lower()[:3]], m.group(3), edition, forward)
+        if iso:
+            out.append((m.start(), iso))
+    return out
+
+
+def _excluded(url: str) -> bool:
+    h = _host(url)
+    return any(h == d or h.endswith("." + d) or h.startswith(d.split(".")[0] + ".") for d in EXCLUDED_HOSTS)
+
+
+def _links(text: str) -> list:
+    out = []
+    for m in _LINK.finditer(text or ""):
+        url = (m.group(2) or m.group(3) or m.group(4) or "").rstrip(".,;:")
+        if url and not _excluded(url):
+            out.append(((m.group(1) or "").strip(), url))
+    return out
+
+
+def _host(url: str) -> str:
+    try:
+        h = (_urlparse(url).hostname or "").lower()
+    except ValueError:
+        return ""
+    return h[4:] if h.startswith("www.") else h
+
+
+def source_name(url: str, text: str = "") -> str:
+    h = _host(url)
+    for dom, name in SOURCE_NAMES:
+        if h == dom or h.endswith("." + dom):
+            return name
+    t = _plain(text or "")
+    return t if t and not t.lower().startswith("http") and len(t) <= 40 else h
+
+
+def _is_official(url: str) -> bool:
+    h = _host(url)
+    return any(h == d or h.endswith("." + d) for d in OFFICIAL_HOSTS)
+
+
+def _source(lines: list):
+    body = [l for l in lines if not _IMPACT.search(l)]
+    for group in (body, lines):
+        for text, url in _links("\n".join(group)):
+            return {"name": source_name(url, text), "url": url}
+    return None
+
+
+def _sentences(text: str, n: int = 2) -> str:
+    parts = re.split(r"(?<=[.!?])\s+(?=[\"“'(₹$A-Z0-9])", text or "")
+    out, buf = [], ""
+    for p in parts:
+        buf = f"{buf} {p}".strip() if buf else p
+        if _ABBR.search(buf):
+            continue
+        out.append(buf)
+        buf = ""
+        if len(out) >= n:
+            break
+    if buf and len(out) < n:
+        out.append(buf)
+    return " ".join(out).strip()
+
+
+def _clean_title(t: str) -> str:
+    t = re.sub(r"^\s*(?:\d{1,2}[.)]\s+)?(?:NEW|NEW_REG|CIRCULAR|DRAFT|ENFORCEMENT|CONTEXT|DEADLINE|IN[- ]FORCE)\]\s*", "", t or "", flags=re.I)
+    c = re.sub(r"^\d{1,2}[.)]\s+", "", _BRACKET_TAGS.sub("", t).strip(" :—–-"))
+    return re.sub(r"\s{2,}", " ", c).strip(" :—–-") or (t or "")
+
+
+def _card_summary(u: dict):
+    body = [l for l in u["_lines"] if l.strip() and not _IMPACT.search(l) and not l.lstrip().startswith(">")
+            and not ANY_COMMENT.match(l)]
+    if not body:
+        return None
+    first, rest = body[0], body[1:]
+    title = u["title"].rstrip("…").strip()
+    if first.lstrip().startswith("|"):
+        cells = [c.strip() for c in first.strip().strip("|").split("|")]
+        lead = _plain(cells[0]) if cells else ""
+        others = [_plain(c) for c in cells[1:] if _plain(c)]
+        text = lead
+        if title and lead.startswith(title) and len(lead) > len(title) + 15:
+            text = lead[len(title):].lstrip(" .:—–-")
+        elif title and lead.startswith(title):
+            text = ""
+        text = " ".join(x for x in [text.rstrip(".") + "." if text else "", "; ".join(others)] if x)
+    else:
+        m = re.match(r"^\s*(?:[-*]|\d+[.)])?\s*\*\*(.+?)\*\*", first)
+        if _plain(first).rstrip("…") == title or _plain(first) == title:
+            first = ""
+        elif m and _clip(_plain(re.sub(r"^\s*\d+\.\s+", "", m.group(1)))).rstrip("…").strip() == title and len(_plain(m.group(1))) >= 25:
+            first = first[m.end():]
+        text = _plain("\n".join([first] + rest))
+    text = _BRACKET_TAGS.sub("", _plain(text)).strip(" :—–-")
+    if title and text.startswith(title) and len(text[len(title):].split()) >= 6:
+        text = text[len(title):].strip(" :—–-")
+    if not text:
+        return None
+    return _clip(_sentences(text, 2), 480) or None
+
+
+def _card_impact(u: dict):
+    for l in u["_lines"]:
+        if _IMPACT.search(l):
+            p = _plain(l)
+            p = re.sub(r"^.*?(?:why it matters|possible impact on)[^:]*:\s*", "", p, flags=re.I).strip()
+            if p:
+                return _clip(p, 480)
+    return None
+
+
+def _cat_from_tags(t: dict, title: str) -> str:
+    c, tp, rg = set(t["companies"]), set(t["topics"]), set(t["regulators"])
+    if "muthoot-fincorp" in c and re.search(r"muthoot fincorp|\bMFL\b", title or "", re.I):
+        return "muthoot-fincorp"
+    if rg and tp & {"circular", "enforcement", "policy"}:
+        return "regulation"
+    for topic, cat in (("results", "results"), ("rating", "ratings"), ("m-and-a", "deals"), ("ipo", "deals"),
+                       ("asset-quality", "asset-quality"), ("gold-price", "gold")):
+        if topic in tp:
+            return cat
+    if c - {"muthoot-fincorp"}:
+        return "peers"
+    if "gold-loan" in tp:
+        return "gold"
+    if "muthoot-fincorp" in c:
+        return "muthoot-fincorp"
+    if rg:
+        return "regulation"
+    return "markets"
+
+
+def _category(u: dict, private: bool) -> str:
+    over = (u.get("_card") or {}).get("category")
+    if over in CATEGORIES and (private or over != "teaching"):
+        return over
+    sec = u["section"] or ""
+    if u["report"] == "02-regulation":
+        if _SEC_CATS[0][0].search(sec):
+            return "teaching" if private else "regulation"
+        return "regulation"
+    if u["report"] == "01-daily-watch" and not re.search(r"urgent|high impact|headline", sec, re.I):
+        for rx, cat in _SEC_CATS:
+            if rx.search(sec):
+                if cat == "teaching" and not private:
+                    break
+                return cat
+    return _cat_from_tags(u["tags"], u["title"])
+
+
+def _find_ref(text: str):
+    """(regulator, ref_no, end_pos) for the first reference number in the text, else (None, None, None)."""
+    best = None
+    for reg, rx in _REF_RX:
+        m = rx.search(text or "")
+        if m and (best is None or m.start() < best[2].start()):
+            best = (reg, m.group(0).rstrip(".,;:)"), m)
+    if not best:
+        return None, None, None
+    reg, ref, m = best
+    if ref.startswith("RBI/"):  # RBI prints both numbers on a circular: RBI/2026-27/303 + DoR.AML.REC.255/...
+        m2 = _REF_RX[1][1].search(text, m.end(), m.end() + 60)
+        if m2:
+            return reg, f"{ref} {m2.group(0)}", m2.end()
+    return reg, ref, m.end()
+
+
+def _applies(text: str):
+    text = _plain(text or "")
+    m = _SCOPE.search(text)
+    span = m.group(1) if m else ""
+    lead = re.match(r"^\s*\W*(?:\[[^\]]*\]\s*)*\**\s*([A-Za-z ,&-]{4,60}?)\s+[–—-]\s", text[:120])
+    if lead:
+        span += " " + lead.group(1)
+    found = [k for k, rx in _APPLIES if rx.search(span)]
+    if "nbfc-mfis" in found and "nbfcs" in found and not re.search(r"\bNBFCs\b", span):
+        found.remove("nbfcs")
+    return found or None
+
+
+def parse_reg(u: dict, edition: str):
+    raw = "\n".join(l for l in u["_lines"] if not ANY_COMMENT.match(l))
+    text = _URL.sub(" ", raw)
+    regulator, ref, end = _find_ref(text)
+    tags = u["tags"]
+    if not regulator and tags["regulators"]:
+        order = ("rbi", "sebi", "ibbi", "nhb", "mca", "irdai", "govt")
+        regulator = sorted(tags["regulators"], key=lambda r: order.index(r) if r in order else 99)[0].upper()
+    official = [url for _, url in _links(raw) if _is_official(url)]
+    url = official[0] if official else None
+    if not regulator and url:
+        regulator = source_name(url)
+    issued = None
+    if ref:
+        near = [iso for pos, iso in _dates(text[end:end + 90], edition)]
+        issued = near[0] if near else None
+    if not issued:
+        m = re.search(r"\b(?:issued|dated|released|notified)\s+(?:on\s+)?", text, re.I)
+        if m:
+            near = _dates(text[m.end():m.end() + 30], edition)
+            issued = near[0][1] if near else None
+    if not issued:
+        t0 = u["_lines"][0] if u["_lines"] else ""
+        m = re.search(r"\(([^)]{3,40})\)", t0)
+        near = _dates(m.group(1), edition) if m else []
+        issued = near[0][1] if near else None
+    effective = None
+    m = re.search(r"\[EFFECTIVE:\s*(\d{4}-\d{2}-\d{2})\]", raw, re.I)
+    if m:
+        effective = m.group(1)
+    else:
+        m = re.search(r"\b(?:effective|in force|comes into force|applies)\s+(?:from|on|by)\s+", text, re.I)
+        if m:
+            near = _dates(text[m.end():m.end() + 30], edition, forward=True)
+            effective = near[0][1] if near else None
+    status = None
+    if re.search(r"\[DRAFT\]|\bdraft\b|consultation paper", raw, re.I) and not re.search(r"\[NEW\]", raw):
+        status = "draft"
+    elif re.search(r"\[DEADLINE\]", raw, re.I):
+        status = "deadline"
+    elif re.search(r"\[NEW\]|\[NEW_REG\]", raw):
+        status = "new"
+    elif effective and effective <= edition:
+        status = "in-force"
+    elif effective and effective > edition:
+        status = "deadline"
+    elif issued and (_ed(edition) - _ed(issued)).days <= 3:
+        status = "new"
+    reg = {"ref_no": ref, "regulator": regulator, "applies_to": _applies(text), "issued": issued,
+           "effective": effective, "status": status, "url": url}
+    for ov in u.get("_reg") or []:  # <!-- reg: ... --> wins, field by field
+        if "ref" in ov or "ref_no" in ov:
+            reg["ref_no"] = (ov.get("ref") or ov.get("ref_no") or "").strip() or None
+        if "regulator" in ov:
+            reg["regulator"] = ov["regulator"].strip() or None
+        if "applies" in ov or "applies_to" in ov:
+            v = ov.get("applies") or ov.get("applies_to") or ""
+            reg["applies_to"] = [x.strip().lower() for x in v.split(",") if x.strip()] or None
+        for k in ("issued", "effective"):
+            if k in ov:
+                reg[k] = _iso_or_none(ov[k])
+        if "status" in ov:
+            reg["status"] = ov["status"].strip().lower() if ov["status"].strip().lower() in REG_STATUS else None
+        if "url" in ov:
+            reg["url"] = ov["url"].strip() or None
+    return reg
+
+
+def _wants_reg(u: dict) -> bool:
+    if u["report"] != "02-regulation" or u["kind"] == "calendar":
+        return False
+    if u.get("_reg"):
+        return True
+    raw = "\n".join(u["_lines"])
+    _, ref0, _ = _find_ref(_URL.sub(" ", raw))
+    if u["kind"] == "circular":
+        return bool(ref0) or any(_is_official(url) and not re.search(r"Display\.aspx$|NotificationUser\.aspx$|/circulars/?$|HomeAction", url)
+                                 for _, url in _links(raw))
+    if not re.search(r"new regulatory|circular|regulatory updates|what landed", u["section"] or "", re.I):
+        return False
+    _, ref, _ = _find_ref(_URL.sub(" ", raw))
+    return bool(ref) and any(_is_official(url) for _, url in _links(raw))
+
+
+def build_cards(units: list, edition: str, private: bool) -> list:
+    cards = []
+    for u in units:
+        title = _clean_title(u["title"])
+        if not title.strip():
+            continue  # e.g. a table header row; story_tags keeps it, cards do not
+        c = {"id": f"{edition}-{REPORT_SHORT.get(u['report'], u['report'])}-{u['n']}", "n": u["n"], "date": edition,
+             "report": REPORT_SHORT.get(u["report"], u["report"]), "section": u["section"], "kind": u["kind"],
+             "category": _category(u, private), "title": title, "summary": _card_summary(u),
+             "impact": _card_impact(u), "source": _source(u["_lines"]), "tags": u["tags"]}
+        if _wants_reg(u):
+            c["reg"] = parse_reg(u, edition)
+            for ov in u.get("_reg") or []:
+                if (ov.get("title") or "").strip():
+                    c["title"] = ov["title"].strip()
+        cards.append(c)
+    return cards
+
+
+# ---- lessons (private edition only) ----
+_TEACH_HEAD = re.compile(r"^##\s+.*\b(?:teaching|lesson|refresher|curriculum)\b", re.I)
+_QUIZ_MARK = re.compile(r"^\s*(?:#{2,4}\s*)?\W*\**\s*quiz(?:\s+yourself)?\b", re.I)
+_WEEKDAYS = r"(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)"
+
+
+def _split_answer(a: str):
+    a = a.strip()
+    m = re.match(r"^(.{1,60}?)\s+[—–-]\s+(.+)$", a)
+    if m:
+        return m.group(1).strip(), m.group(2).strip()
+    m = re.match(r"^(.+?[.!?])\s+(.+)$", a)
+    if m and len(m.group(1)) <= 160:
+        return m.group(1).strip(), m.group(2).strip()
+    return a, None
+
+
+def parse_lessons(text: str, edition: str) -> list:
+    lines = (text or "").split("\n")
+    out, i = [], 0
+    while i < len(lines):
+        if not _TEACH_HEAD.match(lines[i]):
+            i += 1
+            continue
+        head = _plain(lines[i][2:])
+        j = i + 1
+        while j < len(lines) and not (re.match(r"^##\s", lines[j]) and not _QUIZ_MARK.match(lines[j][2:].strip())):
+            j += 1
+        block = lines[i + 1:j]
+        i = j
+        title = re.sub(r"^(?:\w+\s+)?(?:daily\s+)?(?:teaching|lesson)(?:\s+session)?\s*(?:[—–:-]\s*)?", "", head, flags=re.I).strip() or head
+        module = None
+        m = re.match(rf"^{_WEEKDAYS}\s+(?:refresher\s+)?\(?([^:()]+?)\)?\s*[:—–]\s*(.+)$", title)
+        if m:
+            module, title = m.group(1).strip(), m.group(2).strip()
+        else:
+            m = re.match(rf"^{_WEEKDAYS}\s+refresher\s*\(([^)]+)\)\s*[:—–-]?\s*(.*)$", title)
+            if m:
+                module, title = m.group(1).strip(), (m.group(2).strip() or title)
+        body = "\n".join(block)
+        n = None
+        m = re.search(r"\bDay\s+\**(\d{1,3})\**\b", head + "\n" + body)
+        if m:
+            n = int(m.group(1))
+        # summary: first prose paragraph (prefer the "What is it?" subsection)
+        paras, cur_p, in_what = [], [], False
+        for l in block:
+            s = l.strip()
+            if re.match(r"^#{3,4}\s", s):
+                if cur_p:
+                    paras.append((in_what, " ".join(cur_p)))
+                    cur_p = []
+                in_what = bool(re.search(r"what is it|what it is", s, re.I))
+                continue
+            if not s or s.startswith("|") or s.startswith(">") or _QUIZ_MARK.match(s) or s.startswith("<"):
+                if cur_p:
+                    paras.append((in_what, " ".join(cur_p)))
+                    cur_p = []
+                continue
+            if re.match(r"^(?:[-*]|\d+[.)])\s", s) and not cur_p:
+                continue
+            cur_p.append(s)
+        if cur_p:
+            paras.append((in_what, " ".join(cur_p)))
+        paras = [(w, p) for w, p in paras if len(_plain(p).split()) >= 8 and not re.match(r"^\W*day\s+\**\d", _plain(p), re.I)] or paras
+        pick = next((p for w, p in paras if w), paras[0][1] if paras else "")
+        summary = _clip(_sentences(_plain(pick), 2), 480) or None
+        # quiz
+        quiz, answers, qi = [], {}, None
+        for k, l in enumerate(block):
+            if _QUIZ_MARK.match(l.strip()):
+                qi = k
+                break
+        if qi is not None:
+            in_ans, last = False, None
+            for l in block[qi + 1:]:
+                s = l.strip()
+                if re.search(r"<summary>|^\**\s*answers?\b", s, re.I):
+                    in_ans = True
+                    continue
+                if re.match(r"^#{2,4}\s", s) and quiz:
+                    break
+                m = re.match(r"^(\d+)[.)]\s+(.+)$", s)
+                if m and in_ans:
+                    answers[int(m.group(1))] = _plain(m.group(2))
+                    continue
+                if m:
+                    q = _plain(m.group(2))
+                    ans = None
+                    m2 = re.match(r"^(.*\?)\s*\((.+)\)\s*$", q)
+                    if m2:
+                        q, ans = m2.group(1).strip(), m2.group(2).strip()
+                    last = {"q": q, "options": [], "answer": ans, "explain": None, "_k": int(m.group(1))}
+                    quiz.append(last)
+                    continue
+                m = re.match(r"^(?:[-*]\s*)?\(?([a-dA-D])[).]\s+(.+)$", s)
+                if m and last is not None and not in_ans:
+                    last["options"].append(_plain(m.group(2)))
+            for q in quiz:
+                a = q["answer"] or answers.get(q.pop("_k"))
+                q.pop("_k", None)
+                if a:
+                    q["answer"], q["explain"] = _split_answer(a)
+                    if q["options"]:
+                        mo = re.match(r"^\(?([a-dA-D])\)?(?:[).:\s]|$)", q["answer"])
+                        if mo:
+                            q["answer"] = q["options"][ord(mo.group(1).lower()) - 97]
+        srcs, seen = [], set()
+        for t, url in _links(body):
+            if url not in seen:
+                seen.add(url)
+                srcs.append({"name": source_name(url, t), "url": url})
+        out.append({"date": edition, "n": n, "title": title, "module": module, "summary": summary,
+                    "quiz": quiz, "sources": srcs})
+    return out
+
+
+# ---- Muthoot Fincorp Ltd NCD status (mfl_ncd). Muthoot Fincorp only, never Muthoot Finance; status facts only ----
+_MFL_HEAD = re.compile(r"^#{2,3}\s+.*(?:muthoot fincorp|\bMFL\b)", re.I)
+_RANGE = re.compile(r"(\d{1,2})\s+([A-Za-z]{3})[a-z]*\.?(?:\s+(\d{4}))?\s*(?:[–—-]|to)\s*(\d{1,2})\s+([A-Za-z]{3})[a-z]*\.?(?:,?\s+(\d{4}))?")
+
+
+def parse_ncd(text: str, edition: str):
+    """Returns (found, obj). found=False: no NCD lines and no override. obj=None with found=True: override 'none'."""
+    lines = (text or "").split("\n")
+    ov = None
+    for l in lines:
+        m = NCD_COMMENT.match(l)
+        if m:
+            body = m.group(1).strip()
+            if body.lower() in ("none", "null", "-", ""):
+                return True, None
+            ov = _kv(body)
+    rows, prose, in_mfl = [], [], False
+    for l in lines:
+        if re.match(r"^#{2,3}\s", l):
+            in_mfl = bool(_MFL_HEAD.match(l)) and not re.search(r"muthoot finance\b", l, re.I)
+            continue
+        if not in_mfl or not re.search(r"\bNCDs?\b|tranche", l, re.I) or re.search(r"muthoot finance\b(?! ?corp)", l, re.I):
+            continue
+        s = l.strip()
+        if s.startswith("|"):
+            cells = [c.strip() for c in s.strip("|").split("|")]
+            if len(cells) >= 2:
+                rows.append(cells)
+        elif s:
+            prose.append(s)
+    if not rows and not prose and ov is None:
+        return False, None
+    o = {"issue": None, "open": None, "close": None, "size_cr": None, "rating": None, "coupon_range": None,
+         "bids": [], "status": None, "source": None}
+    alltext = " ".join(" | ".join(r) for r in rows) + " " + " ".join(prose)
+    m = re.search(r"\bTranche\s+([IVX]+|\d+)\b", alltext)
+    if m:
+        o["issue"] = f"Tranche {m.group(1)}"
+    word = None
+    for cells in rows:
+        label, val = _plain(cells[0]).lower(), cells[1]
+        asof = _iso_or_none(_plain(cells[2])) if len(cells) > 2 else None
+        links = _links(" ".join(cells))
+        if re.search(r"status", label):
+            rm = _RANGE.search(_plain(val))
+            if rm:
+                y2 = rm.group(6) or rm.group(3)
+                o["close"] = _mkdate(rm.group(4), _MON.get(rm.group(5).lower()[:3]), y2, edition, True)
+                o["open"] = _mkdate(rm.group(1), _MON.get(rm.group(2).lower()[:3]), rm.group(3) or y2, edition, True)
+            wm = re.match(r"^\W*(open|closed|upcoming|opens|closes|announced)", _plain(val), re.I)
+            word = wm.group(1).lower() if wm else word
+            if links:
+                o["source"] = {"name": source_name(links[0][1], links[0][0]), "url": links[0][1]}
+        elif re.search(r"subscri|bids?\b", label):
+            bm = re.search(r"([\d.]+)\s*(?:×|x\b|times)", _plain(val))
+            if bm:
+                o["bids"].append({"date": asof or edition, "times_subscribed": float(bm.group(1))})
+            if links and not o["source"]:
+                o["source"] = {"name": source_name(links[0][1], links[0][0]), "url": links[0][1]}
+        elif re.search(r"\bsize\b|green", label):
+            nums = [float(x.replace(",", "")) for x in re.findall(r"₹\s?([\d,]+(?:\.\d+)?)\s*(?:cr|crore)", val)]
+            if nums:
+                o["size_cr"] = max(nums)
+        elif re.search(r"rating", label):
+            o["rating"] = _plain(val) or None
+        elif re.search(r"coupon", label):
+            cm = re.search(r"\d+(?:\.\d+)?%\s*[–—-]\s*\d+(?:\.\d+)?%", val)
+            o["coupon_range"] = cm.group(0) if cm else None
+    ptxt = _plain(" ".join(prose))
+    if not o["open"]:
+        rm = _RANGE.search(ptxt) if re.search(r"\bopen", ptxt, re.I) else None
+        if rm:
+            y2 = rm.group(6) or rm.group(3)
+            o["close"] = _mkdate(rm.group(4), _MON.get(rm.group(5).lower()[:3]), y2, edition, True)
+            o["open"] = _mkdate(rm.group(1), _MON.get(rm.group(2).lower()[:3]), rm.group(3) or y2, edition, True)
+    if o["size_cr"] is None:
+        m = re.search(r"(?:including the green[- ]shoe[^₹]{0,40}|green[- ]shoe[^₹]{0,30}=\s*|total (?:issue )?size[^₹]{0,20})₹\s?([\d,]+)\s*(?:cr|crore)", ptxt, re.I)
+        if m:
+            o["size_cr"] = float(m.group(1).replace(",", ""))
+    if o["rating"] is None:
+        m = re.search(r"\brated\s+([^.()]{4,80})", ptxt)
+        if m:
+            o["rating"] = m.group(1).strip()
+    if o["size_cr"] is not None and float(o["size_cr"]).is_integer():
+        o["size_cr"] = int(o["size_cr"])
+    if not o["source"]:
+        for t, url in _links(" ".join(prose)):
+            o["source"] = {"name": source_name(url, t), "url": url}
+            break
+    if ov:
+        for k in ("issue", "rating", "coupon_range"):
+            if k in ov:
+                o[k] = ov[k] or None
+        for k in ("open", "close"):
+            if k in ov:
+                o[k] = _iso_or_none(ov[k])
+        if "size_cr" in ov:
+            try:
+                o["size_cr"] = float(ov["size_cr"])
+                o["size_cr"] = int(o["size_cr"]) if o["size_cr"].is_integer() else o["size_cr"]
+            except ValueError:
+                o["size_cr"] = None
+        if "bids" in ov:  # bids=2026-10-30:1.86,2026-10-29:1.67
+            o["bids"] = []
+            for part in ov["bids"].split(","):
+                if ":" in part:
+                    d, x = part.split(":", 1)
+                    try:
+                        if _iso_or_none(d):
+                            o["bids"].append({"date": d.strip(), "times_subscribed": float(x)})
+                    except ValueError:
+                        pass
+        if "source" in ov and ov["source"].startswith("http"):
+            o["source"] = {"name": source_name(ov["source"]), "url": ov["source"]}
+        if "status" in ov:
+            word = ov["status"].lower()
+    st = None
+    if word in ("closed", "closes") and o["close"] and o["close"] < edition:
+        st = "closed"
+    if o["open"] and o["close"]:
+        st = "upcoming" if edition < o["open"] else ("closed" if edition > o["close"] else "open")
+    if word in ("open", "closed", "upcoming") and (ov and "status" in ov):
+        st = word
+    elif st is None and word in ("open", "closed", "upcoming"):
+        st = word
+    o["status"] = st
+    if not any(o[k] for k in ("issue", "open", "close", "size_cr", "bids", "rating")):
+        return False, None
+    return True, o
+
+
+def ncd_days(days: list, raw_root) -> None:
+    """Sets day['mfl_ncd'] on every day (in place), with bids accumulated across editions for the same issue."""
+    hist = {}
+    for d in sorted(days, key=lambda x: x["id"]):
+        try:
+            text = ""
+            p = Path(raw_root) / d["id"] / "01-daily-watch.md" if raw_root else None
+            if p is not None and p.exists():
+                text = p.read_text(encoding="utf-8")
+            else:
+                rep = next((r for r in d.get("reports") or [] if r.get("key") == "01-daily-watch"), None)
+                text = (rep or {}).get("content") or ""
+            found, o = parse_ncd(text, d["id"])
+            if not found or o is None:
+                d["mfl_ncd"] = None
+                continue
+            key = o["issue"] or "?"
+            book = hist.setdefault(key, {})
+            for b in o["bids"]:
+                book[b["date"]] = b["times_subscribed"]
+            o["bids"] = [{"date": k, "times_subscribed": v} for k, v in sorted(book.items()) if k <= d["id"]]
+            d["mfl_ncd"] = o
+        except Exception as exc:  # never fatal
+            print(f"export_json: mfl_ncd skipped for {d.get('id')}: {exc}", file=sys.stderr)
+            d["mfl_ncd"] = None
+
+
+def _raw_reports(day: dict, raw_dir) -> list:
+    out = []
+    for r in day.get("reports", []):
+        if r.get("key") not in TAG_REPORTS or r.get("missing"):
+            continue
+        text = None
+        if raw_dir is not None:
+            p = Path(raw_dir) / f"{r['key']}.md"
+            if p.exists():
+                text = p.read_text(encoding="utf-8")
+        out.append((r["key"], text if text is not None else (r.get("content") or "")))
+    return out
+
+
+def cards_day(day: dict, raw_dir=None, private: bool = False) -> dict:
+    """Copy of the day with `cards` (and, private only, `lessons`). Same units and order as story_tags."""
+    try:
+        out = dict(day)
+        units = []
+        raws = _raw_reports(day, raw_dir)
+        for key, text in raws:
+            units.extend(_units(key, text))
+        for i, u in enumerate(units):
+            u["n"] = i + 1
+        out["cards"] = build_cards(units, day["id"], private)
+        if private:
+            les = []
+            for key, text in raws:
+                if key == "02-regulation":
+                    les.extend(parse_lessons(text, day["id"]))
+            out["lessons"] = les
+        return out
+    except Exception as exc:  # never fatal
+        print(f"export_json: cards skipped for {day.get('id')}: {exc}", file=sys.stderr)
+        return day
+
+
+def load_circular_seed(path) -> dict:
+    try:
+        j = json.loads(Path(path).read_text(encoding="utf-8"))
+        return j if isinstance(j, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def _seed_card(s: dict, private: bool):
+    url, ref = s.get("url"), s.get("ref_no")
+    if not url or not ref or not _iso_or_none(s.get("issued")):
+        return None  # every seed entry needs its official URL, ref no. and issue date
+    title = s.get("title") or ref
+    tags = derive_tags(f"{title}\n{s.get('summary') or ''}")
+    if s.get("regulator") and s["regulator"].lower() in TAG_REGULATORS:
+        tags["regulators"] = sorted(set(tags["regulators"]) | {s["regulator"].lower()})
+    tags["topics"] = sorted(set(tags["topics"]) | {"circular"})
+    slug = re.sub(r"[^a-z0-9]+", "-", ref.lower()).strip("-")
+    return {"id": f"seed-{slug}", "n": None, "date": s["issued"], "report": "rules", "section": "Latest circulars",
+            "kind": "circular", "category": "regulation", "title": title, "summary": s.get("summary"),
+            "impact": s.get("impact") if private else None,
+            "source": {"name": source_name(url), "url": url}, "tags": tags,
+            "reg": {"ref_no": ref, "regulator": s.get("regulator"), "applies_to": s.get("applies_to") or None,
+                    "issued": s["issued"], "effective": _iso_or_none(s.get("effective")),
+                    "status": s.get("status") if s.get("status") in REG_STATUS else None, "url": url}}
+
+
+def _ref_key(ref):
+    return re.sub(r"\s+", "", (ref or "").split(" ")[0]).lower()
+
+
+def build_latest_circulars(days: list, seed: dict, private: bool) -> list:
+    if not days:
+        return []
+    newest = max(d["id"] for d in days)
+    start = (_ed(newest) - _dt.timedelta(days=CIRCULAR_WINDOW - 1)).isoformat()
+    picked = {}
+    seeds = {}
+    for s in (seed or {}).get("circulars") or []:
+        if isinstance(s, dict) and _ref_key(s.get("ref_no")):
+            seeds.setdefault(_ref_key(s.get("ref_no")), s)
+    for d in sorted(days, key=lambda x: x["id"]):  # oldest first: keep the first coverage of each instrument
+        for c in d.get("cards") or []:
+            r = c.get("reg")
+            if not r:
+                continue
+            sd = seeds.get(_ref_key(r.get("ref_no")))
+            if sd:  # fill fields the edition left unknown from the verified seed entry (copy; day cards stay as published)
+                c = dict(c, reg=dict(r))
+                r = c["reg"]
+                for k in ("regulator", "issued", "effective", "url"):
+                    if not r.get(k) and sd.get(k):
+                        r[k] = sd[k]
+                if not r.get("applies_to") and sd.get("applies_to"):
+                    r["applies_to"] = list(sd["applies_to"])
+                t0 = c.get("title") or ""
+                if sd.get("title") and str(r.get("ref_no")).split(" ")[0] not in t0 and ":" not in t0:
+                    c["title"] = sd["title"]
+            when = r.get("issued") or c["date"]
+            if when < start or c["date"] < start:
+                continue
+            key = _ref_key(r.get("ref_no")) or (r.get("url") or c["id"])
+            if key not in picked:
+                picked[key] = c
+            elif not picked[key].get("reg", {}).get("ref_no") and r.get("ref_no"):
+                picked[key] = c
+    for s in (seed or {}).get("circulars") or []:
+        c = _seed_card(s, private) if isinstance(s, dict) else None
+        if not c or c["date"] < start or c["date"] > newest:
+            continue
+        key = _ref_key(c["reg"]["ref_no"])
+        if key not in picked:
+            picked[key] = c
+    return sorted(picked.values(), key=lambda c: (c["reg"].get("issued") or c["date"], c["date"], c["id"]), reverse=True)
+
+
+def _deadline_lines(text: str):
+    """Yield (title, date_text, line) for calendar bullets and table rows in calendar/deadline/watchlist sections."""
+    sec = None
+    for l in (text or "").split("\n"):
+        if re.match(r"^##\s", l):
+            sec = l
+            continue
+        if not sec or not re.search(r"calendar|deadline|watchlist|did \*?not\*? move|upcoming", sec, re.I):
+            continue
+        if _TEACH_HEAD.match(sec):
+            continue
+        s = l.strip()
+        m = re.match(r"^[-*]\s+\*\*([^*]+?):?\*\*:?\s*(.+)$", s)
+        if m:
+            yield _plain(m.group(2)), m.group(1), s
+            continue
+        if s.startswith("|") and not re.match(r"^\|\s*:?-{2,}", s) and not re.match(r"^\|\s*(?:item|date|what)\s*\|", s, re.I):
+            cells = [c.strip() for c in s.strip("|").split("|")]
+            if len(cells) >= 2:
+                yield _plain(cells[0]), cells[-1], s
+
+
+def _title_regulator(title: str):
+    t = title or ""
+    for reg, pat in (("SEBI", r"\bSEBI\b|\bLODR\b|Risk-o-Meter|\bILDS\b"), ("IBBI", r"\bIBBI\b|\bCIRP\b"),
+                     ("NHB", r"\bNHB\b"), ("FIU-IND", r"\bFIU"),
+                     ("RBI", r"\bRBI\b|\bMPC\b|Directions?\b|Ombudsman|Recovery agents|\bNBFC-AA\b|\bSBR\b")):
+        if re.search(pat, t):
+            return reg
+    return None
+
+
+def build_deadlines(days: list, latest_circulars: list, seed: dict) -> list:
+    if not days:
+        return []
+    newest = max(d["id"] for d in days)
+    floor = (_ed(newest) - _dt.timedelta(days=DEADLINE_PAST)).isoformat()
+    out, seen = [], set()
+
+    def add(date, title, regulator, ref, url, status):
+        if not date or date < floor or not title:
+            return
+        key = (date, _ref_key(ref) or re.sub(r"\W+", "", title.lower())[:40])
+        if key in seen:
+            return
+        words = {w for w in re.findall(r"[a-z0-9]{4,}", title.lower())}
+        for x in out:
+            if x["date"] == date:
+                xw = {w for w in re.findall(r"[a-z0-9]{4,}", x["title"].lower())}
+                if len(words & xw) >= 2 or (words and xw and (words <= xw or xw <= words)):
+                    for k, v in (("regulator", regulator), ("ref_no", ref), ("url", url)):
+                        x[k] = x[k] or v
+                    return
+        if not regulator:
+            regulator = _title_regulator(title)
+        seen.add(key)
+        out.append({"date": date, "title": _clip(title, 200), "regulator": regulator, "ref_no": ref, "url": url,
+                    "status": status})
+
+    src_day = None
+    for d in sorted(days, key=lambda x: x["id"], reverse=True):
+        rep = [r for r in d.get("_raw") or [] if r[0] == "02-regulation"]
+        if rep and any(True for _ in _deadline_lines(rep[0][1])):
+            src_day = (d["id"], rep[0][1])
+            break
+    if src_day:
+        edition, text = src_day
+        for title, dtxt, line in _deadline_lines(text):
+            ds = _dates(_plain(dtxt), edition, forward=True)
+            if not ds:
+                continue
+            date = ds[0][1]
+            regulator, ref, _ = _find_ref(_URL.sub(" ", line))
+            if not regulator:
+                t = derive_tags(title)
+                regulator = t["regulators"][0].upper() if t["regulators"] else None
+            links = _links(line)
+            off = [u for _, u in links if _is_official(u)]
+            url = off[0] if off else (links[0][1] if links else None)
+            if re.search(r"\bdraft|consultation|if finali[sz]ed|comments? (?:due|by)", line, re.I):
+                status = "draft"
+            else:
+                status = "deadline" if date >= newest else "in-force"
+            add(date, title, regulator, ref, url, status)
+    for c in latest_circulars:
+        r = c.get("reg") or {}
+        if r.get("effective") and r["effective"] > newest:
+            add(r["effective"], f"{c['title']} (effective)", r.get("regulator"), r.get("ref_no"), r.get("url"), "deadline")
+    for s in (seed or {}).get("deadlines") or []:
+        if isinstance(s, dict) and _iso_or_none(s.get("date")) and s.get("url"):
+            add(s["date"], s.get("title"), s.get("regulator"), s.get("ref_no"), s.get("url"),
+                s.get("status") if s.get("status") in REG_STATUS else ("deadline" if s["date"] >= newest else "in-force"))
+    up = sorted((x for x in out if x["date"] >= newest), key=lambda x: (x["date"], x["title"]))
+    past = sorted((x for x in out if x["date"] < newest), key=lambda x: (x["date"], x["title"]), reverse=True)
+    return up + past
+
+
+def cards_export(days: list, raw_root, data_dir, private: bool) -> dict:
+    """Adds cards (+ private lessons) and mfl_ncd to every day in place; returns the latest.json extras."""
+    extras = {}
+    try:
+        for i, d in enumerate(days):
+            raw_dir = Path(raw_root) / d["id"] if raw_root else None
+            days[i] = cards_day(d, raw_dir, private)
+        ncd_days(days, raw_root)
+        for d in days:
+            d["_raw"] = _raw_reports(d, Path(raw_root) / d["id"] if raw_root else None)
+        seed = load_circular_seed(Path(data_dir) / CIRCULAR_SEED)
+        lc = build_latest_circulars(days, seed, private)
+        extras["latest_circulars"] = lc
+        extras["deadlines"] = build_deadlines(days, lc, seed)
+        extras["mfl_ncd"] = days[0].get("mfl_ncd") if days else None
+        if private:
+            extras["lessons"] = sorted((l for d in days for l in d.get("lessons") or []),
+                                       key=lambda l: l["date"], reverse=True)
+    except Exception as exc:  # never fatal
+        print(f"export_json: cards extras skipped: {exc}", file=sys.stderr)
+    for d in days:
+        d.pop("_raw", None)
+        d.setdefault("mfl_ncd", None)
+    return extras
+# ---- end cards block ----
 
 
 # ---- daily gold and AGLOC LTV block (docs/DATA_FORMAT.md "Gold and LTV"); additive, never fatal ----
@@ -760,6 +1693,7 @@ def export(site: Path) -> Path:
         raise SystemExit("export_json: data.js has no days")
     data = site / "data"
     data.mkdir(exist_ok=True)
+    extras = cards_export(days, site / "days", data, private=False)  # cards, mfl_ncd; never fatal (no lessons here)
     for d in days:
         (data / f"{d['id']}.json").write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
     seed = load_seed(site)
@@ -767,6 +1701,7 @@ def export(site: Path) -> Path:
     series.update(build_gold_series(days, load_gold_seed(data / SEED_FILE)))  # gold keys keep their own dates
     latest = {"schema": SCHEMA, "schema_version": SCHEMA_VERSION, "generated": payload["generated"],
               "latest": days[0]["id"], "days": [_index_entry(d) for d in days], "series": series, "today": days[0]}
+    latest.update(extras)  # latest_circulars, deadlines, mfl_ncd
     try:
         latest["tag_labels"] = labels_for(*(d.get("tags") for d in days))
     except Exception as exc:  # never fatal

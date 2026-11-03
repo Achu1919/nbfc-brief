@@ -141,8 +141,9 @@ def section_titles(text: str) -> list[str]:
 
 def read_report(path: Path, key: str, folder: str) -> dict:
     text = path.read_text(encoding="utf-8")
-    # story-tag override comments (<!-- tags: ... -->) are read by export_json.py from the raw file; never shown
-    text = "\n".join(l for l in text.split("\n") if not re.match(r"^\s*<!--\s*tags:.*-->\s*$", l, re.I))
+    # override comments (<!-- tags: ... -->, <!-- reg: ... -->, <!-- ncd: ... -->) are read by export_json.py
+    # from the raw file; never shown
+    text = "\n".join(l for l in text.split("\n") if not re.match(r"^\s*<!--\s*(?:tags|reg|ncd)\s*:.*-->\s*$", l, re.I))
     meta = JOBS[key]
     return {
         "id": f"{folder}-{key}",
