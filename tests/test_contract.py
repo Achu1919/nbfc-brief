@@ -16,6 +16,8 @@ REG_KEYS = {"ref_no", "regulator", "applies_to", "issued", "effective", "status"
 NCD_KEYS = {"issue", "open", "close", "size_cr", "rating", "coupon_range", "bids", "status", "source"}
 EXCLUDED = re.compile(r"exa\.ai|stockfin|trackliveprice|makro\.live|stockwatch\.live", re.I)
 PRIVATE_KEYS = {"lessons", "lesson", "quiz", "teaching"}
+INDEX_URL = re.compile(r"^https?://(www\.)?rbi\.org\.in/Scripts/(NotificationUser|BS_CircularIndexDisplay|BS_PressReleaseDisplay|BS_ViewMasDirections)\.aspx$", re.I)
+AS_OF_DISPLAY = re.compile(r"^\d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec), \d{2}:\d{2} [A-Z]{2,4}$")
 
 def no_private(o, where):
     """Public data never carries lessons, quizzes or teaching (keys or category)."""
@@ -116,8 +118,10 @@ dl = j.get("deadlines")
 if not isinstance(dl, list): err("latest.json: deadlines missing")
 else:
     for x in dl:
-        if set(x) != {"date", "title", "regulator", "ref_no", "url", "status"}: err(f"deadline keys {sorted(x)}")
+        if set(x) != {"date", "title", "regulator", "ref_no", "url", "status", "date_text"}: err(f"deadline keys {sorted(x)}")
         if not ISO.match(str(x.get("date"))) or not x.get("title"): err(f"deadline row {x}")
+        if x.get("date_text") is not None and not isinstance(x["date_text"], str): err(f"deadline date_text {x}")
+        if INDEX_URL.match(x.get("url") or ""): err(f"deadline links an index page, not the circular: {x.get('url')}")
         if EXCLUDED.search(x.get("url") or ""): err(f"deadline url {x.get('url')}")
 sp = D / "circulars_seed.json"
 if sp.exists():
@@ -141,6 +145,39 @@ if hp.exists():
             for day, v in ser.items():
                 if not ISO.match(day): err(f"history.json {k}: bad date {day}")
                 if v is not None and (isinstance(v, bool) or not isinstance(v, (int, float))): err(f"history.json {k} {day}: not a number")
+# gold.spot.as_of_display: present whenever the raw as_of is, formatted like '2 Nov, 18:49 GMT'
+for i in ids:
+    p = D / f"{i}.json"
+    if not p.exists(): continue
+    sp_ = ((json.loads(p.read_text(encoding="utf-8")).get("gold") or {}).get("spot") or {})
+    if sp_:
+        if "as_of_display" not in sp_: err(f"{i}: gold.spot.as_of_display missing")
+        elif sp_.get("as_of_display") is not None and not AS_OF_DISPLAY.match(sp_["as_of_display"]): err(f"{i}: as_of_display {sp_['as_of_display']!r}")
+
+# exporter rules (unit checks against export_json.py in the repo root)
+try:
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    import export_json as X
+    tg = lambda **k: {"companies": k.get("c", []), "topics": k.get("t", []), "regulators": k.get("r", [])}
+    for title, tags, want in (
+        ("Oil fell 7.6% on Iran-deal hopes, and the rupee closed flat", tg(t=["markets"], r=["rbi"]), "markets"),
+        ("FII outflows top ₹23,000 crore in September; RBI under 'tightening pressure'", tg(t=["markets"], r=["rbi"]), "markets"),
+        ("RBI issues gold loan Directions", tg(t=["circular", "gold-loan"], r=["rbi"]), "regulation"),
+        ("MFIN asks RBI to revise the household income cap (inflation)", tg(t=["macro"], r=["rbi"]), "regulation"),
+    ):
+        got = X._cat_from_tags(tags, title)
+        if got != want: err(f"category rule: {title!r} -> {got}, want {want}")
+    if X._range_end("2–4 Dec 2026", "2026-11-04") != "2026-12-04": err("date range 2–4 Dec 2026 must end 2026-12-04")
+    if X._range_end("28 Nov–2 Dec 2026", "2026-11-04") != "2026-12-02": err("cross-month date range")
+    if X._range_end("4 Dec 2026", "2026-11-04") is not None: err("single date is not a range")
+    if X.as_of_display("2026-11-02 1849 GMT (2026-11-03 00:19 IST)") != "2 Nov, 18:49 GMT": err("as_of_display format")
+    if X.as_of_display(None) is not None: err("as_of_display(None)")
+except ImportError as e:
+    err(f"export_json import failed: {e}")
+mpc = [x for x in (dl or []) if x.get("date_text")]
+for x in mpc:
+    if not re.search(r"\d", x["date_text"]): err(f"date_text {x['date_text']!r}")
+
 print(f"{len(ids)} day(s) checked, {len(errs)} problem(s)")
 for e in errs[:50]: print(" -", e)
 sys.exit(1 if errs else 0)

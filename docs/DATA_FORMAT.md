@@ -216,6 +216,7 @@ Columns are `Item | Value | Previous | Change | Effective | Source`. `Change` is
   "ibja":  {"rate_999": 13752, "rate_916": 12599, "prev_999": 14005, "prev_916": 12829, "session": "PM",
             "date": "2026-11-02", "prev_date": "2026-10-30", "source": "https://ibjarates.com/"},
   "spot":  {"usd_oz": 3990.4, "prev_usd_oz": 4012.1, "inr_10g": null, "as_of": "2026-11-03 07:10 IST",
+            "as_of_display": "3 Nov, 07:10 IST",
             "source": "https://www.reuters.com/markets/commodities/", "inr_source": null},
   "agloc": {"ltv_85": 10709, "ltv_80": 10079, "ltv_75": 9449, "ref_price": 12599, "from": "2026-11-03", "to": "2026-11-03",
             "prev": {"ltv_85": 10904, "ltv_80": 10263, "ltv_75": 9621, "ref_price": 12828, "from": "2026-10-31", "to": "2026-11-02"},
@@ -226,6 +227,9 @@ Columns are `Item | Value | Previous | Change | Effective | Source`. `Change` is
 - Numbers: thousands separators (including Indian `1,23,456`), `₹`, `Rs` and `US$` are stripped. `—`, `-`, `n/a` or an empty cell becomes `null`. Any value can be `null`, and nothing is computed or derived.
 - `ibja.session` is `AM` or `PM`, read from Effective (e.g. `2026-11-02 PM`). `ibja.date` is the date in Effective. `prev_date` is a date written in the 999 row's Previous cell (e.g. `14,005 (2026-10-30 PM)`), else `null`.
 - `agloc.from` and `agloc.to` come from Effective (`2026-10-23 to 2026-10-23`); rows marked `same` share them. `agloc.prev` is `null` when no Previous value is given. Its `from` and `to` come from dates written in a Previous cell, else `null`.
+- `spot.as_of` is kept exactly as written (e.g. `2026-11-02 1849 GMT (2026-11-03 00:19 IST)`). `spot.as_of_display` is the
+  first date and time in it, formatted for display like `2 Nov, 18:49 GMT` (day, short month, 24-hour time, zone as written);
+  `null` when `as_of` is null or has no readable date and time.
 - A group (`ibja`, `spot`, `agloc`) is present only if at least one of its rows is in the table.
 - Failure-safe: a malformed table means no `gold` key for that day, and publishing continues.
 
@@ -293,7 +297,7 @@ editions did not cover.
 ```json
 {"circulars": [{"ref_no": "...", "regulator": "RBI", "title": "...", "summary": "...", "issued": "YYYY-MM-DD",
                 "effective": null, "applies_to": ["nbfcs"], "status": "new", "url": "https://www.rbi.org.in/..."}],
- "deadlines": [{"date": "YYYY-MM-DD", "title": "...", "regulator": "SEBI", "ref_no": "...", "url": "...", "status": "deadline"}]}
+ "deadlines": [{"date": "YYYY-MM-DD", "title": "...", "regulator": "SEBI", "ref_no": "...", "url": "...", "status": "deadline", "date_text": null}]}
 ```
 
 Only official sources (rbi.org.in, sebi.gov.in, ibbi.gov.in, nhb.org.in, fiuindia.gov.in). Entries without `url`,
@@ -301,9 +305,15 @@ Only official sources (rbi.org.in, sebi.gov.in, ibbi.gov.in, nhb.org.in, fiuindi
 
 ## `latest.json` → `deadlines[]`
 
-`{date, title, regulator, ref_no, url, status}` from calendar, deadline and watchlist sections, circular `effective`
+`{date, title, regulator, ref_no, url, status, date_text}` from calendar, deadline and watchlist sections, circular `effective`
 dates and the seed. Upcoming first (ascending), then past items newest first; items more than 30 days before the newest
 edition are dropped. Same-date rows that describe the same thing are merged. `regulator`, `ref_no` and `url` may be null.
+- A date written as a range (e.g. `2–4 Dec 2026`, `28 Nov–2 Dec 2026`) parses to its **end** date in `date`;
+  `date_text` keeps the range as written. `date_text` is `null` for single dates.
+- `url` is the exact circular or press release. A bare index page (RBI `NotificationUser.aspx`,
+  `BS_CircularIndexDisplay.aspx`, etc. with no `Id`) is not a source and is dropped; a `deadlines` entry in
+  `data/circulars_seed.json` (`{date, title, regulator, ref_no, url, status}`) fills the exact URL.
+- `title` drops the trailing `(Regulator ref)` and `(link)` text, since those have their own fields.
 
 ## `mfl_ncd` (day files and `latest.json`, both levels)
 
@@ -317,6 +327,7 @@ no solicitation or rate card.
 - Override: `<!-- ncd: issue=Tranche I; open=2026-10-23; close=2026-11-05; size_cr=500; rating=...; status=open -->`,
   or `<!-- ncd: none -->` to force `null`.
 - Fields not in the edition (e.g. `coupon_range`) are `null`.
+- Size is the issue size (base + green shoe), never the shelf limit or a minimum subscription.
 
 Public data never has `lessons`, `quiz` or any `teaching` key or category (`tests/test_contract.py` checks this).
 ## App-side notes: search and gold card (app only; no data change)

@@ -172,6 +172,22 @@
    "ref_no": "HO/(201)2026-DDHS-POD1/I/24467/2026",
    "url": "https://www.sebi.gov.in/legal/circulars/oct-2026/extension-of-timeline-for-compliance-with-terms-and-conditions-by-debenture-trustees-dts-for-carrying-out-activities-outside-the-purview-of-sebi_105454.html",
    "status": "deadline"
+  },
+  {
+   "date": "2026-12-31",
+   "title": "Type I NBFC deregistration applications due (NBFC Registration, Exemptions and SBR Amendment Directions, 2026, para 26)",
+   "regulator": "RBI",
+   "ref_no": "RBI/2026-27/43 DOR.FIN.REC.No.67/03.10.001/2026-27",
+   "url": "https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13407&Mode=0",
+   "status": "deadline"
+  },
+  {
+   "date": "2027-01-01",
+   "title": "Recovery-agent rules apply (NBFC Responsible Business Conduct Third Amendment Directions, 2026)",
+   "regulator": "RBI",
+   "ref_no": "RBI/2026-27/230 DOR.MCS.REC.No.199/01-01-039/2026-27",
+   "url": "https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13672&Mode=0",
+   "status": "deadline"
   }
  ]
 }

@@ -589,7 +589,7 @@ _SEC_CATS = (
     (re.compile(r"credit rating|\bratings?\b", re.I), "ratings"),
     (re.compile(r"\bdeals?\b|m&a|fund-?rais|capital rais", re.I), "deals"),
     (re.compile(r"\bnpa\b|asset quality", re.I), "asset-quality"),
-    (re.compile(r"\bmarket|\bstock", re.I), "markets"),
+    (re.compile(r"\bmarket|\bstock|industry trends|credit data|sector(?:al)? (?:lending|credit)|\bmacro|\becono|commodit", re.I), "markets"),
     (re.compile(r"\brbi\b|regulat|\bsebi\b|circular|calendar|deadline", re.I), "regulation"),
 )
 
@@ -748,6 +748,12 @@ def _card_impact(u: dict):
     return None
 
 
+_MACRO_TITLE = re.compile(r"\b(?:oil|brent|crude|rupee|sensex|nifty|commodit\w*|FIIs?|FPIs?|forex|FX swap|inflation|CPI|WPI|GDP|"
+                          r"macro|bond yields?|G-?secs?|midterms?|outflows?|inflows?|crash(?:es|ed)?\s+\d+(?:\.\d+)?%)", re.I)
+_REG_TITLE = re.compile(r"\b(?:asks? RBI|circulars?|directions?|guidelines?|draft|consultation|framework|norms?|deadline)\b", re.I)
+_REG_TOPICS = {"circular", "enforcement", "policy"}
+
+
 def _cat_from_tags(t: dict, title: str) -> str:
     c, tp, rg = set(t["companies"]), set(t["topics"]), set(t["regulators"])
     if "muthoot-fincorp" in c and re.search(r"muthoot fincorp|\bMFL\b", title or "", re.I):
@@ -764,6 +770,8 @@ def _cat_from_tags(t: dict, title: str) -> str:
         return "gold"
     if "muthoot-fincorp" in c:
         return "muthoot-fincorp"
+    if rg and _MACRO_TITLE.search(title or "") and not _REG_TITLE.search(title or "") and not tp & _REG_TOPICS:
+        return "markets"  # macro / commodity / market story that merely mentions a regulator (e.g. oil, rupee, FII flows)
     if rg:
         return "regulation"
     return "markets"
@@ -937,6 +945,127 @@ def _split_answer(a: str):
     return a, None
 
 
+_QNUM = re.compile(r"^(?:(\d+)[.)]\s+|\**\s*Q\s*(\d+)\s*[:.)]\s*\**\s*:?\s*)(.+)$", re.I)
+_QLABEL = re.compile(r"^\**\s*(?:Q\d*|Question)\s*[:.]\s*\**\s*:?\s*", re.I)
+_ALABEL = re.compile(r"^[*_]*\(?\s*\**\s*(?:A|Ans|Answers?)\s*\**\s*[:.\u2014\u2013-]\s*\**\s*", re.I)
+_OPT = re.compile(r"(?:^|\s)[-*]?\s*\(?([a-dA-D])\)\s+")
+
+
+def _unwrap(s: str) -> str:
+    """Strip one layer of italic/bold/paren wrapping: '*(text)*' -> 'text'."""
+    s = s.strip()
+    for _ in range(3):
+        m = re.match(r"^(\*{1,2}|_)(.+)\1$", s)
+        if m:
+            s = m.group(2).strip()
+            continue
+        m = re.match(r"^\((.+)\)$", s)
+        if not m:
+            break
+        s = m.group(1).strip()
+    return s
+
+
+def _options(s: str):
+    """['opt a', 'opt b', ...] for 'a) x  b) y' / '- (a) x' lines, else None."""
+    if not re.match(r"^(?:[-*]\s*)?\(?[a-dA-D]\)\s+\S", s) and not re.match(r"^(?:[-*]\s*)?[a-dA-D][.]\s+\S", s):
+        return None
+    parts = re.split(r"(?:^|\s)(?:[-*]\s*)?\(?[a-dA-D][).]\s+", s)
+    return [_plain(p).strip() for p in parts if p.strip()]
+
+
+def _parse_quiz(lines: list) -> list:
+    """Quiz items after a 'Quiz yourself' mark. Answers are read from: an italic next line ('*answer*' or
+    '*Answer: ...*'), an '**A:**' / '**Answer:**' line, an inline '*(answer)*' or bold-led '**No.** why' after the
+    question mark, a closing '*(Answers: (1) ... (2) ...)*' paragraph, or a numbered list in an Answers block."""
+    quiz, answers, in_ans, last = [], {}, False, None
+
+    def take(q, raw):
+        raw = _ALABEL.sub("", _unwrap(raw)).strip()
+        if raw and q is not None and not q["answer"]:
+            q["answer"] = raw
+
+    for l in lines:
+        s = l.strip()
+        if not s:
+            continue
+        if (re.match(r"^#{2,4}\s", s) or re.match(r"^-{3,}$", s)) and quiz:
+            break
+        if re.search(r"<summary>", s, re.I) or re.match(r"^[#*_\s]*answers?[*_\s]*:?[*_\s]*$", s, re.I):
+            in_ans = True
+            continue
+        if s.startswith("</details"):
+            in_ans = False
+            continue
+        if s.startswith("<details"):
+            continue
+        s = re.sub(r"^[-*]\s+(?=\*\*)", "", s)  # '- **Answer:** ...'
+        body = _unwrap(s)
+        mb = re.match(r"^\s*\**\s*Answers?\s*(?:\([^)]{0,40}\))?\s*\**\s*[:.\u2014\u2013-]\s*\**\s*(.+)$", body, re.I)
+        if mb and re.search(r"(?:^|\s)\(1\)\s", mb.group(1)):
+            parts = re.split(r"(?:^|\s)\((\d+)\)\s+", mb.group(1))
+            for k in range(1, len(parts) - 1, 2):
+                answers[int(parts[k])] = parts[k + 1].strip()
+            continue
+        m = _QNUM.match(s)
+        if m and in_ans:
+            answers[int(m.group(1) or m.group(2))] = _ALABEL.sub("", m.group(3)).strip()
+            continue
+        if in_ans and last is not None and not answers:  # <details><summary>Answer</summary> text </details> per question
+            take(last, s)
+            continue
+        if m:
+            raw = _QLABEL.sub("", m.group(3)).strip()
+            ans = None
+            mi = re.match(r"^(.*\?)(\**)\s+((?:\*|_|\().+)$", raw)
+            if mi:
+                rest = mi.group(3).strip()
+                q = mi.group(1) + mi.group(2)
+                mbold = re.match(r"^\*\*(.+?)\*\*\s*(.*)$", rest)
+                if mbold and re.match(r"^[a-z,;(]", mbold.group(2).strip()):  # '**It is a restructuring** of the ...'
+                    ans = (mbold.group(1).strip() + " " + mbold.group(2).strip(), None)
+                elif mbold:
+                    ans = (mbold.group(1).strip(), mbold.group(2).strip() or None)
+                else:
+                    ans = (_ALABEL.sub("", _unwrap(rest)).strip(), None)
+                raw = q
+            last = {"q": _plain(raw).strip(), "options": [], "answer": None, "explain": None,
+                    "_k": int(m.group(1) or m.group(2)), "_pair": ans}
+            quiz.append(last)
+            continue
+        if last is None or in_ans:
+            continue
+        opts = _options(s)
+        if opts:
+            last["options"].extend(opts)
+            continue
+        if re.match(r"^\**\s*(?:A|Ans|Answer)\s*\**\s*[:.]", s, re.I) or re.match(r"^(\*|_)[^*].*\1$", s) \
+                or re.match(r"^\*\(.+\)\*$", s):
+            take(last, s)
+            continue
+    out = []
+    for q in quiz:
+        k, pair = q.pop("_k"), q.pop("_pair")
+        if pair and pair[1]:
+            ans, exp = _plain(pair[0]), _plain(pair[1])
+        else:
+            a = (pair[0] if pair else None) or q["answer"] or answers.get(k)
+            ans, exp = _split_answer(_plain(a)) if a else (None, None)
+        if ans and q["options"]:
+            mo = re.match(r"^\(?([a-dA-D])\)?(?:[).:\s]|$)", ans)
+            if mo and ord(mo.group(1).lower()) - 97 < len(q["options"]):
+                rest = ans[mo.end():].strip()
+                ans = q["options"][ord(mo.group(1).lower()) - 97]
+                norm = lambda x: re.sub(r"\W+", " ", x).strip().lower()
+                if rest and not (norm(ans).startswith(norm(rest)) or norm(rest).startswith(norm(ans))):
+                    exp = (rest + (" " + exp if exp else "")).strip()
+        tidy = lambda x: re.sub(r"\s+([.,;:])", r"\1", x).strip() if x else None
+        q["answer"] = tidy(ans)
+        q["explain"] = tidy(exp) or None
+        out.append(q)
+    return out
+
+
 def parse_lessons(text: str, edition: str) -> list:
     lines = (text or "").split("\n")
     out, i = [], 0
@@ -994,39 +1123,7 @@ def parse_lessons(text: str, edition: str) -> list:
                 qi = k
                 break
         if qi is not None:
-            in_ans, last = False, None
-            for l in block[qi + 1:]:
-                s = l.strip()
-                if re.search(r"<summary>|^\**\s*answers?\b", s, re.I):
-                    in_ans = True
-                    continue
-                if re.match(r"^#{2,4}\s", s) and quiz:
-                    break
-                m = re.match(r"^(\d+)[.)]\s+(.+)$", s)
-                if m and in_ans:
-                    answers[int(m.group(1))] = _plain(m.group(2))
-                    continue
-                if m:
-                    q = _plain(m.group(2))
-                    ans = None
-                    m2 = re.match(r"^(.*\?)\s*\((.+)\)\s*$", q)
-                    if m2:
-                        q, ans = m2.group(1).strip(), m2.group(2).strip()
-                    last = {"q": q, "options": [], "answer": ans, "explain": None, "_k": int(m.group(1))}
-                    quiz.append(last)
-                    continue
-                m = re.match(r"^(?:[-*]\s*)?\(?([a-dA-D])[).]\s+(.+)$", s)
-                if m and last is not None and not in_ans:
-                    last["options"].append(_plain(m.group(2)))
-            for q in quiz:
-                a = q["answer"] or answers.get(q.pop("_k"))
-                q.pop("_k", None)
-                if a:
-                    q["answer"], q["explain"] = _split_answer(a)
-                    if q["options"]:
-                        mo = re.match(r"^\(?([a-dA-D])\)?(?:[).:\s]|$)", q["answer"])
-                        if mo:
-                            q["answer"] = q["options"][ord(mo.group(1).lower()) - 97]
+            quiz = _parse_quiz(block[qi + 1:])
         srcs, seen = [], set()
         for t, url in _links(body):
             if url not in seen:
@@ -1042,6 +1139,23 @@ _MFL_HEAD = re.compile(r"^#{2,3}\s+.*(?:muthoot fincorp|\bMFL\b)", re.I)
 _RANGE = re.compile(r"(\d{1,2})\s+([A-Za-z]{3})[a-z]*\.?(?:\s+(\d{4}))?\s*(?:[–—-]|to)\s*(\d{1,2})\s+([A-Za-z]{3})[a-z]*\.?(?:,?\s+(\d{4}))?")
 
 
+def _ncd_size(val: str, prose: bool = False):
+    """Issue size in ₹ cr from 'base + green shoe = total' wording; the shelf is never the issue size."""
+    v = re.sub(r"(?:within|under|of)\s+the\s+₹\s?[\d,]+\s*(?:cr|crore)\s+shelf|\(?₹\s?[\d,]+\s*(?:cr|crore)\s+shelf\)?", " ", val, flags=re.I)
+    num = lambda x: float(x.replace(",", ""))
+    m = re.search(r"=\s*₹\s?([\d,]+(?:\.\d+)?)\s*(?:cr|crore)", v, re.I)
+    if m:
+        return num(m.group(1))
+    b = re.search(r"₹\s?([\d,]+(?:\.\d+)?)\s*(?:cr|crore)\s+base", v, re.I)
+    g = re.search(r"₹\s?([\d,]+(?:\.\d+)?)\s*(?:cr|crore)\s+green[- ]shoe", v, re.I)
+    if b and g:
+        return num(b.group(1)) + num(g.group(1))
+    if prose:
+        return None
+    nums = [num(x) for x in re.findall(r"₹\s?([\d,]+(?:\.\d+)?)\s*(?:cr|crore)", v)]
+    return max(nums) if nums else None
+
+
 def parse_ncd(text: str, edition: str):
     """Returns (found, obj). found=False: no NCD lines and no override. obj=None with found=True: override 'none'."""
     lines = (text or "").split("\n")
@@ -1053,10 +1167,19 @@ def parse_ncd(text: str, edition: str):
             if body.lower() in ("none", "null", "-", ""):
                 return True, None
             ov = _kv(body)
-    rows, prose, in_mfl = [], [], False
+    rows, prose, in_mfl, in_story = [], [], False, False
     for l in lines:
         if re.match(r"^#{2,3}\s", l):
             in_mfl = bool(_MFL_HEAD.match(l)) and not re.search(r"muthoot finance\b", l, re.I)
+            in_story = False
+            continue
+        if re.match(r"^\*\*\d+\.\s", l.strip()):  # bold story line under a mixed section: '**1. MFL's Tranche I NCD ...**'
+            in_story = bool(re.search(r"muthoot fincorp|\bMFL\b", l, re.I)) and bool(re.search(r"\bNCDs?\b|tranche", l, re.I)) \
+                and not re.search(r"muthoot finance\b", l, re.I)
+            continue
+        if in_story and not in_mfl and l.strip() and not l.strip().startswith(">"):
+            if not re.search(r"muthoot finance\b", l, re.I):
+                prose.append(l.strip())
             continue
         if not in_mfl or not re.search(r"\bNCDs?\b|tranche", l, re.I) or re.search(r"muthoot finance\b(?! ?corp)", l, re.I):
             continue
@@ -1096,10 +1219,10 @@ def parse_ncd(text: str, edition: str):
                 o["bids"].append({"date": asof or edition, "times_subscribed": float(bm.group(1))})
             if links and not o["source"]:
                 o["source"] = {"name": source_name(links[0][1], links[0][0]), "url": links[0][1]}
-        elif re.search(r"\bsize\b|green", label):
-            nums = [float(x.replace(",", "")) for x in re.findall(r"₹\s?([\d,]+(?:\.\d+)?)\s*(?:cr|crore)", val)]
-            if nums:
-                o["size_cr"] = max(nums)
+        elif re.search(r"\bsize\b|green", label) and not re.search(r"minimum|\bmin\b|shelf", label):
+            sz = _ncd_size(_plain(val))
+            if sz is not None:
+                o["size_cr"] = sz
         elif re.search(r"rating", label):
             o["rating"] = _plain(val) or None
         elif re.search(r"coupon", label):
@@ -1113,13 +1236,21 @@ def parse_ncd(text: str, edition: str):
             o["close"] = _mkdate(rm.group(4), _MON.get(rm.group(5).lower()[:3]), y2, edition, True)
             o["open"] = _mkdate(rm.group(1), _MON.get(rm.group(2).lower()[:3]), rm.group(3) or y2, edition, True)
     if o["size_cr"] is None:
-        m = re.search(r"(?:including the green[- ]shoe[^₹]{0,40}|green[- ]shoe[^₹]{0,30}=\s*|total (?:issue )?size[^₹]{0,20})₹\s?([\d,]+)\s*(?:cr|crore)", ptxt, re.I)
+        m = re.search(r"(?:including the green[- ]shoe[^₹]{0,40}|green[- ]shoe[^₹]{0,30}=\s*|total (?:issue )?size[^₹]{0,20}|"
+                      r"issue size including[^.₹]{0,20}(?:₹\s?[\d,]+\s*(?:cr|crore)[^.₹]{0,40})?\bis\s+|full (?:issue|size) is\s+)"
+                      r"₹\s?([\d,]+)\s*(?:cr|crore)", ptxt, re.I)
         if m:
             o["size_cr"] = float(m.group(1).replace(",", ""))
+        else:
+            o["size_cr"] = _ncd_size(ptxt, prose=True)
     if o["rating"] is None:
-        m = re.search(r"\brated\s+([^.()]{4,80})", ptxt)
+        m = re.search(r"\brated\s+([^.();,]{4,80})", ptxt)
         if m:
             o["rating"] = m.group(1).strip()
+    if o["coupon_range"] is None:
+        m = re.search(r"\bcoupons?\b[^.%]{0,30}?(\d+(?:\.\d+)?%\s*[–—-]\s*\d+(?:\.\d+)?%)", ptxt, re.I)
+        if m:
+            o["coupon_range"] = m.group(1)
     if o["size_cr"] is not None and float(o["size_cr"]).is_integer():
         o["size_cr"] = int(o["size_cr"])
     if not o["source"]:
@@ -1168,8 +1299,26 @@ def parse_ncd(text: str, edition: str):
     return True, o
 
 
-def ncd_days(days: list, raw_root) -> None:
-    """Sets day['mfl_ncd'] on every day (in place), with bids accumulated across editions for the same issue."""
+def _public_ncd(day_id: str):
+    """mfl_ncd from the public edition's export of the same day (sourced from its markdown), or None.
+    Looks in $NBFC_PUBLIC_DIR or ../nbfc-brief next to this repo; silently None when absent."""
+    import os
+    for base in (os.environ.get("NBFC_PUBLIC_DIR"), Path(__file__).resolve().parent.parent / "nbfc-brief"):
+        if not base:
+            continue
+        p = Path(base) / "data" / f"{day_id}.json"
+        if p.exists() and Path(base).resolve() != Path(__file__).resolve().parent:
+            try:
+                return json.loads(p.read_text(encoding="utf-8")).get("mfl_ncd")
+            except (ValueError, OSError):
+                return None
+    return None
+
+
+def ncd_days(days: list, raw_root, fallback=None) -> None:
+    """Sets day['mfl_ncd'] on every day (in place), with bids accumulated across editions for the same issue.
+    fallback(day_id) may return a sourced mfl_ncd (the public edition) to fill size_cr / rating / coupon_range
+    that this edition's markdown leaves out, for the same issue only."""
     hist = {}
     for d in sorted(days, key=lambda x: x["id"]):
         try:
@@ -1185,6 +1334,12 @@ def ncd_days(days: list, raw_root) -> None:
                 d["mfl_ncd"] = None
                 continue
             key = o["issue"] or "?"
+            if fallback and any(o[k] is None for k in ("size_cr", "rating", "coupon_range")):
+                pub = fallback(d["id"])
+                if pub and pub.get("issue") == o["issue"]:
+                    for k in ("size_cr", "rating", "coupon_range"):
+                        if o[k] is None and pub.get(k) is not None:
+                            o[k] = pub[k]
             book = hist.setdefault(key, {})
             for b in o["bids"]:
                 book[b["date"]] = b["times_subscribed"]
@@ -1330,6 +1485,27 @@ def _deadline_lines(text: str):
                 yield _plain(cells[0]), cells[-1], s
 
 
+_DRANGE = re.compile(r"^\s*(\d{1,2})(?:\s+([A-Za-z]{3,9})\.?)?(?:,?\s+(\d{4}))?\s*(?:[–—-]|to)\s*(\d{1,2})\s+([A-Za-z]{3,9})\.?(?:,?\s+(\d{4}))?\s*$")
+
+
+def _range_end(dtxt: str, edition: str):
+    """ISO end date for '2–4 Dec 2026' / '30 Nov – 2 Dec 2026' style ranges, else None."""
+    m = _DRANGE.match(_plain(dtxt or ""))
+    if not m or _MON.get(m.group(5).lower()[:3]) is None:
+        return None
+    return _mkdate(m.group(4), _MON[m.group(5).lower()[:3]], m.group(6) or m.group(3), edition, True)
+
+
+def _index_url(url: str) -> bool:
+    """True for a regulator's listing / index page (no specific document id), e.g. RBI NotificationUser.aspx."""
+    try:
+        u = _urlparse(url or "")
+    except ValueError:
+        return False
+    return _is_official(url) and not u.query and bool(re.search(r"(?:NotificationUser|BS_CircularIndexDisplay|BS_PressReleaseDisplay|"
+                                                                r"BS_ViewMasDirections|DraftNotificationsGuildelines)\.aspx$", u.path, re.I))
+
+
 def _title_regulator(title: str):
     t = title or ""
     for reg, pat in (("SEBI", r"\bSEBI\b|\bLODR\b|Risk-o-Meter|\bILDS\b"), ("IBBI", r"\bIBBI\b|\bCIRP\b"),
@@ -1347,9 +1523,11 @@ def build_deadlines(days: list, latest_circulars: list, seed: dict) -> list:
     floor = (_ed(newest) - _dt.timedelta(days=DEADLINE_PAST)).isoformat()
     out, seen = [], set()
 
-    def add(date, title, regulator, ref, url, status):
+    def add(date, title, regulator, ref, url, status, date_text=None):
         if not date or date < floor or not title:
             return
+        if url and _index_url(url):
+            url = None  # an index page is not a source for one deadline; a seed entry can fill the exact URL
         key = (date, _ref_key(ref) or re.sub(r"\W+", "", title.lower())[:40])
         if key in seen:
             return
@@ -1358,14 +1536,14 @@ def build_deadlines(days: list, latest_circulars: list, seed: dict) -> list:
             if x["date"] == date:
                 xw = {w for w in re.findall(r"[a-z0-9]{4,}", x["title"].lower())}
                 if len(words & xw) >= 2 or (words and xw and (words <= xw or xw <= words)):
-                    for k, v in (("regulator", regulator), ("ref_no", ref), ("url", url)):
+                    for k, v in (("regulator", regulator), ("ref_no", ref), ("url", url), ("date_text", date_text)):
                         x[k] = x[k] or v
                     return
         if not regulator:
             regulator = _title_regulator(title)
         seen.add(key)
         out.append({"date": date, "title": _clip(title, 200), "regulator": regulator, "ref_no": ref, "url": url,
-                    "status": status})
+                    "status": status, "date_text": date_text})
 
     src_day = None
     for d in sorted(days, key=lambda x: x["id"], reverse=True):
@@ -1376,10 +1554,15 @@ def build_deadlines(days: list, latest_circulars: list, seed: dict) -> list:
     if src_day:
         edition, text = src_day
         for title, dtxt, line in _deadline_lines(text):
-            ds = _dates(_plain(dtxt), edition, forward=True)
-            if not ds:
-                continue
-            date = ds[0][1]
+            date_text = None
+            date = _range_end(dtxt, edition)
+            if date:
+                date_text = _plain(dtxt).strip()
+            else:
+                ds = _dates(_plain(dtxt), edition, forward=True)
+                if not ds:
+                    continue
+                date = ds[0][1]
             regulator, ref, _ = _find_ref(_URL.sub(" ", line))
             if not regulator:
                 t = derive_tags(title)
@@ -1391,7 +1574,9 @@ def build_deadlines(days: list, latest_circulars: list, seed: dict) -> list:
                 status = "draft"
             else:
                 status = "deadline" if date >= newest else "in-force"
-            add(date, title, regulator, ref, url, status)
+            title = re.sub(r"\s*\(\[?link\]?\)\s*$", "", title, flags=re.I)  # markdown '([link](url))' leftover
+            title = re.sub(r"\s*\((?:RBI|SEBI|IBBI|IRDAI|NHB|MCA|PFRDA)\b(?:[^()]|\([^()]*\))*\)\s*$", "", title) or title  # regulator/ref is its own field
+            add(date, title, regulator, ref, url, status, date_text)
     for c in latest_circulars:
         r = c.get("reg") or {}
         if r.get("effective") and r["effective"] > newest:
@@ -1399,7 +1584,8 @@ def build_deadlines(days: list, latest_circulars: list, seed: dict) -> list:
     for s in (seed or {}).get("deadlines") or []:
         if isinstance(s, dict) and _iso_or_none(s.get("date")) and s.get("url"):
             add(s["date"], s.get("title"), s.get("regulator"), s.get("ref_no"), s.get("url"),
-                s.get("status") if s.get("status") in REG_STATUS else ("deadline" if s["date"] >= newest else "in-force"))
+                s.get("status") if s.get("status") in REG_STATUS else ("deadline" if s["date"] >= newest else "in-force"),
+                s.get("date_text"))
     up = sorted((x for x in out if x["date"] >= newest), key=lambda x: (x["date"], x["title"]))
     past = sorted((x for x in out if x["date"] < newest), key=lambda x: (x["date"], x["title"]), reverse=True)
     return up + past
@@ -1412,7 +1598,7 @@ def cards_export(days: list, raw_root, data_dir, private: bool) -> dict:
         for i, d in enumerate(days):
             raw_dir = Path(raw_root) / d["id"] if raw_root else None
             days[i] = cards_day(d, raw_dir, private)
-        ncd_days(days, raw_root)
+        ncd_days(days, raw_root, _public_ncd if private else None)
         for d in days:
             d["_raw"] = _raw_reports(d, Path(raw_root) / d["id"] if raw_root else None)
         seed = load_circular_seed(Path(data_dir) / CIRCULAR_SEED)
@@ -1512,6 +1698,24 @@ def _gold_rows(text: str) -> dict:
     return rows
 
 
+_MON_ABBR = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+
+def as_of_display(raw):
+    """'2026-11-02 1849 GMT (2026-11-03 00:19 IST)' -> '2 Nov, 18:49 GMT'; date only -> '2 Nov'; else None."""
+    m = re.match(r"^\s*(\d{4})-(\d{2})-(\d{2})(?:[ T]+(\d{1,2}):?(\d{2})(?::\d{2})?)?\s*(GMT|UTC|IST|Z)?\b", str(raw or ""))
+    if not m or not 1 <= int(m.group(2)) <= 12:
+        return None
+    s = f"{int(m.group(3))} {_MON_ABBR[int(m.group(2)) - 1]}"
+    if m.group(4):
+        hh = int(m.group(4))
+        if hh > 23 or int(m.group(5)) > 59:
+            return s
+        tz = {"Z": "GMT", "UTC": "UTC"}.get(m.group(6) or "", m.group(6) or "")
+        s += f", {hh:02d}:{m.group(5)}" + (f" {tz}" if tz else "")
+    return s
+
+
 def parse_gold(text: str):
     """Top-level `gold` object from the report Markdown, or None when the section/table is absent."""
     rows = _gold_rows(text)
@@ -1537,7 +1741,8 @@ def parse_gold(text: str):
         inr = _gold_num(si[0]) if si else None
         gold["spot"] = {
             "usd_oz": _gold_num(su[0]) if su else None, "prev_usd_oz": _gold_num(su[1]) if su else None,
-            "inr_10g": inr, "as_of": (su or si)[3] or None, "source": _gold_url((su or si)[4]),
+            "inr_10g": inr, "as_of": (su or si)[3] or None, "as_of_display": as_of_display((su or si)[3]),
+            "source": _gold_url((su or si)[4]),
             "inr_source": _gold_url(si[4]) if si and inr is not None else None,
         }
     tiers = ("ltv_85", "ltv_80", "ltv_75", "ref_price")
