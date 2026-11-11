@@ -21,13 +21,14 @@ Source: [CNBC-TV18](https://www.cnbctv18.com/economy/cii-recommends-regulatory-r
 <!-- ncd: issue=Tranche I; open=2026-10-23; close=2026-11-05; size_cr=500; rating=CRISIL AA/Stable, Brickwork AA+/Stable; coupon_range=8.56%–9.25%; bids=2026-11-05:2.67; source=https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/; status=closed -->
 
 ### Muthoot Fincorp NCD status
+Muthoot Fincorp's Tranche I NCD allotment status is still not shown on Chittorgarh's allotment page, and 10 Nov is a market holiday, so there is no listing today. The ₹500 crore issue (₹200 crore base plus ₹300 crore green shoe) closed on 5 Nov with bids at 2.67x, and carries CRISIL AA/Stable and Brickwork AA+/Stable ratings with coupons of 8.56%–9.25%.
 | Field | Value | As of |
 |---|---|---|
 | Status | Closed, 23 Oct – 5 Nov 2026; Chittorgarh's allotment page still says allotment status is not available; today is a market holiday, so no listing today ([Chittorgarh](https://www.chittorgarh.com/ncd_allotment_status/muthoot-fincorp-tranche-i-ncd-october-2026/399/)) | 2026-11-10 |
 | Size | ₹500 crore (₹200 crore base + ₹300 crore green shoe); final allotment size not yet published | 2026-11-10 |
 | Rating | CRISIL AA/Stable; Brickwork AA+/Stable | 2026-11-10 |
 | Coupon | 8.56%–9.25% | 2026-11-10 |
-| Bids | Bids stood at 2.67x at 17:00 IST on 5 Nov; BSE shows 53,36,597 NCDs bid against 20,00,000 base (266.83%) ([BSE](https://beta.bseindia.com/markets/publicIssues/DisplayIPO.aspx?IPONo=8058&id=4903&idtype=1&startdt=23%2FOct%2F2026&status=L&type=DPI)) | 2026-11-05 |
+| Bids | Bids stood at 2.67x at 17:00 IST on 5 Nov; BSE shows 53,36,597 NCDs bid against 20,00,000 base (266.83%) ([BSE bid data](https://beta.bseindia.com/markets/publicIssues/DisplayIPO.aspx?IPONo=8058&id=4903&idtype=1&startdt=23%2FOct%2F2026&status=L&type=DPI)) | 2026-11-05 |
 
 ### Update: no allotment notice yet for Muthoot Fincorp's Tranche I NCDs, and today's exchange holiday rules out a 10 Nov listing
 <!-- tags: companies=muthoot-fincorp; topics=ncd,funding; category=muthoot-fincorp -->

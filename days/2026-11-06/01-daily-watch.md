@@ -13,6 +13,7 @@ Source: [Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i
 <!-- ncd: issue=Tranche I; open=2026-10-23; close=2026-11-05; size_cr=500; rating=CRISIL AA/Stable, Brickwork AA+/Stable; coupon_range=8.56%–9.25%; bids=2026-11-05:2.67; source=https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/; status=closed -->
 
 ### Muthoot Fincorp NCD status
+Muthoot Fincorp's Tranche I NCD closed after its 23 Oct – 5 Nov window, with allotment listed for 9 Nov and BSE listing for 10 Nov. The ₹500 crore issue (₹200 crore base plus ₹300 crore green shoe) closed on 5 Nov with bids at 2.67x, and carries CRISIL AA/Stable and Brickwork AA+/Stable ratings with coupons of 8.56%–9.25%.
 | Field | Value | As of |
 |---|---|---|
 | Status | Closed, 23 Oct – 5 Nov 2026; allotment 9 Nov, BSE listing 10 Nov ([Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/)) | 2026-11-05 |

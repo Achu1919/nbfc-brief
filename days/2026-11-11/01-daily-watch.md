@@ -27,13 +27,14 @@ Source: [Reuters via Mint](https://www.livemint.com/market/gold-falls-nearly-3-a
 <!-- ncd: issue=Tranche I; open=2026-10-23; close=2026-11-05; size_cr=500; rating=CRISIL AA/Stable, Brickwork AA+/Stable; coupon_range=8.56%–9.25%; bids=2026-11-05:2.67; source=https://www.bseindia.com/downloads/UploadDocs/Notices/20261109-30/20261109-30.pdf; status=closed -->
 
 ### Muthoot Fincorp NCD status
+Muthoot Fincorp's Tranche I NCDs are admitted to dealings on BSE from 11 Nov 2026 in the "F" group; the final allotted amount has not been seen in a published source. The ₹500 crore issue (₹200 crore base plus ₹300 crore green shoe) closed on 5 Nov with bids at 2.67x, and carries CRISIL AA/Stable and Brickwork AA+/Stable ratings with coupons of 8.56%–9.25%.
 | Field | Value | As of |
 |---|---|---|
 | Status | Closed, 23 Oct – 5 Nov 2026; admitted to dealings on BSE from 11 Nov 2026, "F" group ([BSE notice](https://www.bseindia.com/downloads/UploadDocs/Notices/20261109-30/20261109-30.pdf)) | 2026-11-11 |
 | Size | ₹500 crore (₹200 crore base + ₹300 crore green shoe); final allotted amount not seen in a published source | 2026-11-11 |
 | Rating | CRISIL AA/Stable; Brickwork AA+/Stable | 2026-11-11 |
 | Coupon | 8.56%–9.25% | 2026-11-11 |
-| Bids | Bids stood at 2.67x at 17:00 IST on 5 Nov; BSE shows 53,36,597 NCDs bid against 20,00,000 base (266.83%) ([BSE](https://beta.bseindia.com/markets/publicIssues/DisplayIPO.aspx?IPONo=8058&id=4903&idtype=1&startdt=23%2FOct%2F2026&status=L&type=DPI)) | 2026-11-05 |
+| Bids | Bids stood at 2.67x at 17:00 IST on 5 Nov; BSE shows 53,36,597 NCDs bid against 20,00,000 base (266.83%) ([BSE bid data](https://beta.bseindia.com/markets/publicIssues/DisplayIPO.aspx?IPONo=8058&id=4903&idtype=1&startdt=23%2FOct%2F2026&status=L&type=DPI)) | 2026-11-05 |
 
 The BSE listing is covered as the lead story above. Muthoot Microfin, Muthoot Fincorp's listed microfinance subsidiary, didn't trade on Tuesday (holiday); its last close was ₹159.73 on 9 Nov ([NSE bhavcopy](https://nsearchives.nseindia.com/products/content/sec_bhavdata_full_09112026.csv)).
 

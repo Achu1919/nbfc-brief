@@ -37,6 +37,7 @@ PEER_PRIVATE_KEYS = ("blind_spots", "impact_deep")
 PRIVATE_KEYS = ("impact_deep", "blind_spots", "lessons")
 PEER_LATEST_DAYS = 21
 PEER_SEED = "peer_intel_seed.json"
+PEER_PRIVATE = "peer_intel_private.json"  # private repo only
 PEER_FILE = "peer_intel.json"
 QUOTE_MAX_WORDS = 25
 QUOTES_MAX = 3
@@ -163,14 +164,17 @@ def norm_compare(r, metrics, period, problems, where, private):
     if mv is not None and not src:
         problems.append(f"{where}: mfl_compare {r['key']} has an MFL value but no source; value removed")
         mv = None
+    pv = pm.get("value") if pm else None
+    if pv is None:
+        problems.append(f"{where}: mfl_compare {r['key']} has no sourced peer figure in metrics; row dropped")
+        return None
     note = r.get("note") or ("" if mv is not None else f"Not yet published for {r.get('mfl_period') or period}")
     if note and not voice_ok(note):
         problems.append(f"{where}: mfl_compare note wording {note!r}; dropped")
         note = ""
     out = {"key": r["key"], "label": r.get("label") or (pm or {}).get("label") or METRIC_LABELS[r["key"]],
            "unit": r.get("unit") or (pm or {}).get("unit") or "",
-           "peer_value": pm.get("value") if pm else _num(r.get("peer_value")),
-           "peer_period": r.get("peer_period") or period, "mfl_value": mv,
+           "peer_value": pv, "peer_period": period, "peer_source": pm.get("source"), "mfl_value": mv,
            "mfl_period": r.get("mfl_period") or period, "same_basis": bool(r.get("same_basis")) and mv is not None,
            "source": ({k: src[k] for k in ("name", "url", "page") if k in src} if (src and mv is not None) else None)}
     if note:
@@ -369,7 +373,15 @@ def peer_export(X, days, data_dir, private, problems):
         seed = json.loads((Path(data_dir) / PEER_SEED).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         seed = {}
+    over = {}
+    if private:  # private-only notes (blind_spots, impact_deep) live in their own file so the shared seed stays public-safe
+        try:
+            over = json.loads((Path(data_dir) / PEER_PRIVATE).read_text(encoding="utf-8")).get("entries") or {}
+        except (OSError, ValueError, AttributeError):
+            over = {}
     for raw in (seed.get("entries") if isinstance(seed, dict) else None) or []:
+        if private and isinstance(raw, dict) and isinstance(over.get(raw.get("id")), dict):
+            raw = dict(raw, **{k: v for k, v in over[raw["id"]].items() if k in ("blind_spots", "impact_deep")})
         e = norm_peer(raw, private, problems)
         if e:
             entries[e["id"]] = e
@@ -422,16 +434,36 @@ _IMPACT_LINE = re.compile(r"why it matters|possible impact on", re.I)
 
 
 def _norm_url(u):
-    u = re.sub(r"#.*$", "", u.strip())
+    """Dedupe key: scheme, www., fragment, utm_* params, case of host and a trailing slash never make a new source."""
+    u = re.sub(r"#.*$", "", (u or "").strip())
     u = re.sub(r"([?&])utm_[^=&]+=[^&]*", r"\1", u).rstrip("?&")
-    m = re.match(r"^(https?)://([^/]+)(.*)$", u, re.I)
-    return (m.group(1).lower() + "://" + m.group(2).lower() + m.group(3)) if m else u
+    m = re.match(r"^(?:https?)://(?:www\.)?([^/]+)(.*)$", u, re.I)
+    return (m.group(1).lower() + (m.group(2).rstrip("/") or "")) if m else u.rstrip("/")
+
+
+def _distinct_names(X, out, labels):
+    """Two different documents from one publisher must not both read 'BSE': use the writer's link text when it
+    says more than the publisher name, else number them ('BSE', 'BSE (2)')."""
+    seen = {}
+    for s, lab in zip(out, labels):
+        n = s["name"]
+        if n in seen:
+            t = X._plain(lab or "").strip()
+            if t and t.lower() != n.lower() and len(t) <= 60 and t not in seen:
+                s["name"] = t
+            else:
+                k = 2
+                while f"{n} ({k})" in seen:
+                    k += 1
+                s["name"] = f"{n} ({k})"
+        seen[s["name"]] = True
+    return out
 
 
 def card_sources(X, lines):
     """All links in the unit (not the impact / MFL view lines), de-duplicated, Tier 1 first, capped at 6.
     Returns (sources, banned_urls, dropped_count)."""
-    out, seen, bad = [], set(), []
+    out, seen, bad, labels = [], set(), [], []
     for l in lines or []:
         if _IMPACT_LINE.search(l) or _PRIVATE_LINE.match(l) or X.ANY_COMMENT.match(l):
             continue
@@ -451,9 +483,79 @@ def card_sources(X, lines):
             if fb:
                 s["fallback"] = True
             out.append(s)
-    out.sort(key=lambda s: s["tier"])  # stable: the writer's order is kept within a tier
+            labels.append((m.group(1) or "").strip())
+    order = sorted(range(len(out)), key=lambda i: out[i]["tier"])  # stable: the writer's order is kept within a tier
+    out, labels = [out[i] for i in order], [labels[i] for i in order]
+    _distinct_names(X, out, labels)
     dropped = max(0, len(out) - SOURCES_MAX)
     return out[:SOURCES_MAX], bad, dropped
+
+
+_TABLE_SEP = re.compile(r"^\s*\|?\s*:?-{2,}")
+_SKIP_COL = re.compile(r"^(?:as of|source|sources|link|date checked|checked|#|no\.?|sr\.? ?no\.?|s\.? ?no\.?)$", re.I)
+
+
+def _cells(line):
+    return [c.strip() for c in line.strip().strip("|").split("|")]
+
+
+def _looks_head(cells):
+    """A header row with its |---| separator already stripped: short, digit-free, link-free labels."""
+    return len(cells) >= 2 and all(c and len(c.split()) <= 4 and not re.search(r"\d|\]\(|\*\*", c) for c in cells)
+
+
+def table_prose(X, lines):
+    """'| Field | Value | As of |' tables -> 'Field: value.' sentences (header, separator and as-of/source columns dropped)."""
+    out, head = [], None
+    rows = [l for l in lines if l.strip().startswith("|")]
+    for i, l in enumerate(rows):
+        if _TABLE_SEP.match(l):
+            continue
+        cells = _cells(l)
+        if (i + 1 < len(rows) and _TABLE_SEP.match(rows[i + 1])) or (head is None and i == 0 and _looks_head(cells)):
+            head = cells
+            continue
+        keep = [(head[k] if head and k < len(head) else "", X._plain(c)) for k, c in enumerate(cells)]
+        keep = [(h, v) for h, v in keep if v and not _SKIP_COL.match(h or "")]
+        if not keep:
+            continue
+        lab, val = keep[0][1], [v for h, v in keep[1:]]
+        extra = [f"{h} {v}" if h else v for h, v in keep[2:]]
+        text = f"{lab}: {val[0]}" if val else lab
+        if extra:
+            text += " (" + "; ".join(extra) + ")"
+        out.append(text.rstrip(".") + ".")
+    return " ".join(out)
+
+
+def fix_table_summary(X, c):
+    """A unit whose body is a markdown table used to get a summary made of flattened cells
+    ('Field Value As of Status Closed …'). Prose written before the table wins; otherwise rows become sentences."""
+    lines = (c.get("_u") or {}).get("_lines") or []
+    trows = [l for l in lines if l.strip().startswith("|")]
+    has_head = any(_TABLE_SEP.match(l) for l in lines) or (trows and _looks_head(_cells(trows[0])))
+    if len(trows) < 2 or not has_head or not c.get("summary") or (lines and lines[0].strip().startswith("|")):
+        return False  # a single table row as its own unit already gets a cell-based summary
+    title = (c.get("title") or "").rstrip("…").strip()
+    pre = []
+    for l in lines:
+        if l.strip().startswith("|"):
+            break
+        if (not l.strip() or _IMPACT_LINE.search(l) or _PRIVATE_LINE.match(l) or X.ANY_COMMENT.match(l)
+                or l.lstrip().startswith(">") or re.match(r"^\W*sources?\s*:", l, re.I)):
+            continue
+        p = X._plain(l).strip()
+        na, nt = re.sub(r"\W+", "", p.lower().rstrip("…")), re.sub(r"\W+", "", title.lower())
+        if p and na and not (na in nt or nt in na):
+            pre.append(p)
+    text = " ".join(pre)
+    if len(text.split()) < 6:
+        text = table_prose(X, lines)
+    text = re.sub(r"\s{2,}", " ", text).strip()
+    if not text:
+        return False
+    c["summary"] = X._clip(X._sentences(text, 2), 480)
+    return True
 
 
 def sources_ok(card, srcs, waiver):
@@ -473,6 +575,17 @@ def sources_ok(card, srcs, waiver):
 STORY_ID = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 EVERGREEN = ("gold-price-weekly", "markets-daily-close", "mfl-gold-ltv")
 TERMINAL = ("listing", "completed", "withdrawn")
+_STATUS_TITLE = re.compile(r"(?:^\s*(?:update\s*[:\-–—]\s*)?status\s*[:\-–—]|\bstatus\s*$)", re.I)
+
+
+def is_status_card(c, ov):
+    """A card whose only news is a status change: `kind=status` in its story comment / story_map entry, or a
+    status block ('… NCD status', 'Status: …')."""
+    if (ov or {}).get("kind") == "status":
+        return True
+    if (ov or {}).get("kind") == "update":
+        return False
+    return bool(_STATUS_TITLE.search(c.get("title") or ""))
 OPEN_DAYS, DORMANT_DAYS = 7, 21
 CONTINUING_MAX = 8
 CIRCULAR_DEADLINE_DAYS, CIRCULAR_CHANGE_DAYS, DEADLINE_NEAR_DAYS = 30, 7, 14
@@ -641,7 +754,7 @@ def stories_export(X, days, data_dir, private, problems, deadlines=None, latest_
                 if srcs:
                     c["source"] = {"name": srcs[0]["name"], "url": srcs[0]["url"]}
                 c["sources_ok"] = sources_ok(c, c["sources"], False)
-                if c.get("impact"):
+                if c.get("impact") or c.get("kind") == "circular":
                     c["impact_label"] = IMPACT_LABEL
                 if private:
                     deep = next((X._plain(_DEEP.sub("", l)) for l in (c.get("_u") or {}).get("_lines") or [] if _DEEP.match(l)), None)
@@ -677,7 +790,7 @@ def stories_export(X, days, data_dir, private, problems, deadlines=None, latest_
             else:
                 c["sources"] = []
             c["sources_ok"] = sources_ok(c, c["sources"], ov.get("single_source"))
-            if c.get("impact"):
+            if c.get("impact") or c.get("kind") == "circular":
                 c["impact_label"] = IMPACT_LABEL
             if private:
                 deep = next((X._plain(_DEEP.sub("", l)) for l in lines if _DEEP.match(l)), None)
@@ -720,6 +833,8 @@ def stories_export(X, days, data_dir, private, problems, deadlines=None, latest_
                     sid = best[1]
                     c["_auto_joined"] = True
             c["story_id"] = sid
+            if is_status_card(c, ov):
+                c["_status_only"] = True
             c["continues"] = [resolve(x.strip()) for x in str(ov.get("continues") or "").split(",") if x.strip()] if ov.get("continues") not in (None, True) else []
             today.setdefault(sid, []).append((c, ov))
         # --- primary / dup / relist per edition
@@ -867,6 +982,7 @@ def status_at(t, asof):
 
 
 def _upd(ed, c, milestone=None, kind=None):
+    kind = kind or ("status" if c.get("_status_only") else None)
     u = {"date": ed, "card_id": c["id"], "report": REPORT_LONG.get(c["report"], c["report"]), "title": c["title"],
          "milestone": milestone}
     if c.get("sources"):
@@ -948,8 +1064,9 @@ def continuing_at(threads, asof, continued_by, deadlines=None):
                   "summary": (lc_card.get("summary") or "")[:200] or None,
                   "source": ({k: lc_card["sources"][0][k] for k in ("name", "url", "tier")} if lc_card.get("sources") else None),
                   "lifecycle_change": None}
-        if lu.get("kind") == "status":
-            hist = [h for h in t.lc_history if h["date"] <= asof]
+        hist_lc = [h for h in t.lc_history if h["date"] <= asof]
+        if lu.get("kind") == "status" and lu.get("lifecycle") and hist_lc:
+            hist = hist_lc
             latest["lifecycle_change"] = {"from": hist[-2]["lifecycle"] if len(hist) > 1 else None,
                                           "to": hist[-1]["lifecycle"], "date": hist[-1]["date"]}
         row = {"story_id": t.id, "title": title, "category": cat, "companies": comp, "status": status,
@@ -1054,6 +1171,30 @@ def _enrich_circulars(X, lcs, cards_by_id, threads, newest):
                       "deadline": dl, "deadline_near": near})
 
 
+_MONS = "jan feb mar apr may jun jul aug sep oct nov dec".split()
+_RANGE_TXT = re.compile(r"\b(\d{1,2})(?:\s+([A-Za-z]{3,9})\.?)?(?:,?\s+(\d{4}))?\s*(?:[–—-]|to)\s*(\d{1,2})\s+([A-Za-z]{3,9})\.?(?:,?\s+(\d{4}))?")
+_WINDOW = re.compile(r"\b(\d{1,3})[- ]day (?:window|period) (?:from|starting|beginning) (\d{1,2} [A-Za-z]{3,9}\.? \d{4})", re.I)
+_MONTH_SPAN = re.compile(r"\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s*[–—-]\s*(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*(?:\s+(\d{4}))?\b")
+
+
+def _fmt_d(iso):
+    d = _dt.date.fromisoformat(iso)
+    return f"{d.day} {_MONS[d.month - 1].title()} {d.year}"
+
+
+def range_text(title, date):
+    """date_text for a deadline that is really a window: '23 Oct – 5 Nov 2026', '7 Nov 2026 – 5 Feb 2027'
+    ('90-day window from 7 Nov 2026'). None when the row is a single day."""
+    t = title or ""
+    m = _RANGE_TXT.search(t)
+    if m and (m.group(2) or m.group(5)) and m.group(5)[:3].lower() in _MONS and (not m.group(2) or m.group(2)[:3].lower() in _MONS):
+        return re.sub(r"\s*(?:-|—|to)\s*", " – ", m.group(0), count=1).strip()
+    m = _WINDOW.search(t)
+    if m and date:
+        return f"{m.group(2)} – {_fmt_d(date)}"
+    return None
+
+
 def _enrich_deadlines(X, rows, threads):
     keys = {}
     for t in threads.values():
@@ -1068,6 +1209,10 @@ def _enrich_deadlines(X, rows, threads):
         if sid:
             x["story_id"] = sid
         t = x.get("title") or ""
+        if not x.get("date_text"):
+            rt = range_text(t, x.get("date"))
+            if rt:
+                x["date_text"] = rt
         x["kind"] = ("comments" if x.get("status") == "draft" or re.search(r"\bcomments?\b|consultation", t, re.I) else
                      "effective" if re.search(r"\(effective\)|\beffective\b|comes into force|in force", t, re.I) else
                      "compliance" if re.search(r"\bdue\b|deadline|compl|submit|filing|report|returns?\b|disclos|results", t, re.I) else
@@ -1114,10 +1259,26 @@ def apply(X, days, extras, data_dir, private, generated):
             extras["week_review"] = wr[mondays[-1]]
     except Exception as exc:  # never fatal
         _log(f"week_review skipped: {exc!r}")
+    fixed = set()
+    for d in days:
+        for c in d.get("cards") or []:
+            try:
+                if fix_table_summary(X, c):
+                    fixed.add(c["id"])
+            except Exception as exc:  # never fatal
+                _log(f"{c.get('id')}: summary fix skipped: {exc!r}")
+            if c.get("impact") or c.get("kind") == "circular":
+                c["impact_label"] = IMPACT_LABEL
+    cards_by_id = {c["id"]: c for d in days for c in d.get("cards") or []}
+    for c in extras.get("latest_circulars") or []:
+        if c.get("id") in fixed:
+            c["summary"] = cards_by_id[c["id"]]["summary"]
+        c["impact_label"] = IMPACT_LABEL
     for d in days:
         for c in d.get("cards") or []:
             c.pop("_u", None)
             c.pop("_auto_joined", None)
+            c.pop("_status_only", None)
             if not private:
                 for k in PRIVATE_KEYS:
                     c.pop(k, None)
@@ -1135,6 +1296,11 @@ def apply(X, days, extras, data_dir, private, generated):
 def finalize(latest, files):
     """Called by export_json just before writing: story_index (+ split) with latest.json's own `generated`."""
     newest = files.pop("_newest", None)
+    pf = files.get(PEER_FILE)
+    if pf:
+        pf["generated"] = latest["generated"]
+        latest["peer_intel_index"] = {"file": "data/" + PEER_FILE, "generated": latest["generated"],
+                                      "count": len(pf.get("entries") or {})}
     so = files.get(STORIES_FILE)
     if not so:
         return files
