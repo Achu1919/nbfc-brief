@@ -6,20 +6,21 @@
 
 ### Muthoot Fincorp Tranche I NCD closes; bids stood at 2.67x
 <!-- tags: companies=muthoot-fincorp; topics=ncd,funding; category=muthoot-fincorp -->
-The Tranche I public NCD closed on 5 Nov with the book at 2.67x the ₹200 crore base at 17:00 IST, up from 2.55x a day earlier. Retail was at 2.51x, HNI 3.79x, non-institutional 1.34x and institutional 0.02x.
+The Tranche I public NCD closed on 5 Nov with the book at 2.67x the ₹200 crore base at 17:00 IST, up from 2.55x a day earlier.
 Possible impact on Muthoot Fincorp: at 2.67x the book is about ₹534 crore against the ₹500 crore ceiling, so the full green shoe is covered once allotment is finalised on 9 Nov.
-Source: [Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/)
+Source: [BSE bid data](https://beta.bseindia.com/markets/publicIssues/DisplayIPO.aspx?IPONo=8058&id=4903&idtype=1&startdt=23%2FOct%2F2026&status=L&type=DPI) · [Tranche I prospectus](https://www.muthootfincorp.com/investors)
 
-<!-- ncd: issue=Tranche I; open=2026-10-23; close=2026-11-05; size_cr=500; rating=CRISIL AA/Stable, Brickwork AA+/Stable; coupon_range=8.56%–9.25%; bids=2026-11-05:2.67; source=https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/; status=closed -->
+<!-- ncd: issue=Tranche I; open=2026-10-23; close=2026-11-05; size_cr=500; rating=CRISIL AA/Stable, Brickwork AA+/Stable; coupon_range=8.56%–9.25%; bids=2026-11-05:2.67; source=https://beta.bseindia.com/markets/publicIssues/DisplayIPO.aspx?IPONo=8058&id=4903&idtype=1&startdt=23%2FOct%2F2026&status=L&type=DPI; status=closed -->
 
 ### Muthoot Fincorp NCD status
+Muthoot Fincorp's Tranche I NCD closed after its 23 Oct – 5 Nov window, with allotment on 9 Nov and BSE trading from T+3 under the prospectus timetable. The ₹500 crore issue (₹200 crore base plus ₹300 crore green shoe) closed on 5 Nov with bids at 2.67x, and carries CRISIL AA/Stable and Brickwork AA+/Stable ratings with coupons of 8.56%–9.25%.
 | Field | Value | As of |
 |---|---|---|
-| Status | Closed, 23 Oct – 5 Nov 2026; allotment 9 Nov, BSE listing 10 Nov ([Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/)) | 2026-11-05 |
+| Status | Closed, 23 Oct – 5 Nov 2026; prospectus timetable: allotment 9 Nov, BSE trading from T+3 ([Tranche I prospectus](https://www.muthootfincorp.com/investors)) | 2026-11-05 |
 | Size | ₹500 crore (₹200 crore base + ₹300 crore green shoe), under a ₹4,000 crore shelf | 2026-11-05 |
 | Rating | CRISIL AA/Stable; Brickwork AA+/Stable | 2026-11-05 |
 | Coupon | 8.56%–9.25% | 2026-11-05 |
-| Bids | 2.67x at 17:00 IST (retail 2.51x, HNI 3.79x, NII 1.34x, institutional 0.02x) | 2026-11-05 |
+| Bids | 2.67x at 17:00 IST on 5 Nov; BSE shows 53,36,597 NCDs bid against 20,00,000 base (266.83%) ([BSE bid data](https://beta.bseindia.com/markets/publicIssues/DisplayIPO.aspx?IPONo=8058&id=4903&idtype=1&startdt=23%2FOct%2F2026&status=L&type=DPI)) | 2026-11-05 |
 
 ### Muthoot Microfin Q2 PAT ₹110.8 crore; gold co-lending with Muthoot Fincorp at ₹453 crore
 <!-- tags: companies=muthoot-microfin,muthoot-fincorp; topics=results,microfinance,gold-loan; category=urgent -->
@@ -142,11 +143,11 @@ Source: [ET Auto](https://auto.economictimes.indiatimes.com/news/commercial-vehi
 
 | Item | Value | As of | Source |
 |---|---|---|---|
-| NCD Tranche I status | Closed 5 Nov 2026; allotment 9 Nov; BSE listing 10 Nov | 2026-11-05 | [Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/) |
-| NCD Tranche I size | ₹200 cr base + ₹300 cr green shoe = ₹500 cr (₹4,000 cr shelf) | 2026-11-05 | [Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/) |
-| NCD Tranche I coupons | 8.56%–9.25% | 2026-11-05 | [Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/) |
-| NCD Tranche I bids at close | 2.67x (retail 2.51x, HNI 3.79x, NII 1.34x, institutional 0.02x) at 17:00 IST | 2026-11-05 | [Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/) |
-| Ratings | CRISIL AA/Stable · Brickwork AA+/Stable | 2026-11-05 | [Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/) |
+| NCD Tranche I status | Closed 5 Nov 2026; prospectus timetable: allotment 9 Nov, BSE trading from T+3 | 2026-11-05 | [Tranche I prospectus](https://www.muthootfincorp.com/investors) |
+| NCD Tranche I size | ₹200 cr base + ₹300 cr green shoe = ₹500 cr (₹4,000 cr shelf) | 2026-11-05 | [Tranche I prospectus](https://www.muthootfincorp.com/investors) |
+| NCD Tranche I coupons | 8.56%–9.25% | 2026-11-05 | [Tranche I prospectus](https://www.muthootfincorp.com/investors) |
+| NCD Tranche I bids at close | 2.67x (266.83% of base on BSE) at 17:00 IST | 2026-11-05 | [BSE](https://beta.bseindia.com/markets/publicIssues/DisplayIPO.aspx?IPONo=8058&id=4903&idtype=1&startdt=23%2FOct%2F2026&status=L&type=DPI) |
+| Ratings | CRISIL AA/Stable · Brickwork AA+/Stable | 2026-11-05 | [Tranche I prospectus](https://www.muthootfincorp.com/investors) |
 | Muthoot Microfin Q2 PAT | ₹110.8 crore (+262.9% YoY); gold co-lend with Muthoot Fincorp ₹453 crore | 2026-11-05 | [NSE press release](https://nsearchives.nseindia.com/corporate/muthootmicrofin_05112026171622_MMLQ2FY27PressReleaseSD.pdf) |
 | AGLOC 85% LTV ceiling | ₹11,221/g (+195) | 2026-11-06 | [AGLOC](https://www.agloc.org/) |
 | Key date: Muthoot Fincorp Q2 (listed debt) | 14 Nov 2026 (SEBI LODR Reg 52) | 2026-11-06 | — |
@@ -169,7 +170,7 @@ IBJA AM on 5 Nov: 999 ₹14,395.0/g, 916 ₹13,185.8/g. The 6 Nov AM rate wasn't
 
 ## 🔗 Source Links
 
-- [Chittorgarh — Muthoot Fincorp Tranche I NCD](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/)
+- [BSE: Tranche I bid data](https://beta.bseindia.com/markets/publicIssues/DisplayIPO.aspx?IPONo=8058&id=4903&idtype=1&startdt=23%2FOct%2F2026&status=L&type=DPI) · [Muthoot Fincorp: Tranche I prospectus](https://www.muthootfincorp.com/investors)
 - [NSE — Muthoot Microfin Q2 press release](https://nsearchives.nseindia.com/corporate/muthootmicrofin_05112026171622_MMLQ2FY27PressReleaseSD.pdf) · [BusinessLine — Microfin Q2](https://www.thehindubusinessline.com/markets/muthoot-microfin-posts-record-disbursements-pat-jumps-36x-in-q2-fy27/article71670335.ece)
 - [RBI — PSL draft Directions press release](https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=63925) · [ETBFSI — PSL draft summary](https://bfsi.economictimes.indiatimes.com/articles/rbi-reviews-priority-sector-lending-framework-retains-broad-targets-in-draft-norms/135578794)
 - [NSE index closes 5 Nov](https://nsearchives.nseindia.com/content/indices/ind_close_all_05112026.csv) · [NSE bhavcopy 5 Nov](https://nsearchives.nseindia.com/products/content/sec_bhavdata_full_05112026.csv)

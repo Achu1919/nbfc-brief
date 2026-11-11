@@ -365,3 +365,120 @@ These notes describe how the app reads data that already exists. They add no fie
 - Muthoot Fincorp hub: `latest.json` → `mfl_ncd` when present, labelled "Status only; not an offer or a recommendation"; otherwise the latest `mfl_market[]` NCD items.
 - Archive: the topic picker dims days without that topic (from the day's `tags`, refined by the search index once it is built).
 - The search index version is 6 (it rebuilds once after this update).
+
+## Peer intelligence (`peer_intel`, additive; content upgrade step 1, 11 Nov 2026)
+Built by `content_upgrade.py` (called from `export_json.export()`), identical in both repos.
+- **Inputs:** `data/peer_intel_seed.json` (entries re-read from filings; public-safe, no private fields) plus any
+  `### <Peer> Q2 FY27 results` unit in `01-daily-watch.md` carrying `<!-- peer: id=pi-<company>-q2fy27; company=<slug>;
+  period=Q2 FY27; basis=consolidated|standalone; results=YYYY-MM-DD:<url> -->` (block format: plan §8).
+- **Outputs:** `data/peer_intel.json` = `{schema_version, generated, entries: {<id>: PeerIntel}}` (all entries; same
+  `generated` as `latest.json`); `latest.json → peer_intel[]` = entries whose newest event is within 21 days of the
+  newest edition; a day file gets `peer_intel[]` only for entries its own markdown created; a card announcing the
+  results gets `peer_intel_id`.
+- **Companies:** only `muthoot-finance`, `manappuram`, `iifl-finance`, `shriram-finance`, `bajaj-finance`.
+  Muthoot Fincorp is never a peer entry; Muthoot Microfin (group company) gets none.
+- **PeerIntel:** `{id, story_id, company, company_name, period, basis, events[], metrics[], guidance[]?, quotes[]?,
+  non_disclosures[]?, mfl_compare[]?, impact?, impact_label?, updated}`; private adds `blind_spots[]?`, `impact_deep?`.
+  Absent optional keys are omitted.
+  - `events[]`: `{type: results|investor-deck|call-transcript|call-recording|rating-rationale|annual-report, date, source}`.
+    At least one Tier-1 filing is required; press alone never creates an entry.
+  - `metrics[]`: `{key, label, unit, value, prev_value, prev_period?, qoq_pct, yoy_pct, computed, disclosed, note?,
+    last_disclosed_period?, source{name,url,page?}}`. Keys: `aum, gold_aum, disbursements, yield, cof, nim, spread,
+    opex_ratio, credit_cost, gnpa, nnpa, pcr, crar, roa, roe, pat, branches, gold_tonnes, avg_ticket` (`gold_book`
+    is dropped). `prev_period` says what `prev_value` is (Q1 FY27 for QoQ, Q2 FY26 for YoY). `qoq_pct` is the
+    company's own figure; when absent it is computed only for amounts (never `%` ratios) with both values on the
+    same basis, and then `computed: true`. Yield, CoF and NIM are as the company defines them (see `note`).
+    `page` is the PDF page number.
+  - `quotes[]`: ≤25 words, ≤3 per entry, with `speaker`, `role` and a source link.
+  - `mfl_compare[]` (both editions, facts only): `{key, label, unit, peer_value, peer_period, mfl_value, mfl_period,
+    same_basis, source, note?}`. `source` is required whenever `mfl_value` is set (else the value is removed). A null
+    `mfl_value` carries `note: "Not yet published for <mfl_period>"`. `note` passes the public voice check.
+- **Sources:** `tier` 1 (regulators, exchanges, rating agencies, company IR), 2 (trusted press, SOURCES.md §2),
+  3 (any other host). Banned hosts (exa.ai, stockfin.ai, trackliveprice.com, makro.live, stockwatch.live, hdfcsky.com,
+  alphastreet) are dropped.
+
+## Story threads, sources and regulation lifecycle (content upgrade)
+
+Written by `content_upgrade.py` from `export_json.export()`. `data/latest.json`, `data/stories.json` and `data/peer_intel.json` carry the same `generated`. A key that does not apply is omitted, never null-filled, unless listed below as nullable.
+
+### Card additions (every edition)
+- `sources[]`: `{name, url, tier}`. Tier 1 = regulator, exchange, rating agency or company IR; 2 = press; 3 = other. Deduplicated by URL, tier-sorted, at most 6. Banned hosts (aggregators) are dropped and reported. `source` is always `{name, url}` of `sources[0]`.
+- `sources_ok`: true when a story or circular has 2+ sources, or 1 Tier-1 source with `single_source=official`.
+- `impact_label`: `"Possible impact on Muthoot Fincorp"` on every card with `impact`.
+- Private only: `impact_deep` (from a `MFL view:` line). It never appears in the public edition.
+
+### Card additions (editions from 2026-10-01)
+- `story_id` (`[a-z0-9-]`, ≤60), `thread_seq` (1-based), `prev_card` (nullable), `is_update`, `dup_of` (nullable; a second card on the same story in one edition), `continues[]`.
+- Id order: `<!-- story: id=… -->` override → `data/story_map.json` (`{card_id: {story_id, title_hash}}`, `_aliases`) → `reg-<regulator>-<ref>` for circulars → auto `<date>-<slug>` with title auto-join (Jaccard ≥ 0.5 within 21 days).
+- Override flags: `continues=a,b`, `milestone=…`, `next=YYYY-MM-DD:what` or `next=:what`, `status=closed`, `dup`, `single_source=official`. Peer overrides use `<!-- peer: … -->`.
+- Analysis cards are threaded only when they carry an override.
+
+### `reg` additions
+`lifecycle` (draft | final | effective | superseded | withdrawn), `comments_due` (nullable), `first_covered {date, card_id, report, title}`, `story_id`, `deadline {date, date_text, kind}` (nullable; kind comments | effective | compliance | other), `deadline_near` (≤14 days), optional `superseded_by`. Lifecycle and deadline are computed as at the card's edition. The older `status` field is unchanged.
+
+### `data/stories.json`
+`{schema_version, generated, aliases, archives[], archived{id: "YYYY-MM"}, stories{id: {...}}}`. Each story has `title, category, companies, regulators, topics, status (open ≤7 days since the last update | dormant ≤21 | closed), opened, last_update, closed (nullable), card_count, editions, updates[], next (nullable {date, date_text, what}), continues, continued_by`. `updates[]` is oldest first: `{date, card_id, report, title, milestone?, source {name, tier}}`, and a status-only entry carries `kind: "status"`, and `reg` with `lifecycle_history` for circular threads. A status-only change counts as an update with `kind: "status"`, shown as "Status". When the file exceeds 250 KB, closed stories move to `data/stories/archive-YYYY-MM.json`.
+
+### `latest.json` additions
+- `story_index {file, generated, open, refs{id: {title, status, last_update, update_count}}}`: refs cover every id referenced by latest, plus one hop.
+- `continuing_stories[]` (≤8, newest first; evergreen threads excluded): `{story_id, title, status, last_update, update_count, latest {card_id, date, report, kind, summary}, next, deadline_near}`. Day files carry it from 2026-11-11 onwards.
+- `deadlines[]` and `latest_circulars[]` gain `story_id` and `kind`.
+
+### Weekly review (`week_review`, Mondays)
+- Under a `##` section of `03-weekly-analysis.md`, `<!-- stories: ids=a,b -->` sets `stories_ref[]` on that `analysis` card. Unknown ids are dropped and reported. The 1 Oct–9 Nov Mondays were backfilled through `data/story_map.json` entries `{stories_ref, title_hash}`.
+- A weekly edition's day file carries `week_review`: `{id (= week_start; route #/week/<id>), published (the Monday), week_start, week_end, report_card_prefix, story_ids[], sections[{card_id, title, story_ids[]}], week_threads[{story_id, cards_in_week, mentioned_in_review}]}`. `week_threads` lists every non-evergreen thread with an update in the week, so false means the weekly skipped it.
+- `latest.json` carries the newest `week_review` for 7 days after its Monday.
+
+### Follow-up additions (11 Nov 2026)
+- `latest.json → peer_intel_index {file: "data/peer_intel.json", generated, count}`. `latest.json`, `stories.json`, `peer_intel.json`, `story_index.generated` and `peer_intel_index.generated` always carry one `generated` value.
+- `mfl_compare[]` rows always have `peer_value`, `peer_period` and `peer_source {name, url, page?}`, all taken from the entry's own sourced metric. A row whose metric isn't in `metrics[]` is dropped and reported.
+- `impact_label` ("Possible impact on Muthoot Fincorp") is on every card with `impact` and on every `circular` card, and also on `latest_circulars[]`. The text is the same in both editions.
+- Summaries of table-bodied cards: any prose written before the table is used; otherwise each row becomes "Label: value." Header, separator, `#`, "As of" and "Source" columns are dropped. A summary never contains flattened header cells.
+- `sources[]`: URLs are compared without scheme, `www.`, fragment, `utm_*` or a trailing slash. Two different documents from the same publisher get different names (the writer's link text, else "BSE (2)").
+- `deadlines[].date_text` is filled whenever the row is a window ("23 Oct – 5 Nov 2026"; "90-day window from 7 Nov 2026" becomes "7 Nov 2026 – 5 Feb 2027").
+- Status-only updates: a card counts as status-only when its story comment or `story_map.json` entry has `kind=status`, or its title is a status block ("… status", "Status: …"). Its `stories.json` update has `kind: "status"`, and `continuing_stories[].latest` gets `kind: "status"` with its `card_id`. `lifecycle_change` is set only for regulation lifecycle moves.
+- Private edition only: `impact_deep` on cards (from `MFL view:` lines) and on peer entries, and peer `blind_spots[] {text, basis, source}`. Peer deep fields live in the private-only `data/peer_intel_private.json` (`{entries: {id: {blind_spots, impact_deep}}}`), merged at export; the shared `peer_intel_seed.json` stays public-safe and the public repo must never contain the private file. Neither key ever appears in public files, and the leak tests enforce this.
+
+## Review fixes (11 Nov 2026, CoS + Site Builder)
+
+- **No aggregator sources.** `content_upgrade.BANNED_HOSTS` / `BANNED_PAGES` / `BANNED_NAMES` (SOURCES.md excluded list plus
+  chittorgarh, ipocentral, ipowatch, investorgain, ipopremium, ipoplatform, ipoji, groww IPO/bond/quote pages and Moneycontrol
+  IPO/quote/market-stats pages; Moneycontrol news stays tier 2) are never cited in any source field of any file.
+  `scrub_aggregators` runs first at export: a banned-source key-number / watchlist / `mfl_market` row is kept only when
+  `data/source_replacements.json` carries a verified official replacement (NSE bhavcopy or NSE index close file values
+  checked to the paisa, or the Tranche I prospectus wording); otherwise the row is dropped. A card whose only sources are
+  aggregators is dropped unless the same file lists a verified replacement. Aggregator names are removed from card text.
+  `mfl_ncd.bids` keeps only exchange-verified figures (`bids_keep`); `mfl_ncd.source` is BSE bid data when bids are present,
+  else the prospectus. `source_replacements.json` is the audit record (built by a one-off script; never hand-edit a value).
+  Raw report markdown (`reports[].content`) is the published archive text and is not rewritten.
+- **Stable thread titles.** `story_map.json` `_threads[story_id] = {title, regulators, next?}`. `stories.json` and
+  `continuing_stories[]` use `title` (≤ 60 chars, neutral, never a dated headline). A thread with no entry is reported.
+- **Regulator tags.** `_threads[id].regulators` is the audited list (a regulator appears only when its action or
+  publication is the news). Without an entry, a non-regulation thread only takes regulator tags from circular / reg cards.
+- **`next`.** `{date, date_text, what, source: {name, url, tier}}`: `_threads[id].next` (with `known_from`, shown from that
+  edition up to its date) or the thread's earliest upcoming sourced deadline row. Never guessed; `null` otherwise.
+- **Milestones are not status-only.** A card whose milestone is open / closed / allotment / listing / listed / results /
+  effective / final / … is a news update (`kind` absent), whatever its title or map says.
+- **Table-row summaries.** A card that is one table row gets labelled values from the table header
+  (`Value: 13,752.4; Previous: …; Change: −253.0 (−1.81%); Effective: …`), source columns left to `sources[]`, empty / '—'
+  cells skipped (`summary: null` if nothing is left). Key-figure tables list every row as `Label: value.` and keep
+  `>`, `<`, `≤` and signs.
+
+## Step 3 fixes (11 Nov 2026, Site Builder notes)
+
+- **No "Update:" prefix.** Card titles (day files, `stories.json` updates, `continuing_stories[].latest`, week_review)
+  drop a leading `Update:` / `Update N:`. Card ids are unchanged; the published markdown keeps the heading as written.
+- **Comparison signs kept.** `>` is removed only as a line-start blockquote marker; `>`, `<`, `≤`, `≥` and a leading
+  `−` / `+` before a figure stay in titles, summaries and impacts ("(≤₹2.5 lakh, ₹2.5–5 lakh, >₹5 lakh)").
+- **Multi-row tables.** A table whose `|---|` line is not in the card unit is still read with its header (checked against
+  the report text). Comparison / status tables label every value with its column
+  ("NPA trigger: NBFC-ML/UL (post Oct 2024): 90 days overdue; Old NBFC Norm: 360 days overdue.").
+- **`next` expiry.** A thread's `next` is cleared once its date is before the edition date, and for the newest edition
+  (`stories.json`, `latest.json`) before the build date (`generated`). The cleared step is kept as
+  `next_passed {date, date_text?, what, source, covered_by?}`; `covered_by` is the card id of the update that reported it,
+  when there is one. Older day files keep the `next` they had on that day.
+- **Chittorgarh (SOURCES.md, 11 Nov 2026).** Allowed only for NCD bid / subscription data, on its `/bond/` NCD pages
+  (tier 2), from the 12 Nov 2026 edition. Anywhere else it is dropped like any excluded site. Editions up to 11 Nov keep
+  the audited BSE / prospectus sourcing; dropped history is not restored.
+- **Thread titles.** A thread without a `_threads` entry falls back to its first card's title, clipped to 60 chars;
+  `tests/review_checks.py` warns about it instead of failing.

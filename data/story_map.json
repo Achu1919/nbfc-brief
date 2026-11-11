@@ -1,0 +1,841 @@
+{
+ "_comment": "Backfill scope A (Sai, 11 Nov 2026): story ids for cards from 1 Oct 2026. Keys are card ids; title_hash guards against card renumbering. _threads: per-thread stable neutral title (<= 60 chars), audited regulators (only when a regulator action is the news) and an optional sourced next step.",
+ "_aliases": {
+  "2026-11-06-muthoot-fincorp-ncd-status": "mfl-ncd-2026-tranche-1",
+  "2026-11-07-muthoot-fincorp-tranche-i-ncd": "mfl-ncd-2026-tranche-1"
+ },
+ "2026-10-23-news-1": {
+  "story_id": "gold-loan-asset-quality-2026",
+  "title_hash": "38a20620"
+ },
+ "2026-10-24-news-1": {
+  "story_id": "shriram-finance-q2fy27-results",
+  "title_hash": "7eaa19e1",
+  "milestone": "results"
+ },
+ "2026-10-25-news-1": {
+  "story_id": "gold-loan-asset-quality-2026",
+  "title_hash": "8e964cb1"
+ },
+ "2026-10-25-news-2": {
+  "story_id": "shriram-finance-q2fy27-results",
+  "title_hash": "64a05240"
+ },
+ "2026-10-26-news-1": {
+  "story_id": "nbfc-rural-stress-2026",
+  "title_hash": "7088e9f1"
+ },
+ "2026-10-26-news-2": {
+  "story_id": "gold-price-weekly",
+  "title_hash": "065f77e6"
+ },
+ "2026-10-26-weekly-50": {
+  "stories_ref": [
+   "shriram-finance-q2fy27-results",
+   "gold-loan-asset-quality-2026"
+  ],
+  "title_hash": "3abcc2cf"
+ },
+ "2026-10-26-weekly-53": {
+  "stories_ref": [
+   "shriram-finance-q2fy27-results"
+  ],
+  "title_hash": "8bc70d6e"
+ },
+ "2026-10-26-weekly-54": {
+  "stories_ref": [
+   "shriram-finance-q2fy27-results",
+   "gold-loan-asset-quality-2026"
+  ],
+  "title_hash": "05ee4698"
+ },
+ "2026-10-26-weekly-55": {
+  "stories_ref": [
+   "shriram-finance-q2fy27-results",
+   "gold-loan-asset-quality-2026"
+  ],
+  "title_hash": "45082eef"
+ },
+ "2026-10-26-weekly-59": {
+  "stories_ref": [
+   "shriram-finance-q2fy27-results"
+  ],
+  "title_hash": "3a5b3d5d"
+ },
+ "2026-10-27-news-1": {
+  "story_id": "nbfc-rural-stress-2026",
+  "title_hash": "2cfbe7e3"
+ },
+ "2026-10-27-news-2": {
+  "story_id": "gold-price-weekly",
+  "title_hash": "376d7a4c"
+ },
+ "2026-10-28-news-1": {
+  "story_id": "gold-price-weekly",
+  "title_hash": "08a4fc9e"
+ },
+ "2026-10-28-news-2": {
+  "story_id": "nbfc-rural-stress-2026",
+  "title_hash": "693ea651"
+ },
+ "2026-10-29-news-2": {
+  "story_id": "markets-daily-close",
+  "title_hash": "d1173812"
+ },
+ "2026-10-29-news-3": {
+  "story_id": "gold-price-weekly",
+  "title_hash": "f137807a"
+ },
+ "2026-10-30-news-2": {
+  "story_id": "nbfc-funding-cost-2026",
+  "title_hash": "bcd79deb"
+ },
+ "2026-10-31-news-1": {
+  "story_id": "gold-price-weekly",
+  "title_hash": "7032b5d7"
+ },
+ "2026-10-31-news-2": {
+  "story_id": "markets-daily-close",
+  "title_hash": "5eb58c47"
+ },
+ "2026-10-31-news-3": {
+  "story_id": "nbfc-rural-stress-2026",
+  "title_hash": "a5106b6a"
+ },
+ "2026-11-01-news-1": {
+  "story_id": "muthoot-finance-q2fy27-results",
+  "title_hash": "4e798b9c",
+  "milestone": "results"
+ },
+ "2026-11-01-news-2": {
+  "story_id": "gold-loan-asset-quality-2026",
+  "title_hash": "d89b7870"
+ },
+ "2026-11-01-news-3": {
+  "story_id": "gold-price-weekly",
+  "title_hash": "5f7c55cb"
+ },
+ "2026-11-02-news-1": {
+  "story_id": "muthoot-finance-q2fy27-results",
+  "title_hash": "a36e9387"
+ },
+ "2026-11-02-news-3": {
+  "story_id": "nbfc-rural-stress-2026",
+  "title_hash": "8fc69354"
+ },
+ "2026-11-02-weekly-39": {
+  "stories_ref": [
+   "muthoot-finance-q2fy27-results",
+   "gold-loan-asset-quality-2026"
+  ],
+  "title_hash": "3abcc2cf"
+ },
+ "2026-11-02-weekly-42": {
+  "stories_ref": [
+   "muthoot-finance-q2fy27-results",
+   "nbfc-rural-stress-2026"
+  ],
+  "title_hash": "8bc70d6e"
+ },
+ "2026-11-02-weekly-44": {
+  "stories_ref": [
+   "muthoot-finance-q2fy27-results",
+   "nbfc-rural-stress-2026",
+   "gold-loan-asset-quality-2026"
+  ],
+  "title_hash": "45082eef"
+ },
+ "2026-11-02-weekly-48": {
+  "stories_ref": [
+   "muthoot-finance-q2fy27-results"
+  ],
+  "title_hash": "2ff2b976"
+ },
+ "2026-11-02-weekly-49": {
+  "stories_ref": [
+   "nbfc-rural-stress-2026"
+  ],
+  "title_hash": "0d204efc"
+ },
+ "2026-11-02-weekly-50": {
+  "stories_ref": [
+   "nbfc-rural-stress-2026"
+  ],
+  "title_hash": "7686a667"
+ },
+ "2026-11-03-news-1": {
+  "story_id": "muthoot-finance-q2fy27-results",
+  "title_hash": "c46e1ee9"
+ },
+ "2026-11-03-news-2": {
+  "story_id": "mfl-gold-ltv",
+  "title_hash": "7011d87f"
+ },
+ "2026-11-03-news-3": {
+  "story_id": "markets-daily-close",
+  "title_hash": "66891ce3"
+ },
+ "2026-11-05-news-1": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "7104c9f4"
+ },
+ "2026-11-05-news-2": {
+  "story_id": "gold-price-weekly",
+  "title_hash": "7afe6e83"
+ },
+ "2026-11-06-news-1": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "2c2a1d3c",
+  "milestone": "closed-subscription"
+ },
+ "2026-11-06-news-2": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "e61c4ef2",
+  "dup": true
+ },
+ "2026-11-06-news-3": {
+  "story_id": "muthoot-microfin-q2fy27-results",
+  "title_hash": "d78b2839",
+  "milestone": "results"
+ },
+ "2026-11-06-news-4": {
+  "story_id": "rbi-psl-draft-directions-2026",
+  "title_hash": "969a554c"
+ },
+ "2026-11-07-news-1": {
+  "story_id": "gold-loan-nbfc-credit-growth-2026",
+  "title_hash": "40a39ab6"
+ },
+ "2026-11-07-news-2": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "4678b79a",
+  "kind": "status"
+ },
+ "2026-11-07-news-3": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "e61c4ef2",
+  "dup": true
+ },
+ "2026-11-08-news-1": {
+  "story_id": "markets-daily-close",
+  "title_hash": "ae28bfb7"
+ },
+ "2026-11-08-news-2": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "da4a21b0",
+  "kind": "status"
+ },
+ "2026-11-08-news-3": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "e61c4ef2",
+  "dup": true
+ },
+ "2026-11-09-news-1": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "7321ff20",
+  "kind": "status"
+ },
+ "2026-11-09-news-2": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "e61c4ef2",
+  "dup": true
+ },
+ "2026-11-09-news-3": {
+  "story_id": "markets-daily-close",
+  "title_hash": "35f26f9f"
+ },
+ "2026-11-09-rules-21": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "ed84c7a5",
+  "dup": true,
+  "kind": "status"
+ },
+ "2026-11-09-weekly-60": {
+  "stories_ref": [
+   "mfl-ncd-2026-tranche-1",
+   "muthoot-microfin-q2fy27-results",
+   "rbi-psl-draft-directions-2026",
+   "gold-loan-nbfc-credit-growth-2026"
+  ],
+  "title_hash": "3abcc2cf"
+ },
+ "2026-11-09-weekly-61": {
+  "stories_ref": [
+   "muthoot-microfin-q2fy27-results"
+  ],
+  "title_hash": "a7ec734f"
+ },
+ "2026-11-09-weekly-62": {
+  "stories_ref": [
+   "rbi-psl-draft-directions-2026",
+   "gold-loan-nbfc-credit-growth-2026"
+  ],
+  "title_hash": "9fed418e"
+ },
+ "2026-11-09-weekly-63": {
+  "stories_ref": [
+   "muthoot-microfin-q2fy27-results"
+  ],
+  "title_hash": "8bc70d6e"
+ },
+ "2026-11-09-weekly-64": {
+  "stories_ref": [
+   "muthoot-microfin-q2fy27-results",
+   "gold-loan-nbfc-credit-growth-2026"
+  ],
+  "title_hash": "05ee4698"
+ },
+ "2026-11-09-weekly-65": {
+  "stories_ref": [
+   "muthoot-microfin-q2fy27-results"
+  ],
+  "title_hash": "45082eef"
+ },
+ "2026-11-09-weekly-66": {
+  "stories_ref": [
+   "mfl-ncd-2026-tranche-1"
+  ],
+  "title_hash": "0e05536d"
+ },
+ "2026-11-09-weekly-67": {
+  "stories_ref": [
+   "muthoot-microfin-q2fy27-results"
+  ],
+  "title_hash": "e9df2282"
+ },
+ "2026-11-09-weekly-69": {
+  "stories_ref": [
+   "mfl-ncd-2026-tranche-1",
+   "rbi-psl-draft-directions-2026"
+  ],
+  "title_hash": "2ff2b976"
+ },
+ "2026-11-09-weekly-70": {
+  "stories_ref": [
+   "rbi-psl-draft-directions-2026",
+   "gold-loan-nbfc-credit-growth-2026"
+  ],
+  "title_hash": "0d204efc"
+ },
+ "2026-11-09-weekly-71": {
+  "stories_ref": [
+   "mfl-ncd-2026-tranche-1"
+  ],
+  "title_hash": "7686a667"
+ },
+ "2026-11-10-news-1": {
+  "story_id": "iifl-finance-blackstone-raise-2026",
+  "title_hash": "00be7639"
+ },
+ "2026-11-10-news-2": {
+  "story_id": "gold-risk-weight-review-2026",
+  "title_hash": "dc457f05"
+ },
+ "2026-11-10-rules-25": {
+  "story_id": "gold-risk-weight-review-2026",
+  "title_hash": "781ad313",
+  "dup": true
+ },
+ "2026-11-11-news-1": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "0203110a",
+  "milestone": "listed"
+ },
+ "2026-11-11-news-2": {
+  "story_id": "iifl-finance-blackstone-raise-2026",
+  "title_hash": "5efd1031",
+  "milestone": "board-approval"
+ },
+ "2026-11-11-news-3": {
+  "story_id": "gold-price-weekly",
+  "title_hash": "74df1b39"
+ },
+ "2026-11-11-rules-19": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "33f9201c",
+  "dup": true,
+  "kind": "status"
+ },
+ "_threads": {
+  "2026-10-02-cbi-files-2nd-rhfl-chargesheet": {
+   "title": "CBI chargesheet in the RHFL loan-diversion case",
+   "regulators": []
+  },
+  "2026-10-02-macquarie-lifts-9-indian-financials": {
+   "title": "Macquarie rating calls on Indian financials",
+   "regulators": []
+  },
+  "2026-10-07-bofa-to-acquire-49-9-of": {
+   "title": "BofA stake in Jio Credit",
+   "regulators": []
+  },
+  "2026-10-11-rbi-cancelled-the-certificate-of": {
+   "title": "RBI cancels registration of 13 NBFCs",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "2026-10-12-listed-muthoot-peer-print": {
+   "title": "Listed Muthoot peer share prices",
+   "regulators": []
+  },
+  "2026-10-13-shriram-finance-upgraded-to-ind": {
+   "title": "Shriram Finance India Ratings upgrade",
+   "regulators": []
+  },
+  "2026-10-14-september-cpi-hit-a-23-month": {
+   "title": "September CPI inflation and the rate outlook",
+   "regulators": []
+  },
+  "2026-10-20-gold-loan-competitive-map-keeps-shifting": {
+   "title": "Gold-loan competition across regions",
+   "regulators": []
+  },
+  "2026-10-21-irdai-commission-cap-risk-gets-a": {
+   "title": "IRDAI commission cap and NBFC insurance income",
+   "regulators": [
+    "irdai"
+   ]
+  },
+  "2026-10-23-creditaccess-grameens-quarter-to-remember": {
+   "title": "CreditAccess Grameen Q2 FY27 results",
+   "regulators": []
+  },
+  "2026-10-23-mahindra-finance-10-intraday-crash": {
+   "title": "Mahindra Finance Q2 FY27 results",
+   "regulators": []
+  },
+  "2026-10-24-rbi-bulletin-review-of-nbfcs": {
+   "title": "RBI Bulletin review of NBFCs",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "2026-10-24-rbi-governor-upper-layer-nbfcs": {
+   "title": "RBI Governor on upper-layer NBFC listing",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "2026-10-28-tata-capitals-pat-jumped-51": {
+   "title": "Tata Capital Q2 FY27 results and rate pass-through",
+   "regulators": []
+  },
+  "2026-10-29-chola-is-building-a-gold-loan": {
+   "title": "Cholamandalam gold-loan expansion",
+   "regulators": []
+  },
+  "2026-10-30-equitas-sfbs-md-ceo": {
+   "title": "Equitas SFB MD and CEO resignation",
+   "regulators": []
+  },
+  "2026-10-30-small-nbfcs-have-lost-an": {
+   "title": "Cyberattacks on small NBFCs",
+   "regulators": []
+  },
+  "2026-11-02-bank-lending-to-nbfcs-up": {
+   "title": "Bank lending to NBFCs (RBI sectoral data)",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "2026-11-04-muthoot-finance-peer-discloses-gst": {
+   "title": "Muthoot Finance GST search disclosure",
+   "regulators": [
+    "govt"
+   ]
+  },
+  "2026-11-07-sebi-settlement-regulations-2026-commence": {
+   "title": "SEBI Settlement Regulations, 2026",
+   "regulators": [
+    "sebi"
+   ]
+  },
+  "bajaj-finance-capital-raise-2026": {
+   "title": "Bajaj Finance capital raise",
+   "regulators": []
+  },
+  "bajaj-finance-q2fy27-results": {
+   "title": "Bajaj Finance Q2 FY27 results",
+   "regulators": []
+  },
+  "gold-loan-asset-quality-2026": {
+   "title": "Gold-loan asset quality across lenders",
+   "regulators": [],
+   "next": {
+    "date": "2026-11-12",
+    "date_text": "12 Nov 2026, 5 PM IST",
+    "known_from": "2026-11-05",
+    "what": "Manappuram Finance Q2 FY27 earnings call",
+    "source": {
+     "name": "NSE (Manappuram intimation, 5 Nov)",
+     "url": "https://nsearchives.nseindia.com/corporate/MANAPPURAM_05112026222522_prior_intimation_concall_SD.pdf"
+    }
+   }
+  },
+  "gold-loan-nbfc-credit-growth-2026": {
+   "title": "NBFC and gold-loan credit growth",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "gold-price-weekly": {
+   "title": "Gold price and gold-loan collateral",
+   "regulators": []
+  },
+  "gold-risk-weight-review-2026": {
+   "title": "Risk weight on secured gold loans",
+   "regulators": []
+  },
+  "gst-colending-18pct-2026": {
+   "title": "GST on NBFC co-lending services",
+   "regulators": [
+    "govt"
+   ]
+  },
+  "iifl-finance-blackstone-raise-2026": {
+   "title": "IIFL Finance capital raise",
+   "regulators": []
+  },
+  "markets-daily-close": {
+   "title": "NBFC stocks: daily market close",
+   "regulators": []
+  },
+  "mfl-gold-ltv": {
+   "title": "Gold collateral value per gram (LTV)",
+   "regulators": []
+  },
+  "mfl-ipo-2026": {
+   "title": "Muthoot Fincorp IPO",
+   "regulators": []
+  },
+  "mfl-ncd-2026-tranche-1": {
+   "title": "Muthoot Fincorp Tranche I NCD issue",
+   "regulators": []
+  },
+  "mfl-ncd-shelf-2026": {
+   "title": "Muthoot Fincorp NCD shelf prospectus",
+   "regulators": []
+  },
+  "mfl-rating-brickwork-2026-10": {
+   "title": "Muthoot Fincorp Brickwork rating",
+   "regulators": []
+  },
+  "mfl-rating-care-aa-2026-10": {
+   "title": "Muthoot Fincorp CARE rating",
+   "regulators": []
+  },
+  "muthoot-finance-q2fy27-results": {
+   "title": "Muthoot Finance Q2 FY27 results",
+   "regulators": []
+  },
+  "muthoot-microfin-q2fy27-results": {
+   "title": "Muthoot Microfin Q2 FY27 results",
+   "regulators": []
+  },
+  "nbfc-funding-cost-2026": {
+   "title": "NBFC funding costs",
+   "regulators": []
+  },
+  "nbfc-rural-stress-2026": {
+   "title": "Rural and microfinance credit stress",
+   "regulators": []
+  },
+  "pnb-housing-aaa-2026": {
+   "title": "PNB Housing Finance AAA ratings",
+   "regulators": []
+  },
+  "q2fy27-results-season": {
+   "title": "Q2 FY27 NBFC results season",
+   "regulators": []
+  },
+  "rbi-crr-daily-maintenance-2026": {
+   "title": "RBI daily CRR maintenance change",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "rbi-mpc-oct-2026": {
+   "title": "RBI MPC October 2026 policy",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "rbi-nbfc-revolving-credit-2026": {
+   "title": "RBI on NBFC revolving credit lines",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "rbi-psl-draft-directions-2026": {
+   "title": "RBI draft priority-sector lending Directions",
+   "regulators": [
+    "rbi"
+   ],
+   "next": {
+    "date": "2026-11-26",
+    "date_text": null,
+    "known_from": "2026-11-06",
+    "what": "Comments due on RBI's draft PSL Directions",
+    "source": {
+     "name": "RBI press release",
+     "url": "https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=63925"
+    }
+   }
+  },
+  "rec-pfc-merger-2026": {
+   "title": "REC–PFC merger",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-ibbi-ibbi-cirp-109-2026": {
+   "title": "IBBI revised Form CA for creditors in a class",
+   "regulators": [
+    "ibbi"
+   ]
+  },
+  "reg-ibbi-ibbi-cirp-110-2026": {
+   "title": "IBBI: RERA compliance in real-estate CIRPs",
+   "regulators": [
+    "ibbi"
+   ]
+  },
+  "reg-rbi-fema-23-r-2-2026-rb": {
+   "title": "FEMA export-import regulations amendment",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-rbi-press-release-2026-2027-1447": {
+   "title": "RBI PSL consolidation drafts for comment",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-rbi-press-release-2026-2027-1471": {
+   "title": "Gandhinagar Leasing and Finance CoR cancelled",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-rbi-press-release-prid-63940": {
+   "title": "RBI sectoral deployment of NBFC credit",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-rbi-rbi-2023-24-85": {
+   "title": "Bank credit to NBFCs (RBI data)",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-rbi-rbi-2026-27-271": {
+   "title": "RBI/2026-27/271: UAPA UNSC 1267 list update",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-rbi-rbi-2026-27-272": {
+   "title": "RBI/2026-27/272–280: non-NBFC circulars",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-rbi-rbi-2026-27-290": {
+   "title": "RBI/2026-27/290: daily CRR maintenance",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-rbi-rbi-2026-27-293": {
+   "title": "RBI/2026-27/293: A.P. (DIR Series) circular",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-rbi-rbi-2026-27-294": {
+   "title": "RBI/2026-27/294–295: bank amendment Directions",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-rbi-rbi-2026-27-296": {
+   "title": "RBI/2026-27/296: UAPA UNSC 1267 list amendment",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-rbi-rbi-2026-27-297": {
+   "title": "RBI/2026-27/297: bank capital adequacy amendment",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-rbi-rbi-2026-27-299": {
+   "title": "RBI/2026-27/299: forthcoming-instructions amendment",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-rbi-rbi-2026-27-300": {
+   "title": "RBI/2026-27/300: lead-bank duties for Delhi districts",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-rbi-rbi-2026-27-301": {
+   "title": "RBI/2026-27/301: UAPA list, three entries removed",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-rbi-rbi-2026-27-302": {
+   "title": "RBI/2026-27/302: UAPA list, three entries amended",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-rbi-rbi-2026-27-303": {
+   "title": "RBI/2026-27/303: UAPA UNSC 1988 list update",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-rbi-rbi-dcm-2026-27-473": {
+   "title": "RBI/DCM/2026-27/473 circular",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-rbi-rbi-dor-2025-26-343": {
+   "title": "RBI exempted-AIF list: NABVENTURES Fund-II",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-rbi-rbi-fed-2026-27-298": {
+   "title": "RBI/FED/2026-27/298: A.P. (DIR Series) circular",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-sebi-ho-17-11-17-7-2026-ddhs-pod2-i-24929-2026": {
+   "title": "SEBI cooling-off for private listed InvIT OFS",
+   "regulators": [
+    "sebi"
+   ]
+  },
+  "reg-sebi-ho-17-11-19-7-2026-ddhs-rac-i-24930-2026": {
+   "title": "SEBI depository receipts on InvIT units",
+   "regulators": [
+    "sebi"
+   ]
+  },
+  "reg-sebi-ho-17-11-19-7-2026-ddhs-rac-i-24932-2026": {
+   "title": "SEBI depository receipts on REIT units",
+   "regulators": [
+    "sebi"
+   ]
+  },
+  "reg-sebi-ho-17-11-22-1-2026-ddhs-pod1": {
+   "title": "SEBI Credit Risk-o-Meter for debt offers",
+   "regulators": [
+    "sebi"
+   ],
+   "next": {
+    "date": "2026-11-21",
+    "date_text": "45 days after the 7 Oct 2026 circular",
+    "what": "Credit Risk-o-Meter disclosure goes live for debt securities",
+    "known_from": "2026-10-23",
+    "source": {
+     "name": "SEBI",
+     "url": "https://www.sebi.gov.in/legal/circulars/oct-2026/introduction-of-credit-risk-o-meter-as-an-additional-disclosure-mechanism-for-debt-securities_105081.html"
+    }
+   }
+  },
+  "reg-sebi-ho-17-11-24-7-2026-ddhs-pod1-i-23122-2026": {
+   "title": "SEBI: merchant banker optional for some debt placements",
+   "regulators": [
+    "sebi"
+   ]
+  },
+  "reg-sebi-ho-17-11-24-8-2026-ddhs-pod1-i-23125-2026": {
+   "title": "SEBI: more ISINs maturing per year (private placement)",
+   "regulators": [
+    "sebi"
+   ]
+  },
+  "reg-sebi-ho-19-34-11-6-2026-afd-pod1-i-25244-2026": {
+   "title": "SEBI accredited-investor circular",
+   "regulators": [
+    "sebi"
+   ]
+  },
+  "reg-sebi-ho-19-34-14-10-2026-afd-pod3-i-24814-2026": {
+   "title": "SEBI FPI KYC review periodicity",
+   "regulators": [
+    "sebi"
+   ]
+  },
+  "reg-sebi-ho-201-2026-ddhs-pod1-i-24467-2026": {
+   "title": "SEBI: debenture trustees' non-SEBI business",
+   "regulators": [
+    "sebi"
+   ]
+  },
+  "reg-sebi-ho-24-13-1-2026-imd-pod-2-i-25242-2026": {
+   "title": "SEBI net settlement for mutual-fund cash trades",
+   "regulators": [
+    "sebi"
+   ]
+  },
+  "reg-sebi-ho-38-30-12-3-2026-mirsd-pod2-i-25175-2026": {
+   "title": "SEBI KYC review for non-resident individual clients",
+   "regulators": [
+    "sebi"
+   ]
+  },
+  "reg-sebi-ho-47-11-11-3-2025-mrd-pod2-i-23843-2026": {
+   "title": "SEBI closing auction session for derivatives",
+   "regulators": [
+    "sebi"
+   ]
+  },
+  "reg-sebi-ho-53-12-13-2-2026-itd5-m2ipc-i-24856-2026": {
+   "title": "SEBI digital-accessibility compliance deadline",
+   "regulators": [
+    "sebi"
+   ]
+  },
+  "reg-sebi-ho-561-2026-mrd-pod2-i-25177-2026": {
+   "title": "SEBI currency-derivative exposure limits",
+   "regulators": [
+    "sebi"
+   ]
+  },
+  "reg-sebi-pr-no-70-2026": {
+   "title": "SEBI Settlement Regulations, 2026 commencement",
+   "regulators": [
+    "sebi"
+   ]
+  },
+  "shriram-finance-mufg-stake-2026": {
+   "title": "MUFG interest in a Shriram Finance stake",
+   "regulators": []
+  },
+  "shriram-finance-q2fy27-results": {
+   "title": "Shriram Finance Q2 FY27 results",
+   "regulators": []
+  }
+ },
+ "2026-10-23-rules-35": {
+  "story_id": "reg-sebi-ho-17-11-22-1-2026-ddhs-pod1",
+  "title_hash": "05ac52af"
+ },
+ "2026-11-04-rules-46": {
+  "story_id": "reg-sebi-ho-17-11-22-1-2026-ddhs-pod1",
+  "title_hash": "4f228923"
+ }
+}
