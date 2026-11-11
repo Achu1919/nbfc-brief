@@ -383,10 +383,14 @@ def _units(report_key: str, text: str) -> list:
         has_numbered = any(re.match(r"^\s*\*\*\d+\.\s", l) for l in lines)
         has_sub = any(re.match(r"^###\s", l) for l in lines)
         gap, mode, skip, not_circ = True, ("num" if has_numbered else "rows"), False, False
-        for l in lines:
+        for li, l in enumerate(lines):
             ov = parse_override(l)
             if ov is not None:
-                (cur["ov"] if cur else pending).append(ov)
+                nxt = next((x.strip() for x in lines[li + 1:] if x.strip() and parse_override(x) is None), "")
+                # rows mode: a comment between two list rows/table rows belongs to the NEXT row (the convention
+                # the editions use: `<!-- reg: ... -->` on the line above `- 6 Nov 2026: SEBI ...`)
+                to_next = mode == "rows" and bool(re.match(r"^(?:[-*]|\d+[.)]|\|)\s?", nxt)) and not re.match(r"^###\s", nxt)
+                (cur["ov"] if (cur and not to_next) else pending).append(ov)
                 continue
             s = l.strip()
             if not s or re.match(r"^-{3,}$", s):
@@ -848,8 +852,12 @@ def parse_reg(u: dict, edition: str):
     if not regulator and url:
         regulator = source_name(url)
     issued = None
-    if ref:
-        near = [iso for pos, iso in _dates(text[end:end + 90], edition)]
+    lead = re.match(r"^\s*(?:[-*]\s+)?\**\s*(\d{1,2}\s+[A-Za-z]{3,9}\.?,?\s+\d{4})\s*\**\s*:", text)
+    if lead:  # "- 27 Oct 2026: SEBI HO/...: ..." (Latest circulars row): the leading date is the issue date
+        ld = _dates(lead.group(1), edition)
+        issued = ld[0][1] if ld and ld[0][1] <= edition else None
+    if ref and not issued:
+        near = [iso for pos, iso in _dates(text[end:end + 90], edition) if iso <= edition]
         issued = near[0] if near else None
     if not issued:
         m = re.search(r"\b(?:issued|dated|released|notified)\s+(?:on\s+)?", text, re.I)
@@ -1426,7 +1434,14 @@ def _seed_card(s: dict, private: bool):
 
 
 def _ref_key(ref):
-    return re.sub(r"\s+", "", (ref or "").split(" ")[0]).lower()
+    """Whole ref no., lower-case alphanumerics only ('PR No.70/2026' -> 'prno702026')."""
+    return re.sub(r"[^a-z0-9]", "", (ref or "").lower())
+
+
+def _ref_key_old(ref):
+    """Pre-11 Nov key (first token). Used only as a fallback match against the seed, and only when it has a digit."""
+    k = re.sub(r"\s+", "", (ref or "").split(" ")[0]).lower()
+    return k if re.search(r"\d", k) else ""
 
 
 def build_latest_circulars(days: list, seed: dict, private: bool) -> list:
@@ -1436,15 +1451,20 @@ def build_latest_circulars(days: list, seed: dict, private: bool) -> list:
     start = (_ed(newest) - _dt.timedelta(days=CIRCULAR_WINDOW - 1)).isoformat()
     picked = {}
     seeds = {}
+    seeds_old = {}
     for s in (seed or {}).get("circulars") or []:
         if isinstance(s, dict) and _ref_key(s.get("ref_no")):
             seeds.setdefault(_ref_key(s.get("ref_no")), s)
+            if _ref_key_old(s.get("ref_no")):
+                seeds_old.setdefault(_ref_key_old(s.get("ref_no")), []).append(s)
     for d in sorted(days, key=lambda x: x["id"]):  # oldest first: keep the first coverage of each instrument
         for c in d.get("cards") or []:
             r = c.get("reg")
             if not r:
                 continue
             sd = seeds.get(_ref_key(r.get("ref_no")))
+            if not sd and len(seeds_old.get(_ref_key_old(r.get("ref_no")), [])) == 1:
+                sd = seeds_old[_ref_key_old(r.get("ref_no"))][0]
             if sd:  # fill fields the edition left unknown from the verified seed entry (copy; day cards stay as published)
                 c = dict(c, reg=dict(r))
                 r = c["reg"]

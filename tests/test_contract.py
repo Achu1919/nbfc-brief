@@ -249,6 +249,24 @@ try:
 except ImportError as e:
     err(f"content_upgrade import failed: {e}")
 
+
+# reg regression (bugs found 11 Nov 2026): a "D Mon YYYY: <REG> <ref>: ..." row carries its own ref, never a neighbour's,
+# and an issue date is never after the edition. Full checks: python3 -m unittest tests.test_regfix
+ROW = re.compile(r"^\d{1,2} [A-Z][a-z]{2} \d{4}: (RBI|SEBI|IBBI|NHB)\b")
+def reg_rows(cards, where):
+    for c in cards or []:
+        r = c.get("reg") or {}
+        if not r: continue
+        if r.get("issued") and c.get("date") and r["issued"] > c["date"] and not c["id"].startswith("seed-"):
+            err(f"{where} {c['id']}: issued {r['issued']} after edition {c['date']}")
+        m = ROW.match(c.get("title") or "")
+        if m and r.get("regulator") and r["regulator"] != m.group(1): err(f"{where} {c['id']}: regulator {r['regulator']} on a {m.group(1)} row")
+        if m and r.get("ref_no") and r["ref_no"].startswith("HO/") and r["ref_no"] not in c["title"]: err(f"{where} {c['id']}: neighbour ref {r['ref_no']}")
+for i in ids:
+    p_ = D / f"{i}.json"
+    if p_.exists(): reg_rows(json.loads(p_.read_text(encoding="utf-8")).get("cards"), i)
+reg_rows(j.get("latest_circulars"), "latest_circulars")
+
 print(f"{len(ids)} day(s) checked, {len(errs)} problem(s)")
 for e in errs[:50]: print(" -", e)
 sys.exit(1 if errs else 0)
