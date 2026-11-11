@@ -358,6 +358,15 @@ WINDOW = re.compile(r"\b\d{1,3}[- ]day (?:window|period) from|\b\d{1,2}(?:\s+[A-
 for x in j.get("deadlines") or []:
     if WINDOW.search(x.get("title") or "") and not x.get("date_text"): err(f"deadline {x.get('date')}: range without date_text")
 
+# CoS + Site Builder review (11 Nov 2026): aggregator sources, stable neutral thread titles, regulator tags,
+# sourced next, milestones never status-only, labelled table-row summaries (tests/review_checks.py, shared)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import review_checks  # noqa: E402
+for m in review_checks.all_errors(D):
+    err(m)
+_ncd = (json.loads((D / "stories.json").read_text(encoding="utf-8")).get("stories") or {}).get("mfl-ncd-2026-tranche-1") or {}
+if _ncd and _ncd.get("title") != "Muthoot Fincorp Tranche I NCD issue": err("NCD thread title is not the stable title")
+
 print(f"{len(ids)} day(s) checked, {len(errs)} problem(s)")
 for e in errs[:50]: print(" -", e)
 sys.exit(1 if errs else 0)
