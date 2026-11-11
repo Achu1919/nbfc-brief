@@ -1670,6 +1670,12 @@ def _content_upgrade(days, extras, data_dir, private, generated):
 
 def _write_content_upgrade(data_dir, files, latest):
     """stories.json / peer_intel.json share latest.json's `generated` and are written in the same run."""
+    try:
+        import content_upgrade
+        files = content_upgrade.finalize(latest, dict(files or {}))
+    except Exception as exc:  # never fatal
+        print(f"export_json: story_index skipped: {exc!r}", file=sys.stderr)
+        files = {k: v for k, v in (files or {}).items() if not k.startswith("_")}
     for name, obj in (files or {}).items():
         path = Path(data_dir) / name
         path.parent.mkdir(parents=True, exist_ok=True)

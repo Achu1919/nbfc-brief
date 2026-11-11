@@ -396,3 +396,30 @@ Built by `content_upgrade.py` (called from `export_json.export()`), identical in
 - **Sources:** `tier` 1 (regulators, exchanges, rating agencies, company IR), 2 (trusted press, SOURCES.md §2),
   3 (any other host). Banned hosts (exa.ai, stockfin.ai, trackliveprice.com, makro.live, stockwatch.live, hdfcsky.com,
   alphastreet) are dropped.
+
+## Story threads, sources and regulation lifecycle (content upgrade)
+
+Written by `content_upgrade.py` from `export_json.export()`. `data/latest.json`, `data/stories.json` and `data/peer_intel.json` carry the same `generated`. A key that does not apply is omitted, never null-filled, unless listed below as nullable.
+
+### Card additions (every edition)
+- `sources[]`: `{name, url, tier}`. Tier 1 = regulator, exchange, rating agency or company IR; 2 = press; 3 = other. Deduplicated by URL, tier-sorted, at most 6. Banned hosts (aggregators) are dropped and reported. `source` is always `{name, url}` of `sources[0]`.
+- `sources_ok`: true when a story or circular has 2+ sources, or 1 Tier-1 source with `single_source=official`.
+- `impact_label`: `"Possible impact on Muthoot Fincorp"` on every card with `impact`.
+- Private only: `impact_deep` (from a `MFL view:` line). It never appears in the public edition.
+
+### Card additions (editions from 2026-10-01)
+- `story_id` (`[a-z0-9-]`, ≤60), `thread_seq` (1-based), `prev_card` (nullable), `is_update`, `dup_of` (nullable; a second card on the same story in one edition), `continues[]`.
+- Id order: `<!-- story: id=… -->` override → `data/story_map.json` (`{card_id: {story_id, title_hash}}`, `_aliases`) → `reg-<regulator>-<ref>` for circulars → auto `<date>-<slug>` with title auto-join (Jaccard ≥ 0.5 within 21 days).
+- Override flags: `continues=a,b`, `milestone=…`, `next=YYYY-MM-DD:what` or `next=:what`, `status=closed`, `dup`, `single_source=official`. Peer overrides use `<!-- peer: … -->`.
+- Analysis cards are threaded only when they carry an override.
+
+### `reg` additions
+`lifecycle` (draft | final | effective | superseded | withdrawn), `comments_due` (nullable), `first_covered {date, card_id, report, title}`, `story_id`, `deadline {date, date_text, kind}` (nullable; kind comments | effective | compliance | other), `deadline_near` (≤14 days), optional `superseded_by`. Lifecycle and deadline are computed as at the card's edition. The older `status` field is unchanged.
+
+### `data/stories.json`
+`{schema_version, generated, aliases, archives[], archived{id: "YYYY-MM"}, stories{id: {...}}}`. Each story has `title, kind, status (open ≤7 days since the last update | dormant ≤21 | closed), opened, last_update, closed, update_count, updates[] (oldest first; kind update | status), next, continues, continued_by`, and `reg` with `lifecycle_history` for circular threads. A status-only change counts as an update with `kind: "status"`, shown as "Status". When the file exceeds 250 KB, closed stories move to `data/stories/archive-YYYY-MM.json`.
+
+### `latest.json` additions
+- `story_index {file, generated, open, refs{id: {title, status, last_update, update_count}}}`: refs cover every id referenced by latest, plus one hop.
+- `continuing_stories[]` (≤8, newest first; evergreen threads excluded): `{story_id, title, status, last_update, update_count, latest {card_id, date, report, kind, summary}, next, deadline_near}`. Day files carry it from 2026-11-11 onwards.
+- `deadlines[]` and `latest_circulars[]` gain `story_id` and `kind`.

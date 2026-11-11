@@ -13,6 +13,8 @@ def err(m): errs.append(m)
 KINDS = {"story", "item", "circular", "calendar", "analysis"}
 CATS = {"regulation", "muthoot-fincorp", "peers", "gold", "markets", "results", "ratings", "deals", "asset-quality"}
 REG_KEYS = {"ref_no", "regulator", "applies_to", "issued", "effective", "status", "url"}
+REG_NEW = {"lifecycle", "comments_due", "first_covered", "story_id", "deadline", "deadline_near", "superseded_by"}  # content upgrade
+STORY_ID = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 NCD_KEYS = {"issue", "open", "close", "size_cr", "rating", "coupon_range", "bids", "status", "source"}
 EXCLUDED = re.compile(r"exa\.ai|stockfin|trackliveprice|makro\.live|stockwatch\.live", re.I)
 PRIVATE_KEYS = {"lessons", "lesson", "quiz", "teaching"}
@@ -44,9 +46,22 @@ def check_card(c, where):
     if "<!--" in (c.get("title") or "") + (c.get("summary") or "") + (c.get("impact") or ""): err(f"{w}: comment leaked")
     t = c.get("impact") or ""
     if SOLICIT.search(t) or re.search(r"\b(we|our|you|your)\b", t, re.I): err(f"{w}: impact wording")
+    for s_ in c.get("sources") or []:
+        if s_.get("tier") not in (1, 2, 3) or not str(s_.get("url", "")).startswith("http") or EXCLUDED.search(s_.get("url") or ""): err(f"{w}: sources entry {s_}")
+    if c.get("sources") and src and src.get("url") != c["sources"][0].get("url"): err(f"{w}: source != sources[0]")
+    if len(c.get("sources") or []) > 6: err(f"{w}: more than 6 sources")
+    if c.get("impact") and c.get("impact_label") not in (None, "Possible impact on Muthoot Fincorp"): err(f"{w}: impact_label")
+    if "story_id" in c:
+        if not (isinstance(c["story_id"], str) and STORY_ID.match(c["story_id"]) and len(c["story_id"]) <= 60): err(f"{w}: story_id {c['story_id']!r}")
+        if not isinstance(c.get("thread_seq"), int) or c["thread_seq"] < 1: err(f"{w}: thread_seq")
     if "reg" in c:
         r = c["reg"]
-        if set(r) != REG_KEYS: err(f"{w}: reg keys {sorted(r)}")
+        if not (REG_KEYS <= set(r) <= REG_KEYS | REG_NEW): err(f"{w}: reg keys {sorted(r)}")
+        if r.get("lifecycle") not in (None, "draft", "final", "effective", "superseded", "withdrawn"): err(f"{w}: lifecycle {r.get('lifecycle')}")
+        dl_ = r.get("deadline")
+        if dl_ is not None and (not ISO.match(str(dl_.get("date"))) or dl_.get("kind") not in ("comments", "effective", "compliance", "other")): err(f"{w}: reg.deadline {dl_}")
+        fc = r.get("first_covered")
+        if fc is not None and set(fc) != {"date", "card_id", "report", "title"}: err(f"{w}: first_covered {fc}")
         if r.get("status") not in (None, "new", "draft", "in-force", "deadline"): err(f"{w}: reg status")
         for k in ("issued", "effective"):
             if r.get(k) is not None and not ISO.match(str(r[k])): err(f"{w}: reg {k}")
@@ -118,7 +133,8 @@ dl = j.get("deadlines")
 if not isinstance(dl, list): err("latest.json: deadlines missing")
 else:
     for x in dl:
-        if set(x) != {"date", "title", "regulator", "ref_no", "url", "status", "date_text"}: err(f"deadline keys {sorted(x)}")
+        if not ({"date", "title", "regulator", "ref_no", "url", "status", "date_text"} <= set(x) <= {"date", "title", "regulator", "ref_no", "url", "status", "date_text", "story_id", "kind"}): err(f"deadline keys {sorted(x)}")
+        if x.get("kind") not in (None, "comments", "effective", "compliance", "other"): err(f"deadline kind {x.get('kind')}")
         if not ISO.match(str(x.get("date"))) or not x.get("title"): err(f"deadline row {x}")
         if x.get("date_text") is not None and not isinstance(x["date_text"], str): err(f"deadline date_text {x}")
         if INDEX_URL.match(x.get("url") or ""): err(f"deadline links an index page, not the circular: {x.get('url')}")
@@ -266,6 +282,36 @@ for i in ids:
     p_ = D / f"{i}.json"
     if p_.exists(): reg_rows(json.loads(p_.read_text(encoding="utf-8")).get("cards"), i)
 reg_rows(j.get("latest_circulars"), "latest_circulars")
+
+
+# story threads (docs/DATA_FORMAT.md "Story threads")
+stp = D / "stories.json"
+if stp.exists():
+    sj = json.loads(stp.read_text(encoding="utf-8"))
+    if sj.get("generated") != j.get("generated"): err("stories.json: generated differs from latest.json")
+    for sid, st in (sj.get("stories") or {}).items():
+        if not STORY_ID.match(sid) or len(sid) > 60: err(f"stories.json: bad id {sid}")
+        if st.get("status") not in ("open", "dormant", "closed"): err(f"stories.json {sid}: status")
+        if (st.get("opened") or "") < "2026-10-01": err(f"stories.json {sid}: opened before 1 Oct")
+        ds = [u.get("date") for u in st.get("updates") or []]
+        if ds != sorted(ds): err(f"stories.json {sid}: updates not oldest first")
+        for x in st.get("continues") or []:
+            if x not in sj["stories"] and x not in (sj.get("aliases") or {}) and x not in (sj.get("archived") or {}): err(f"stories.json {sid}: continues unknown {x}")
+    si = j.get("story_index") or {}
+    if si.get("generated") != j.get("generated") or si.get("file") != "data/stories.json": err("story_index pointer")
+    cs = j.get("continuing_stories") or []
+    if len(cs) > 8: err("continuing_stories: more than 8")
+    for r in cs:
+        if r.get("story_id") in ("gold-price-weekly", "markets-daily-close", "mfl-gold-ltv"): err("continuing_stories: evergreen thread")
+        if r.get("story_id") not in (si.get("refs") or {}): err(f"story_index.refs missing {r.get('story_id')}")
+        if (r.get("latest") or {}).get("kind") not in ("update", "status"): err(f"continuing {r.get('story_id')}: latest.kind")
+        t = ((r.get("latest") or {}).get("summary") or "")
+        if SOLICIT.search(t): err(f"continuing {r.get('story_id')}: wording")
+    lu = [r.get("last_update") for r in cs]
+    if lu != sorted(lu, reverse=True): err("continuing_stories: not newest first")
+    for c in (j.get("today") or {}).get("cards") or []:
+        if c.get("story_id") and c["story_id"] not in (si.get("refs") or {}): err(f"story_index.refs missing card id {c['story_id']}")
+elif (j.get("story_index")): err("story_index without data/stories.json")
 
 print(f"{len(ids)} day(s) checked, {len(errs)} problem(s)")
 for e in errs[:50]: print(" -", e)
