@@ -423,3 +423,8 @@ Written by `content_upgrade.py` from `export_json.export()`. `data/latest.json`,
 - `story_index {file, generated, open, refs{id: {title, status, last_update, update_count}}}`: refs cover every id referenced by latest, plus one hop.
 - `continuing_stories[]` (≤8, newest first; evergreen threads excluded): `{story_id, title, status, last_update, update_count, latest {card_id, date, report, kind, summary}, next, deadline_near}`. Day files carry it from 2026-11-11 onwards.
 - `deadlines[]` and `latest_circulars[]` gain `story_id` and `kind`.
+
+### Weekly review (`week_review`, Mondays)
+- Under a `##` section of `03-weekly-analysis.md`, `<!-- stories: ids=a,b -->` sets `stories_ref[]` on that `analysis` card. Unknown ids are dropped and reported. The 1 Oct–9 Nov Mondays were backfilled through `data/story_map.json` entries `{stories_ref, title_hash}`.
+- A weekly edition's day file carries `week_review`: `{id (= week_start; route #/week/<id>), published (the Monday), week_start, week_end, report_card_prefix, story_ids[], sections[{card_id, title, story_ids[]}], week_threads[{story_id, cards_in_week, mentioned_in_review}]}`. `week_threads` lists every non-evergreen thread with an update in the week, so false means the weekly skipped it.
+- `latest.json` carries the newest `week_review` for 7 days after its Monday.

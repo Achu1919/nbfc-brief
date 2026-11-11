@@ -1101,12 +1101,12 @@ def apply(X, days, extras, data_dir, private, generated):
     except Exception as exc:  # never fatal
         _log(f"peer_intel skipped: {exc!r}")
     try:
-        wr = week_review_export(X, days, threads, problems) if "week_review_export" in globals() else {}
+        wr = week_review_export(X, days, threads, problems, data_dir)
         for d in days:
             if d["id"] in wr:
                 d["week_review"] = wr[d["id"]]
         mondays = sorted(wr)
-        if mondays:
+        if mondays and newest and _days(newest, mondays[-1]) < 7:  # latest.json carries it until the next weekly
             extras["week_review"] = wr[mondays[-1]]
     except Exception as exc:  # never fatal
         _log(f"week_review skipped: {exc!r}")
@@ -1141,3 +1141,64 @@ def finalize(latest, files):
     size = len(json.dumps(hot, ensure_ascii=False).encode("utf-8"))
     latest["story_index"] = story_index(hot, latest, latest["generated"], size, hot.get("archives") or [])
     return files
+
+
+def week_review_export(X, days, threads, problems, data_dir):
+    """Monday weekly: `<!-- stories: ids=a,b -->` under a `##` section (or a story_map entry with stories_ref)
+    -> card.stories_ref; plus one week_review object per weekly edition (plan section 1.6, review point 9)."""
+    try:
+        smap = json.loads((Path(data_dir) / STORY_MAP).read_text(encoding="utf-8"))
+    except Exception:
+        smap = {}
+    aliases = dict(smap.get("_aliases") or {}) if isinstance(smap, dict) else {}
+
+    def resolve(i):
+        seen = set()
+        while i in aliases and i not in seen:
+            seen.add(i)
+            i = aliases[i]
+        return i
+    out = {}
+    for d in sorted(days, key=lambda x: x["id"]):
+        ed = d["id"]
+        weekly = [c for c in d.get("cards") or [] if c.get("report") in ("weekly", "03-weekly-analysis")]
+        if not weekly or ed < THREAD_FROM:
+            continue
+        ws = (_dt.date.fromisoformat(ed) - _dt.timedelta(days=7)).isoformat()
+        we = (_dt.date.fromisoformat(ed) - _dt.timedelta(days=1)).isoformat()
+        sections, all_ids = [], []
+        for c in weekly:
+            ids = None
+            for ov in (c.get("_u") or {}).get("_ext") or []:
+                if "_stories" in ov and ov["_stories"].get("ids") not in (None, True):
+                    ids = [x.strip().lower() for x in str(ov["_stories"]["ids"]).split(",") if x.strip()]
+            mp = smap.get(c["id"]) if isinstance(smap, dict) else None
+            if ids is None and isinstance(mp, dict) and isinstance(mp.get("stories_ref"), list):
+                if mp.get("title_hash") and mp["title_hash"] != title_hash(c["title"]):
+                    problems.append(f"story_map {c['id']}: title_hash mismatch; stories_ref skipped")
+                else:
+                    ids = list(mp["stories_ref"])
+            if ids is None:
+                continue
+            good = []
+            for i in (resolve(x) for x in ids):
+                if i not in threads:
+                    problems.append(f"{c['id']}: stories_ref unknown story {i}")
+                elif i not in good:
+                    good.append(i)
+            c["stories_ref"] = good
+            if good:
+                sections.append({"card_id": c["id"], "title": c.get("section") or c["title"], "story_ids": good})
+                all_ids += [i for i in good if i not in all_ids]
+        mentioned = set(all_ids)
+        wt = []
+        for t in threads.values():
+            if t.id in EVERGREEN:
+                continue
+            n = sum(1 for e, c in t.updates if ws <= e <= we)
+            if n:
+                wt.append({"story_id": t.id, "cards_in_week": n, "mentioned_in_review": t.id in mentioned})
+        wt.sort(key=lambda r: (-r["cards_in_week"], r["story_id"]))
+        out[ed] = {"id": ws, "published": ed, "week_start": ws, "week_end": we,
+                   "report_card_prefix": f"{ed}-weekly", "story_ids": all_ids, "sections": sections, "week_threads": wt}
+    return out

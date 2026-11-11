@@ -313,6 +313,18 @@ if stp.exists():
         if c.get("story_id") and c["story_id"] not in (si.get("refs") or {}): err(f"story_index.refs missing card id {c['story_id']}")
 elif (j.get("story_index")): err("story_index without data/stories.json")
 
+
+# week_review (Monday weekly; plan section 1.6, review point 9)
+wr = j.get("week_review")
+if wr is not None:
+    if set(wr) != {"id", "published", "week_start", "week_end", "report_card_prefix", "story_ids", "sections", "week_threads"}: err(f"week_review keys {sorted(wr)}")
+    if wr.get("id") != wr.get("week_start") or not ISO.match(str(wr.get("published"))): err("week_review id/published")
+    for sid in wr.get("story_ids") or []:
+        if sid not in ((j.get("story_index") or {}).get("refs") or {}): err(f"week_review: story_index.refs missing {sid}")
+    for sec in wr.get("sections") or []:
+        if not str(sec.get("card_id", "")).startswith(wr.get("report_card_prefix", "?")): err(f"week_review section {sec.get('card_id')}")
+        if SOLICIT.search(sec.get("title") or ""): err("week_review section wording")
+
 print(f"{len(ids)} day(s) checked, {len(errs)} problem(s)")
 for e in errs[:50]: print(" -", e)
 sys.exit(1 if errs else 0)
