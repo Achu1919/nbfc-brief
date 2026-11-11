@@ -45,7 +45,7 @@ function bars(ser,w,h){var mx=Math.max.apply(0,ser.concat([1])),bw=w/ser.length;
   return '<svg class="hspk" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" aria-hidden="true" focusable="false">'+ser.map(function(v,i){var bh=v?Math.max(2,Math.round((h-1)*v/mx)):1;
     return '<rect x="'+(i*bw+1).toFixed(1)+'" y="'+(h-bh)+'" width="'+Math.max(1,bw-2).toFixed(1)+'" height="'+bh+'" rx="1"'+(v?'':' class="z"')+'/>';}).join('')+'</svg>';}
 function summ(d){var s=d.sm||d.b||'';if(d.imp){var k=s.indexOf(d.imp);if(k>0)s=s.slice(0,k);}
-  s=s.replace(/(?:^|\s)(?:Possible impact on Muthoot Fincorp|Why it matters[^:]{0,24}|MFL (?:impact|note|angle)|FP&A [a-z]+):\s.*$/i,'').trim();return clip(clean(s),260);}
+  s=s.replace(/(?:^|\s)(?:Possible impact on Muthoot Fincorp|Why it matters[^:]{0,24}|MFL (?:impact|note|angle)|FP&A [a-z]+):\s.*$/i,'').trim();s=clean(s);if(window.NBCU&&NBCU.cleanSum)s=NBCU.cleanSum(s);return clip(s,260);}
 function srcA(src){return src&&src.u&&/^https?:/.test(src.u)?'<a href="'+esc(src.u)+'" target="_blank" rel="noopener noreferrer">'+esc(clip(src.l||'source',40))+'</a>':'';}
 function kindL(d){var tg=(String(d.t).match(TAGRX)||[])[1];if(tg)return tg.charAt(0)+tg.slice(1).toLowerCase();return {Story:'Top story',Circular:'Circular',Calendar:'Calendar',MFL:NB.mflLabel||'Muthoot Fincorp',Weekly:'Weekly',Gold:'Gold rates'}[d.k]||String(d.s||'').split(' \u00b7 ').pop()||d.k;}
 function fcard(d,page){var c=d.c&&d.c!==page?NB.hubChip(d.c):'',s=summ(d),a=srcA(d.src);
@@ -164,7 +164,7 @@ function hubBody(slug){var X=ix();if(!X)return loading();var L=hubDocs(slug),day
   var label=slug==='muthoot-fincorp'?'News timeline':slug==='peers'?'Peer news':slug==='gold'?'Gold-loan news':'Latest';
   return pre+'<section aria-labelledby="h-hf"><div class="sec" data-st><h2 id="h-hf">'+label+'</h2><span class="aside num">'+plural(L.length,'item')+'</span></div><div id="hfeed">'+feed(L,slug,ST.lim)+'</div></section>';}
 function hubHtml(slug){if(!HUB[slug])return '<div class="hd" data-st="h"><p class="greet">Topics</p><h1>Topic not found</h1></div><div class="g card empty" data-st><p>There is no topic called \u201c'+esc(slug)+'\u201d. <a href="#/topics">See all topics</a>.</p></div>';
-  return hubHd(slug,subOf(slug))+'<div id="hbody">'+hubBody(slug)+'</div>'+NB.foot();}
+  return hubHd(slug,subOf(slug))+cu('hubThreads',slug)+'<div id="hbody">'+hubBody(slug)+'</div>'+NB.foot();}
 function html(view,key,pq){ST={f:'',lim:24};var m=String(pq||'').match(/(?:^|&)f=([a-z-]+)/);if(m)ST.f=m[1];
   if(view==='topics')return topicsHtml();if(view==='peer')return peerHtml(key);return hubHtml(key);}
 function title(view,key){return view==='topics'?'Topics':view==='peer'?peerName(key):HUB[key]?HUB[key].n:'Topics';}

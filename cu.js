@@ -8,6 +8,8 @@
       (so they work offline after one online open). Skipped on Save-Data / 2G; then they load on first use.
    3. Renderers: Peer Intelligence cards (Peers hub, peer pages, Today nudge) and the card basics (sources line,
       lifecycle and deadline chips, thread badges, impact label).
+   4. Step 2: the Continuing stories strip, the story timeline sheet (#/story/<id>), the Threads list (#/threads),
+      "Continuing in this topic" on hubs, and a clean-up for summaries that were flattened from markdown tables.
    Built from one source for both editions; the public file is generated without any private-only code. */
 (function(){'use strict';
 var PRIV=false;
@@ -83,7 +85,9 @@ function src(s){s=O(s);if(!s)return null;var u=U(s.url),n=S(s.name)||(u?host(u):
   return {name:n,url:u,tier:t,fallback:fb,role:ROLE[s.role]?s.role:'',page:pg};}
 function srcSort(L){var seen={};return L.filter(function(x){if(!x)return false;var k=x.url||x.name;if(seen[k])return false;seen[k]=1;return true;})
   .map(function(x,i){return [x,i];}).sort(function(a,b){return (a[0].tier||4)-(b[0].tier||4)||a[1]-b[1];}).map(function(x){return x[0];});}
-function cardSources(c){var L=A(c&&c.sources).map(src).filter(Boolean);if(!L.length){var s=src(c&&c.source);if(s)L=[s];}return srcSort(L);}
+/* a card lists each publisher once: the same name twice (two BSE pages) keeps the first after the tier sort */
+function cardSources(c){var L=A(c&&c.sources).map(src).filter(Boolean);if(!L.length){var s=src(c&&c.source);if(s)L=[s];}
+  var seen={};return srcSort(L).filter(function(x){var k=x.name.toLowerCase();if(seen[k])return false;seen[k]=1;return true;});}
 function reg(r,top){r=O(r)||{};top=O(top)||{};
   var lc=S(top.lifecycle)||S(r.lifecycle),near=r.deadline_near===true||top.deadline_near===true;
   if(lc==='deadline-near'){lc='';near=true;}
@@ -97,11 +101,15 @@ function card(c){c=O(c)||{};var r=O(c.reg);
   var o={id:S(c.id),sid:Id(c.story_id),seq:N(c.thread_seq)!=null&&c.thread_seq>=1?Math.round(c.thread_seq):null,upd:c.is_update===true,
     dup:S(c.dup_of),sources:cardSources(c),label:S(c.impact_label)||IMPACT,reg:r?reg(r,null):null,stRef:A(c.stories_ref).map(Id).filter(Boolean)};
   return o;}
+function nextOf(n){n=O(n);return n&&(S(n.what)||D(n.date))?{date:D(n.date),text:S(n.date_text),what:S(n.what)}:null;}
+function upd(u){u=O(u);if(!u||!D(u.date)||!S(u.title))return null;var so=O(u.source);
+  return {date:u.date,card:S(u.card_id),report:S(u.report),title:S(u.title),milestone:S(u.milestone),kind:u.kind==='status'?'status':'',summary:S(u.summary),
+    src:so&&S(so.name)?{name:S(so.name),tier:so.tier===1||so.tier===2||so.tier===3?so.tier:null,url:U(so.url)}:null};}
 function contItem(x){x=O(x);if(!x)return null;var sid=Id(x.story_id);if(!sid||!S(x.title))return null;var la=O(x.latest)||{},nx=O(x.next);
   return {sid:sid,title:S(x.title),cat:S(x.category),status:S(x.status),opened:D(x.opened),last:D(x.last_update)||D(la.date),
     count:N(x.update_count)!=null?x.update_count:N(x.updates),
     latest:{date:D(la.date),card:S(la.card_id),report:S(la.report),kind:la.kind==='status'?'status':'update',title:S(la.title),summary:S(la.summary),source:src(la.source)},
-    recent:A(x.recent).map(O).filter(Boolean).slice(0,3),next:nx&&(S(nx.what)||D(nx.date))?{date:D(nx.date),text:S(nx.date_text),what:S(nx.what)}:null,
+    recent:A(x.recent).map(upd).filter(Boolean).slice(0,3),next:nx&&(S(nx.what)||D(nx.date))?{date:D(nx.date),text:S(nx.date_text),what:S(nx.what)}:null,
     reg:O(x.reg)?reg(x.reg,null):null};}
 function refItem(x){x=O(x);if(!x||!S(x.title))return null;return {title:S(x.title),cat:S(x.category),status:S(x.status),opened:D(x.opened),last:D(x.last_update),
   count:N(x.update_count),continues:A(x.continues).map(Id).filter(Boolean),continuedBy:A(x.continued_by).map(Id).filter(Boolean)};}
@@ -152,11 +160,12 @@ function loadStories(){if(L.stories)return Promise.resolve(L.stories);if(!X.stor
         /* stories.json counts cards (card_count) and editions; update_count is the older contract name */
         out[id]={title:S(s.title),cat:S(s.category),status:S(s.status),opened:D(s.opened),last:D(s.last_update),
           count:N(s.card_count)!=null?s.card_count:N(s.update_count)!=null?s.update_count:A(s.updates).length,editions:N(s.editions),
-          updates:A(s.updates).map(O).filter(function(u){return u&&D(u.date)&&S(u.title);}),next:O(s.next),reg:O(s.reg)?reg(s.reg,null):null,
+          updates:A(s.updates).map(upd).filter(Boolean),next:nextOf(s.next),reg:O(s.reg)?reg(s.reg,null):null,
+          rg:S(O(s.reg)&&s.reg.regulator)||S(A(s.regulators)[0]),closed:D(s.closed),
           continues:A(s.continues).map(Id).filter(Boolean),continuedBy:A(s.continued_by).map(Id).filter(Boolean)};});
       var al={},a=O(j.aliases)||{};Object.keys(a).forEach(function(k){var t=Id(a[k]);if(Id(k)&&t)al[k]=t;});
       L.stories={generated:S(j.generated),stale:!!(S(j.generated)&&X.gen&&S(j.generated)<X.gen),stories:out,aliases:al};return L.stories;})
-    .catch(function(){L.sp=null;return null;});
+    .catch(function(){L.sp=null;L.sfail=true;return null;});
   return L.sp;}
 function loadPeer(){if(L.peer)return Promise.resolve(L.peer);if(!X.peerFile)return Promise.resolve(null);
   if(!L.pp)L.pp=getJ(X.peerFile).then(function(j){j=O(j)||{};var E=O(j.entries)||{},list=Array.isArray(j.entries)?j.entries:Object.keys(E).map(function(k){return E[k];});
@@ -194,9 +203,9 @@ function dots(n){n=Math.max(1,Math.min(5,n||1));var s='';for(var i=0;i<n;i++)s+=
 /* "Update 4 · since 2 Nov" from the card alone (thread_seq) plus the opened date from story_index.refs when present;
    "Status" when today's only news on the thread is a lifecycle or deadline change */
 function badge(k){if(!k||!k.sid)return '';var c=X.contBy[k.sid];
-  if(c&&c.latest.kind==='status'&&(!c.latest.card||c.latest.card===k.id))return '<span class="thr st-only" title="Only the status changed">'+dots(1)+'Status</span>';
+  if(c&&c.latest.kind==='status'&&(!c.latest.card||c.latest.card===k.id))return '<a class="thr st-only press" href="#/story/'+esc(k.sid)+'" title="Only the status changed">'+dots(1)+'Status</a>';
   if(!k.seq||k.seq<2)return '';var r=story(k.sid),since=r&&r.opened?' \u00b7 since '+dm(r.opened):'';
-  return '<span class="thr">'+dots(k.seq)+'Update '+k.seq+since+'</span>';}
+  return '<a class="thr press" href="#/story/'+esc(k.sid)+'" aria-label="Update '+k.seq+(r&&r.opened?', thread since '+esc(dm(r.opened)):'')+'. Open the story timeline">'+dots(k.seq)+'Update '+k.seq+since+'</a>';}
 function statusBadge(sid){var c=X.contBy[Id(sid)];return c&&c.latest.kind==='status'?'<span class="thr st-only" title="Only the status changed">'+dots(1)+'Status</span>':'';}
 function impactP(text,label,cls){return text?'<p class="'+(cls||'why sm')+'"><b>'+esc(label||IMPACT)+':</b> '+esc(text)+'</p>':'';}
 /* everything a Today story card adds; empty strings when the fields are absent */
@@ -277,6 +286,197 @@ function nudge(day){if(!day||day.id!==X.latestId)return '';var Ls=X.pi.filter(fu
   return Ls.slice(0,2).map(function(p){var t=evTypes(p).filter(function(x){return p.ev.some(function(e){return e.type===x&&e.date===day.id;});}),lab=t.indexOf('investor-deck')>=0?'investor deck':EVL[t[0]]||'filing';
     return '<a class="pin g press" data-st href="#/peer/'+esc(p.co)+'">'+(NB().hubIcon?NB().hubIcon('peers',18):'')+'<span class="pin-t"><b>New:</b> '+esc(p.name+' '+(p.period?p.period+' ':'')+lab)+'</span><span class="pin-a" aria-hidden="true">\u2192</span></a>';}).join('');}
 
+/* ================= step 2 ================= */
+/* ---------------- summaries flattened from markdown tables ----------------
+   Some exporter summaries are a table's cells run together ("Field Value As of Status Closed, ... 2026-11-11 Size ...")
+   or one headerless row ("14,242.0; 14,145.2 (2026-11-06 PM); 96.8 (+0.68%); 2026-11-10 AM; IBJA"). Shown as they
+   are, they read as noise, so: markdown pipes and |---| rows are dropped; a header row (Field/Item/Metric + Value...)
+   keeps only the first data row ("Status: Closed, ..."), or nothing when rows cannot be told apart; a headerless
+   numeric row keeps its first cell (the figure) and last cell (the source). Ordinary prose is returned unchanged. */
+var THDR=/^\s*(?:Field|Item|Metric|Parameter|Particulars|Measure|Indicator)\s+(?:Values?|Figures?|Details?|Data|Status|Description)(?:\s+(?:As of|As on|Date|Sources?|Period|Notes?|Remarks|Change))*\s+/;
+var FLD={status:1,size:1,rating:1,ratings:1,coupon:1,coupons:1,bids:1,amount:1,issue:1,listing:1,allotment:1,tenor:1,'yield':1,date:1,price:1};
+var ISOG=/\b20\d\d-\d\d-\d\d\b/;
+function cleanSum(t){t=typeof t==='string'?t:'';if(!t)return '';
+  if(/\|\s*:?-{3,}/.test(t)||/-{3,}:?\s*\|/.test(t))t=t.replace(/\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)*\|?/g,' ');
+  if(t.indexOf('|')>=0)t=t.split('|').map(function(x){return x.trim();}).filter(Boolean).join(' \u00b7 ');
+  var h=t.match(THDR);
+  if(h){var rest=t.slice(h[0].length).trim(),m=ISOG.exec(rest);if(!m)return '';
+    var first=rest.slice(0,m.index).replace(/[\s;,\u00b7(]+$/,'').trim(),w=first.match(/^([A-Za-z]+)\s+(?=\S)/);
+    if(w&&FLD[w[1].toLowerCase()])first=w[1]+': '+first.slice(w[0].length);
+    return first.length>=12?first:'';}
+  var cells=t.split(/;\s+/);
+  if(cells.length>=3){var isN=function(c){c=c.trim();return /^[\d\u20b9$+\-\u2212(]/.test(c)||c==='same'||ISOG.test(c.slice(0,10));};
+    var k=cells.filter(isN).length,last=cells[cells.length-1].trim();
+    if(k>=2&&k>=cells.length-1&&isN(cells[0]))return cells[0].trim()+(!isN(last)&&last.length<=40?' \u00b7 '+last:'');}
+  return t;}
+
+/* ---------------- threads: one model for the strip, the sheet, the list and hubs ---------------- */
+function hubOf(c){var H=NB().HUB||{};return H[c]||null;}
+function hubName(c){var h=hubOf(c);return h?h.n:'';}
+function plainT(t){return String(t||'').replace(/^\s*update\s*[:\u2013\u2014-]\s*/i,'');}
+function thread(id){id=Id(id);if(!id)return null;var s=L.stories;if(s&&s.aliases[id])id=s.aliases[id];
+  var f=s&&s.stories[id],c=X.contBy[id],r=X.refs[id];if(!f&&!c&&!r)return null;
+  var t={id:id,title:'',cat:'',status:'',opened:'',last:'',count:null,ups:[],next:null,reg:null,rg:'',cont:[],contBy:[],full:!!f,stale:false};
+  if(f){t.title=f.title;t.cat=f.cat;t.status=f.status;t.opened=f.opened;t.last=f.last;t.ups=f.updates.slice();t.next=f.next;t.reg=f.reg;t.rg=f.rg;
+    t.cont=f.continues;t.contBy=f.continuedBy;t.count=t.ups.length;}
+  else if(c){t.title=c.title;t.cat=c.cat;t.status=c.status;t.opened=c.opened;t.last=c.last;t.count=c.count;t.next=c.next;t.reg=c.reg;
+    var la=c.latest;t.ups=c.recent.slice().reverse();if(la.date&&S(la.title||la.summary))t.ups.push({date:la.date,card:la.card,report:la.report,title:la.title||la.summary,milestone:'',kind:la.kind==='status'?'status':'',summary:la.title?la.summary:'',src:la.source});}
+  else{t.title=r.title;t.cat=r.cat;t.status=r.status;t.opened=r.opened;t.last=r.last;t.count=r.count;t.cont=r.continues;t.contBy=r.continuedBy;}
+  if(!t.cont.length&&r)t.cont=r.continues;if(!t.contBy.length&&r)t.contBy=r.continuedBy;
+  /* stories.json older than latest.json: today's update comes from continuing_stories */
+  if(f&&c&&c.latest.date&&!t.ups.some(function(u){return (c.latest.card&&u.card===c.latest.card)||(u.date===c.latest.date&&u.title===c.latest.title);})&&c.latest.date>=(t.last||'')){
+    t.ups.push({date:c.latest.date,card:c.latest.card,report:c.latest.report,title:c.latest.title||c.latest.summary,milestone:'',kind:c.latest.kind,summary:c.latest.title?c.latest.summary:'',src:c.latest.source});t.stale=true;t.count=t.ups.length;}
+  if(f&&c&&c.latest.date===X.latestId){var lu=t.ups.filter(function(u){return u.card===c.latest.card;})[0];if(lu&&!lu.summary&&c.latest.summary&&c.latest.summary!==lu.title)lu.summary=c.latest.summary;}
+  if(L.stories&&L.stories.stale)t.stale=true;
+  t.ups.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});return t;}
+function allThreads(){var out={},s=L.stories;
+  if(s)Object.keys(s.stories).forEach(function(k){var f=s.stories[k];out[k]={id:k,title:f.title,cat:f.cat,status:f.status,opened:f.opened,last:f.last,count:f.updates.length||f.count};});
+  Object.keys(X.refs).forEach(function(k){if(out[k])return;var r=X.refs[k];out[k]={id:k,title:r.title,cat:r.cat,status:r.status,opened:r.opened,last:r.last,count:r.count};});
+  X.cont.forEach(function(c){var o=out[c.sid];if(!o)out[c.sid]={id:c.sid,title:c.title,cat:c.cat,status:c.status,opened:c.opened,last:c.last,count:c.count};
+    else if(c.last>(o.last||'')){o.last=c.last;o.status=c.status||o.status;}});
+  return Object.keys(out).map(function(k){return out[k];}).filter(function(t){return t.title;})
+    .sort(function(a,b){return (a.last||'')<(b.last||'')?1:(a.last||'')>(b.last||'')?-1:0;});}
+var TST={open:'Open',dormant:'Dormant',closed:'Closed'};
+function rail(n,max){n=Math.max(1,Math.min(max||6,n||1));var s='';for(var i=0;i<n;i++)s+=(i?'<s></s>':'')+'<b'+(i===n-1?' class="on"':'')+'></b>';return s;}
+function cnt(n,w){return n+' '+w+(n===1?'':'s');}
+
+/* ---------------- Today (and an archived edition): Continuing stories strip ---------------- */
+function contCard(c,dayId){var h=hubOf(c.cat),la=c.latest,same=la.date&&la.date===dayId,live=dayId===X.latestId;
+  var when=same?(live?'Today':'This edition'):la.date?'Last update '+dm(la.date):'';
+  var line=plainT(la.title||la.summary);
+  return '<li data-st><a class="cc g press" href="#/story/'+esc(c.sid)+'"'+(h?' data-hub="'+esc(c.cat)+'"':'')+'>'+
+    '<span class="cc-k">'+(h?(NB().hubIcon?NB().hubIcon(c.cat,13):'')+'<span>'+esc(h.n)+'</span>':'<span>Story</span>')+(c.opened?'<span class="cc-s num">since '+esc(dm(c.opened))+'</span>':'')+'</span>'+
+    '<span class="cc-t">'+esc(c.title)+'</span>'+
+    (line?'<span class="cc-l">'+(when?'<b>'+esc(when)+(la.kind==='status'?' \u00b7 Status':'')+':</b> ':'')+esc(line)+'</span>':'')+
+    (c.next?'<span class="cc-nx"><b>Next:</b> '+esc([c.next.text||(c.next.date?dm(c.next.date):''),c.next.what].filter(Boolean).join(' \u00b7 '))+'</span>':'')+
+    '<span class="cc-rail" aria-hidden="true">'+rail(c.count)+'</span><span class="cc-n num">'+(c.count?esc(cnt(c.count,'update')):'')+'</span></a></li>';}
+function contStrip(day){if(!day)return '';var live=day.id===X.latestId,list=live?X.cont:A(day.continuing_stories).map(contItem).filter(Boolean).slice(0,8);
+  if(!list.length)return '';
+  return '<section aria-labelledby="h-cont" class="cont"><div class="sec" data-st><h2 id="h-cont">'+(live?'Continuing stories':'Continuing on '+esc(sday(day.id)))+'</h2><a class="aside" href="#/threads">All threads \u2192</a></div>'+
+    '<ul class="cstrip" role="list" aria-label="Story threads, swipe for more">'+list.map(function(c){return contCard(c,day.id);}).join('')+'</ul></section>';}
+
+/* ---------------- story timeline sheet ---------------- */
+var SH={el:null,scrim:null,id:'',under:'#/',pushed:false,opener:null,inert:[],skip:'',last:location.hash};
+function storyHash(h){var m=/^#\/story\/([^?\/#]+)/.exec(h||'');try{return m?decodeURIComponent(m[1]):'';}catch(e){return '';}}
+function readLink(u){var nb=NB();return u.date&&nb.readHref?nb.readHref(u.date,u.report||'01-daily-watch',u.title,''):'';}
+function tierB(s){if(!s)return '';var lab=s.tier?String(s.tier):'',cls=s.tier===1?'p':s.tier===2?'s':'c';
+  return '<span class="tl-src">'+(lab?'<span class="tier '+cls+'" aria-hidden="true">'+lab+'</span><span class="sr">Tier '+lab+' source: </span>':'')+esc(s.name)+'</span>';}
+function relRow(ids,lab){var rows=A(ids).map(function(i){var r=thread(i);return r?'<a class="tl-rel press" href="#/story/'+esc(r.id)+'" data-cus><span>'+esc(lab)+'</span> '+esc(r.title)+'</a>':'';}).filter(Boolean);
+  return rows.join('');}
+function sheetHtml(t){var h=hubOf(t.cat),today=X.latestId,ups=t.ups.slice().reverse(),n=t.full?t.ups.length:(t.count||t.ups.length),oldest=t.ups[0];
+  var chips=(t.rg?'<span class="rgb">'+esc(t.rg.toUpperCase())+'</span>':'')+(t.reg?regChips(t.reg,null):'')+(TST[t.status]?'<span class="st cu-ts cu-ts-'+t.status+'">'+TST[t.status]+'</span>':'');
+  var meta=[n?cnt(n,'update'):'',t.opened?'first covered '+sday(t.opened):'',h?h.n:''].filter(Boolean).join(' \u00b7 ');
+  var x='<div class="sh-h" data-drag><span class="sh-grab" aria-hidden="true"></span><button type="button" class="sh-x press" data-cuclose aria-label="Close the story timeline"><span aria-hidden="true">\u00d7</span></button></div>'+
+    (chips?'<div class="tagrow sh-c">'+chips+'</div>':'')+'<h2 id="cu-sh-t">'+esc(t.title)+'</h2>'+(meta?'<p class="sh-m num">'+esc(meta)+'</p>':'');
+  x+=relRow(t.cont,'Grew out of:')+relRow(t.contBy,'Continues in:');
+  var lis='';
+  if(t.next)lis+='<li class="tl-n tl-nx"><p class="tl-d num">'+esc([t.next.date?sday(t.next.date):t.next.text,'Next'].filter(Boolean).join(' \u00b7 '))+'</p><p class="tl-t">'+esc(t.next.what||'Next step')+'</p>'+(t.next.text&&t.next.date?'<p class="tl-s">'+esc(t.next.text)+'</p>':'')+'</li>';
+  lis+=ups.map(function(u){var now=u.date===today,first=t.full&&u===oldest,href=readLink(u);
+    var d=[sday(u.date),now?'Today':'',first?'First covered':''].filter(Boolean).join(' \u00b7 ');
+    return '<li class="tl-n'+(now?' now':'')+(u.kind==='status'?' tl-st':'')+'"><p class="tl-d num">'+esc(d)+(u.kind==='status'?' <span class="tl-m">Status</span>':'')+(u.milestone?' <span class="tl-m">'+esc(tcase(u.milestone))+'</span>':'')+'</p>'+
+      (href?'<a class="tl-t press" href="'+esc(href)+'">'+esc(plainT(u.title))+'</a>':'<p class="tl-t">'+esc(plainT(u.title))+'</p>')+
+      (u.summary&&u.summary!==u.title?'<p class="tl-s">'+esc(NB().clip?NB().clip(cleanSum(u.summary),200):cleanSum(u.summary))+'</p>':'')+(u.src?'<p class="tl-sr">'+tierB(u.src)+'</p>':'')+'</li>';}).join('');
+  x+=lis?'<ol class="tl" role="list">'+lis+'</ol>':'';
+  var note=!t.full&&X.storyFile?(L.sfail?'Earlier updates load when online.':L.stories?'':'Loading earlier updates\u2026'):'';
+  if(t.stale&&t.full)note='Index updating: today\u2019s update is from this morning\u2019s edition.';
+  if(note)x+='<p class="note sh-n" role="status">'+esc(note)+'</p>';
+  var lat=ups[0],lh=lat?readLink(lat):'';
+  x+='<div class="sh-a">'+(h?'<a class="press" href="#/topic/'+esc(t.cat)+'">Open in '+esc(h.n)+'</a>':'')+(lh?'<a class="press pri" href="'+esc(lh)+'">'+(lat.date===today?'Read today\u2019s report':'Read the latest report')+'</a>':'')+'</div>';
+  return x;}
+function rm(){var R=NB()&&NB().RM;return !!(R&&R.matches);}
+function sp(k){var s=NB()&&NB().SPRINGS;return s&&s[k]?s[k]:{ms:420,easing:'cubic-bezier(.2,.9,.25,1)'};}
+function stagger(root){if(rm()||!root.animate)return;var r=sp('Rise'),st=NB().STAGGER||32;
+  [].slice.call(root.querySelectorAll('.tl-n')).slice(0,8).forEach(function(li,i){li.animate([{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'none'}],{duration:r.ms,easing:r.easing,delay:i*st,fill:'backwards'});});}
+function fillSheet(t,anim){var b=SH.el.querySelector('.sh-b');SH.id=t.id;if(hubOf(t.cat))SH.el.setAttribute('data-hub',t.cat);else SH.el.removeAttribute('data-hub');b.innerHTML=sheetHtml(t);if(anim)stagger(b);
+  if(!t.full&&X.storyFile&&!L.stories&&!L.sfail)loadStories().then(function(){if(SH.el&&SH.id===t.id){var t2=thread(t.id);if(t2){fillSheet(t2,false);}}});}
+function lockOthers(on){if(on){SH.inert=[];[].forEach.call(document.body.children,function(el){if(el===SH.el||el===SH.scrim||el.id==='toast'||el.tagName==='SCRIPT'||el.inert)return;el.inert=true;SH.inert.push(el);});
+    document.documentElement.classList.add('cu-lock');}
+  else{SH.inert.forEach(function(el){el.inert=false;});SH.inert=[];document.documentElement.classList.remove('cu-lock');}}
+function openSheet(id,o){var t=thread(id);
+  if(!t){if(!L.stories&&X.storyFile&&!L.sfail&&!o.retried){loadStories().then(function(){if(storyHash(location.hash)===id)openSheet(id,Object.assign({},o,{retried:true}));});return;}
+    unknown(o);return;}
+  if(SH.el){fillSheet(t,true);SH.el.querySelector('.sh-b').scrollTop=0;return;}
+  SH.opener=document.activeElement;SH.under=o.under||'#/';SH.pushed=!!o.pushed;
+  var sc=document.createElement('div');sc.className='sh-scrim';sc.setAttribute('data-cuclose','');
+  var el=document.createElement('section');el.className='sheet cu-sheet';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','cu-sh-t');
+  el.innerHTML='<div class="sh-b"></div>';document.body.appendChild(sc);document.body.appendChild(el);SH.el=el;SH.scrim=sc;
+  fillSheet(t,true);lockOthers(true);
+  if(rm()){el.animate&&el.animate([{opacity:0},{opacity:1}],{duration:150});sc.animate&&sc.animate([{opacity:0},{opacity:1}],{duration:150});}
+  else if(el.animate){var g=sp('Glide');el.animate([{transform:'translateY(100%)'},{transform:'none'}],{duration:g.ms+120,easing:g.easing});sc.animate([{opacity:0},{opacity:1}],{duration:220,easing:'cubic-bezier(.4,0,.2,1)'});}
+  var x=el.querySelector('.sh-x');if(x)x.focus({preventScroll:true});}
+function closeSheet(){var el=SH.el,sc=SH.scrim,op=SH.opener;if(!el)return;SH.el=null;SH.scrim=null;SH.id='';lockOthers(false);
+  function done(){el.remove();sc.remove();}
+  if(rm()||!el.animate)done();
+  else{var cur=getComputedStyle(el).transform;el.animate([{transform:cur==='none'?'none':cur},{transform:'translateY(100%)'}],{duration:220,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'}).finished.then(done,done);
+    sc.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});}
+  if(op&&op.isConnected&&op.focus)op.focus({preventScroll:true});else{var h=document.querySelector('#app h1');if(h){h.setAttribute('tabindex','-1');h.focus({preventScroll:true});}}}
+/* close from inside the app: undo the #/story entry when we pushed it, else put the page's own hash back */
+function requestClose(){if(!SH.el)return;if(SH.pushed){SH.skip=SH.under;history.back();}else{try{history.replaceState(null,'',SH.under);}catch(e){}SH.last=SH.under;closeSheet();}}
+function unknown(o){var nb=NB();if(nb&&nb.toast)nb.toast('This story isn\u2019t in this edition\u2019s index');
+  if(o.pushed){SH.skip=o.under||'#/';history.back();}else{try{history.replaceState(null,'',o.under||'#/');}catch(e){}}}
+/* called by app.js on every hashchange before it routes; true = handled here, do not route */
+function onHash(){var id=storyHash(location.hash);
+  if(id){if(SH.el&&SH.id===id)return true;openSheet(id,{under:SH.el?SH.under:(SH.last&&!storyHash(SH.last)?SH.last:'#/'),pushed:true});return true;}
+  var h=location.hash,skip=SH.skip&&(h===SH.skip||(!h&&SH.skip==='#/'));SH.skip='';SH.last=h;
+  if(SH.el){closeSheet();return skip||h===SH.under;}
+  return skip;}
+/* called once after the first route: a reload on #/story/<id> opens the sheet over Today */
+function deep(){var id=storyHash(location.hash);if(id)openSheet(id,{under:'#/',pushed:false});else SH.last=location.hash;}
+document.addEventListener('keydown',function(e){if(!SH.el)return;
+  if(e.key==='Escape'){e.preventDefault();requestClose();return;}
+  if(e.key==='Tab'){var f=[].slice.call(SH.el.querySelectorAll('a[href],button:not([disabled]),[tabindex]:not([tabindex="-1"])')).filter(function(x){return x.offsetParent!==null;});if(!f.length)return;
+    var a=f[0],z=f[f.length-1];if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus();}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus();}}});
+/* drag the handle (or the header row) down to dismiss */
+(function(){var y0=0,t0=0,dy=0,on=false;
+  document.addEventListener('pointerdown',function(e){if(!SH.el||!e.target.closest||!e.target.closest('.cu-sheet [data-drag]')||e.target.closest('button'))return;on=true;y0=e.clientY;t0=Date.now();dy=0;
+    try{e.target.setPointerCapture(e.pointerId);}catch(x){}SH.el.getAnimations&&SH.el.getAnimations().forEach(function(a){a.cancel();});});
+  document.addEventListener('pointermove',function(e){if(!on||!SH.el)return;dy=Math.max(0,e.clientY-y0);SH.el.style.transform=dy?'translateY('+dy+'px)':'';});
+  function up(){if(!on)return;on=false;if(!SH.el)return;var v=dy/Math.max(1,Date.now()-t0);
+    if(dy>90||v>.6){requestClose();return;}
+    var el=SH.el,from=el.style.transform;el.style.transform='';if(from&&!rm()&&el.animate){var g=sp('Glide');el.animate([{transform:from},{transform:'none'}],{duration:g.ms,easing:g.easing});}}
+  document.addEventListener('pointerup',up);document.addEventListener('pointercancel',up);})();
+document.addEventListener('click',function(e){if(!SH.el||!e.target.closest)return;
+  var c=e.target.closest('[data-cuclose]');if(c){e.preventDefault();requestClose();return;}
+  var r=e.target.closest('a[data-cus]');if(r&&SH.el.contains(r)){e.preventDefault();var id=storyHash(r.getAttribute('href'));try{history.replaceState(null,'','#/story/'+id);}catch(x){}SH.last=SH.under;openSheet(id,{under:SH.under,pushed:SH.pushed});}});
+
+/* ---------------- Threads list (#/threads) and hub blocks ---------------- */
+var TF={f:''};
+function tRow(t,showHub){var h=hubOf(t.cat);
+  return '<li><a class="trow g press" href="#/story/'+esc(t.id)+'"'+(h?' data-hub="'+esc(t.cat)+'"':'')+'>'+
+    '<span class="tr-k">'+(showHub&&h?(NB().hubIcon?NB().hubIcon(t.cat,13):'')+'<span>'+esc(h.n)+'</span>':'')+(TST[t.status]?'<span class="cu-ts cu-ts-'+t.status+'">'+TST[t.status]+'</span>':'')+'</span>'+
+    '<span class="tr-t">'+esc(t.title)+'</span><span class="tr-m num">'+esc([t.count?cnt(t.count,'update'):'',t.last?'last '+dm(t.last):'',t.opened&&t.opened!==t.last?'since '+dm(t.opened):''].filter(Boolean).join(' \u00b7 '))+'</span>'+
+    '<span class="tr-a" aria-hidden="true">\u203a</span></a></li>';}
+function tList(list,showHub){return '<ul class="tlist" role="list">'+list.map(function(t){return tRow(t,showHub);}).join('')+'</ul>';}
+function threadsBody(){var all=allThreads(),f=TF.f,list=f?all.filter(function(t){return t.cat===f;}):all;
+  var g={open:[],dormant:[],closed:[]};list.forEach(function(t){(g[t.status]||g.dormant).push(t);});
+  var x='';
+  if(g.open.length)x+='<section aria-labelledby="h-to"><div class="sec" data-st><h2 id="h-to">Open</h2><span class="aside num">'+g.open.length+'</span></div><div data-st>'+tList(g.open,!f)+'</div></section>';
+  if(g.dormant.length)x+='<section aria-labelledby="h-td"><div class="sec" data-st><h2 id="h-td">Dormant</h2><span class="aside">no update in 7 days</span></div><div data-st>'+tList(g.dormant,!f)+'</div></section>';
+  if(g.closed.length)x+='<section aria-labelledby="h-tc"><div class="sec" data-st><h2 id="h-tc">Closed recently</h2></div><div data-st><button type="button" class="pill press tc-b" data-cux="cu-tc" aria-expanded="false" aria-controls="cu-tc">Show '+cnt(g.closed.length,'closed thread')+'</button><div id="cu-tc" hidden>'+tList(g.closed,!f)+'</div></div></section>';
+  if(!x)x='<div class="g card empty" data-st><p class="note" style="margin:0">'+(f?'No threads in '+esc(hubName(f))+' yet.':'No story threads yet.')+'</p></div>';
+  var note=!L.stories&&X.storyFile?(L.sfail?'Showing the threads in this edition. The full list loads when online.':'Loading all threads\u2026'):'';
+  return (note?'<p class="note" role="status" data-st>'+esc(note)+'</p>':'')+x;}
+function threadsChips(){var all=allThreads(),seen={};all.forEach(function(t){if(hubOf(t.cat))seen[t.cat]=(seen[t.cat]||0)+1;});
+  var H=(NB().HUBS||[]).filter(function(h){return seen[h.s];});
+  return '<div class="tp-s th-f" role="group" aria-label="Filter threads by topic" data-st><button type="button" class="pill press" data-cuf="" aria-pressed="'+(!TF.f)+'">All</button>'+
+    H.map(function(h){return '<button type="button" class="pill press" data-cuf="'+h.s+'" data-hub="'+h.s+'" aria-pressed="'+(TF.f===h.s)+'"><i aria-hidden="true"></i>'+esc(h.n)+' <span class="num">'+seen[h.s]+'</span></button>';}).join('')+'</div>';}
+function threadsView(){var m=location.hash.match(/[?&]f=([a-z-]+)/);TF.f=m&&hubOf(m[1])?m[1]:'';
+  return '<div class="hd hubhd g" data-st="h" data-hub="'+esc(TF.f||'')+'"><a class="hback press" href="#/topics"><span aria-hidden="true">\u2039</span> Topics</a>'+
+    '<div class="hh"><div><p class="greet">Topics</p><h1>Threads</h1></div></div><p class="hsub">Every story followed across editions since 1 Oct 2026. Tap one for its timeline.</p></div>'+
+    '<div id="thf">'+threadsChips()+'</div><div id="thbody">'+threadsBody()+'</div>'+(NB().foot?NB().foot():'');}
+function mountThreads(root){if(L.stories||!X.storyFile)return;
+  loadStories().then(function(){if(!root.isConnected)return;var f=root.querySelector('#thf'),b=root.querySelector('#thbody');if(f)f.innerHTML=threadsChips();if(b)b.innerHTML=threadsBody();});}
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-cuf]');if(!b)return;TF.f=b.getAttribute('data-cuf');
+  document.querySelectorAll('[data-cuf]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});
+  var hd=document.querySelector('.hubhd');if(hd)hd.setAttribute('data-hub',TF.f);
+  var tb=document.getElementById('thbody');if(tb)tb.innerHTML=threadsBody();
+  try{history.replaceState(null,'','#/threads'+(TF.f?'?f='+TF.f:''));}catch(x){}SH.last=location.hash;});
+/* a hub's "Continuing in this topic": up to 4 open or dormant threads of that hub, newest first */
+function hubThreads(slug){var list=allThreads().filter(function(t){return t.cat===slug&&(t.status==='open'||t.status==='dormant');}).slice(0,4);
+  if(!L.stories&&X.storyFile&&!L.sfail)loadStories().then(function(){var el=document.getElementById('cu-ht');if(el&&el.getAttribute('data-slug')===slug)el.outerHTML=hubThreads(slug);});
+  if(!list.length)return '<section id="cu-ht" data-slug="'+esc(slug)+'" hidden></section>';
+  return '<section id="cu-ht" data-slug="'+esc(slug)+'" aria-labelledby="h-ht" class="cu-ht"><div class="sec" data-st><h2 id="h-ht">Continuing in this topic</h2><a class="aside" href="#/threads?f='+esc(slug)+'">All threads \u2192</a></div><div data-st>'+tList(list,false)+'</div></section>';}
+
 /* ---------------- interactions (delegated) ---------------- */
 function reveal(el){var R=NB()&&NB().RM;if(!el.animate||(R&&R.matches))return;var sp=NB().SPRINGS&&NB().SPRINGS.Rise;
   el.animate([{opacity:0,transform:'translateY(-4px)'},{opacity:1,transform:'none'}],{duration:sp?sp.ms:320,easing:sp?sp.easing:'cubic-bezier(.2,.9,.25,1)'});
@@ -288,6 +488,7 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
 window.NBCU={prep:prep,ingest:ingest,warm:warm,loadStories:loadStories,loadPeer:loadPeer,onPeer:onPeer,story:story,
   card:card,cardBits:cardBits,circBits:circBits,regChips:regChips,srcList:srcList,impactP:impactP,
   piSlot:piSlot,piHistory:piHistory,tileNote:tileNote,nudge:nudge,fxBanner:fxBanner,
+  cleanSum:cleanSum,contStrip:contStrip,onHash:onHash,deep:deep,openStory:function(id){location.hash='#/story/'+id;},closeStory:requestClose,threadsView:threadsView,mountThreads:mountThreads,hubThreads:hubThreads,thread:thread,
   get impactLabel(){return X.lab||'';},get continuing(){return X.cont;},get week(){return X.week;},get peerIntel(){return X.pi;},get fixture(){return X.fixture;},
   _x:function(){return {X:X,L:L};}};
 })();

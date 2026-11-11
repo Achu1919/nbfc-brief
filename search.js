@@ -233,6 +233,8 @@ function rx(q){var qt=toks(q),alts=[];qt.forEach(function(t){(ALIAS[t]||[t]).for
 function hi(s,re){s=String(s);if(!re)return esc(s);var out='',last=0,m;re.lastIndex=0;
   while((m=re.exec(s))){out+=esc(s.slice(last,m.index))+'<mark>'+esc(m[0])+'</mark>';last=m.index+m[0].length;if(!m[0].length)re.lastIndex++;}
   return out+esc(s.slice(last));}
+/* summaries flattened from tables are tidied by cu.js before they are shown (the index keeps the raw text for matching) */
+function cs(b){try{return window.NBCU&&NBCU.cleanSum?NBCU.cleanSum(b):b;}catch(e){return b;}}
 function snip(b,re,n){n=n||170;if(!b)return '';var p=0;if(re){re.lastIndex=0;var m=re.exec(b);if(m)p=m.index;}
   var st=Math.max(0,p-50);if(st>0){var sp=b.indexOf(' ',st);if(sp>0&&sp<p)st=sp+1;}
   var s=b.slice(st,st+n);if(st+n<b.length)s=s.replace(/\s+\S*$/,'')+'…';return (st>0?'…':'')+s;}
@@ -264,7 +266,7 @@ function filtersHtml(){var cn=counts();
 function anyF(){return GROUPS.some(function(G){return ST.f[G[2]].length;});}
 function row(r,re,i){var d=r.d,tg=[];GROUPS.forEach(function(G){(d.tg[G[0]]||[]).slice(0,3).forEach(function(s){if(G[0]!=='topics'||tg.length<4)tg.push(label(G[0],s));});});
   return '<li class="sx-r" style="--i:'+i+'"><a class="sx-a press" href="'+esc(d.h+(d.h.indexOf('?')>=0?'&':'?')+'from=search')+'"><span class="sx-m"><span class="num">'+esc(NB.shortDay(d.d))+'</span><span class="sx-k">'+esc(d.k)+'</span><span class="sx-s">'+esc(d.s.replace(/^.*? · /,''))+'</span></span>'+
-    '<span class="sx-t">'+hi(d.t,re)+'</span>'+(d.b?'<span class="sx-b">'+hi(snip(d.b,re),re)+'</span>':'')+
+    '<span class="sx-t">'+hi(d.t,re)+'</span>'+(d.b&&cs(d.b)?'<span class="sx-b">'+hi(snip(cs(d.b),re),re)+'</span>':'')+
     '<span class="sx-f2">'+(d.src&&d.src.l?'<span class="sx-src">'+esc(d.src.l)+'</span>':'')+(tg.length?'<span class="sx-tg">'+tg.map(esc).join(' · ')+'</span>':'')+'</span></a></li>';}
 var root=null,inp=null,deb=0,lastRes=[];
 function render(more){if(!root||!root.isConnected)return;var res=document.getElementById('sxRes'),cnt=document.getElementById('sxCnt'),mb=document.getElementById('sxMore');

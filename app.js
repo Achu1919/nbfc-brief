@@ -451,6 +451,7 @@ function viewToday(day){
   h+=ticker(day)+glance(day,st);
   var sc=storyCards(day);
   if(window.NBCU&&day.id===M.days[0].id){try{main+=NBCU.fxBanner()+NBCU.nudge(day);}catch(e){}}
+  if(window.NBCU&&NBCU.contStrip){try{main+=NBCU.contStrip(day);}catch(e){}}
   if(sc)main+=sc;
   else main+=live(day)&&nr&&nr.missing?'<div class="g card empty" data-st><h2>The news desk has not filed yet</h2><p>The 7:00 AM job has not filed for '+esc(day.label)+' yet. This page offers a refresh when it does.</p></div>':'<div class="g card empty" data-st><h2>The news desk did not arrive</h2><p>The 7:00 AM job left no file for '+esc(day.label)+'.</p></div>';
   main+=goldCard(day,false)+circBlock(day);
@@ -732,6 +733,8 @@ function goldRange(b){var k=b.dataset.gk,box=b.closest('.gx-in');GRANGE[k]=+b.da
 /* ---------------- search (optional; search.js loads only when Search is opened) ---------------- */
 var SXP=null;
 function loadSearch(){if(window.NBSearch)return Promise.resolve();if(!SXP)SXP=loadScript('/search.js').catch(function(e){SXP=null;throw e;});return SXP;}
+function threadsView(){if(window.NBCU&&NBCU.threadsView)return NBCU.threadsView();
+  return '<div class="hd" data-st="h"><p class="greet">Topics</p><h1>Threads</h1></div><div class="g card empty" data-st><p>Threads are not available in this version yet. Reload once while online.</p></div>';}
 function searchView(){if(window.NBSearch)return NBSearch.html(PQ);
   return '<div class="hd" data-st="h"><p class="greet">Search</p><h1>Search editions</h1></div><div class="g card empty" data-st><h2>Search is not available offline yet</h2><p>Open Search once while online and it will work offline after that.</p></div>';}
 window.__NB={ns:'nbfc-brief',get M(){return M;},esc:esc,stripMd:stripMd,noCites:noCites,clip:clip,firstSentence:firstSentence,cleanHead:cleanHead,deEmoji:deEmoji,slug:slug,
@@ -796,13 +799,14 @@ function dayCards(day){var C=Array.isArray(day.cards)?day.cards.filter(function(
     return {t:s.h,sum:s.rest,imp:s.why,src:s.src||[],cat:catOf(e&&e.tags,'Story',e?e.section:'',null),tags:tg0(e&&e.tags),href:readHref(day.id,'news',s.h)};});}
 /* content upgrade (cu.js): sources line "Source: BSE +2", lifecycle/deadline chips, "Update N · since" / "Status" badge,
    impact_label. Each bit is empty when its field is absent, so the card is unchanged. */
+function cleanSum(t){try{return window.NBCU&&NBCU.cleanSum?NBCU.cleanSum(t):t;}catch(e){return t;}}
 function cuBits(c){if(!c.raw||!window.NBCU)return null;try{return NBCU.cardBits(c.raw,c.day);}catch(e){return null;}}
 function storyCard(c,i){var h=HUB[c.cat],src=(c.src||[]).filter(function(x){return x&&x.u;}),X=cuBits(c);
   var srcHtml=X&&X.srcLine?X.srcLine:(src.length?'Source: '+src.slice(0,2).map(function(x){return '<a href="'+esc(x.u)+'" target="_blank" rel="noopener noreferrer">'+esc(x.l)+'</a>';}).join(', '):'Source in the full report');
   var more='<a class="more press" href="'+esc(c.href)+'">Read full report<span class="sr">: '+esc(clip(c.t,60))+'</span> <span aria-hidden="true">\u2192</span></a>';
   return '<article class="scard g" data-st'+(c.cat?' data-hub="'+c.cat+'"':'')+'>'+
     '<div class="tagrow">'+(c.cat?hubChip(c.cat):'<span class="hchip none"><span>News</span></span>')+(i===0?'<span class="kick">Top story</span>':X&&X.k.upd?'<span class="kick">Update</span>':'')+(X?X.chips:'')+'</div>'+
-    '<h3>'+esc(c.t)+'</h3>'+(c.sum?'<p class="sum">'+esc(noCites(stripMd(c.sum)))+'</p>':'')+(c.imp?impLine(clip(noCites(stripMd(c.imp)),220),X&&X.label):'')+(X?X.deep:'')+
+    '<h3>'+esc(c.t)+'</h3>'+(c.sum&&cleanSum(noCites(stripMd(c.sum)))?'<p class="sum">'+esc(cleanSum(noCites(stripMd(c.sum))))+'</p>':'')+(c.imp?impLine(clip(noCites(stripMd(c.imp)),220),X&&X.label):'')+(X?X.deep:'')+
     (c.also&&c.also.length?'<p class="also">Also in: '+esc(c.also.join(', '))+'</p>':'')+
     (X&&X.badge?'<p class="by srcl">'+srcHtml+'</p>'+X.srcList+'<div class="sc-f">'+X.badge+more+'</div>':
       (X?X.srcList:'')+'<div class="sc-f"><span class="by'+(X&&X.srcLine?' srcl':'')+'">'+srcHtml+'</span>'+more+'</div>')+'</article>';}
@@ -830,7 +834,7 @@ function fillCircLater(){loadAgp();var el=document.getElementById('lcirc');if(!e
 var HBP=null;
 function loadHubs(){if(window.NBHubs)return Promise.resolve();if(!HBP)HBP=loadSearch().then(function(){return loadScript('/hubs.js');}).catch(function(e){HBP=null;throw e;});return HBP;}
 var HUBV={topics:1,topic:1,peer:1};
-function tabOf(v){return HUBV[v]?'topics':v==='search'?'':v;}
+function tabOf(v){return HUBV[v]||v==='threads'?'topics':v==='search'?'':v;}
 function hubsView(day){if(window.NBHubs)return NBHubs.html(S.view,S.key,PQ,day);
   return '<div class="hd" data-st="h"><p class="greet">Topics</p><h1>Topics</h1></div><div class="g card empty" data-st><h2>Topics are not available offline yet</h2><p>Open Topics once while online and they will work offline after that.</p></div>';}
 /* Archive: topic dots on the calendar, from the day-level tags in latest.json days[] */
@@ -854,7 +858,7 @@ function loadAgp(){if(AGP)return;var hit=null;
     document.querySelectorAll('section.gold').forEach(function(sec){var hd=sec.querySelector('h2'),full=hd&&hd.id==='h-gold',day=M.byId[S.day]||M.days[0];if(!day||day.stub)return;
       var t=document.createElement('div');t.innerHTML=goldCard(day,full);var n=t.firstElementChild;if(n)sec.replaceWith(n);});}).catch(function(){});}
 try{ARCH.topic=sessionStorage.getItem(SITE_NS+'-atopic')||'';if(ARCH.topic&&!HUB[ARCH.topic])ARCH.topic='';}catch(e){}
-Object.assign(window.__NB,{priv:SITE_PRIV,HUBS:HUBS,HUB:HUB,hubHas:hubHas,catOf:catOf,hubIcon:hubIcon,hubChip:hubChip,readHref:readHref,circStrip:circStrip,circItem:circItem,RSTAT:RSTAT,impLine:impLine,impLabel:'Possible impact on Muthoot Fincorp',goldCard:goldCard,gChart:gChart,gChartBlock:gChartBlock,gSeries:gSeries,item:item,dirOf:dirOf,chg:chg,hasChg:hasChg,pct:pct,FULL:FULL,SHORT:SHORT,PEER_ORDER:PEER_ORDER,MARKET_ORDER:MARKET_ORDER,dm:dm,live:live,getDay:getDay,stories:stories,srcA:srcA,inlineMd:inlineMd,foot:foot,avail:avail,todayIST:todayIST,flatT:flatT,mflBlock:mflMarket,regCalendar:regCalendar,loadScript:loadScript,tg0:tg0,cascade:function(r){cascade(r,false);}});
+Object.assign(window.__NB,{toast:toast,priv:SITE_PRIV,HUBS:HUBS,HUB:HUB,hubHas:hubHas,catOf:catOf,hubIcon:hubIcon,hubChip:hubChip,readHref:readHref,circStrip:circStrip,circItem:circItem,RSTAT:RSTAT,impLine:impLine,impLabel:'Possible impact on Muthoot Fincorp',goldCard:goldCard,gChart:gChart,gChartBlock:gChartBlock,gSeries:gSeries,item:item,dirOf:dirOf,chg:chg,hasChg:hasChg,pct:pct,FULL:FULL,SHORT:SHORT,PEER_ORDER:PEER_ORDER,MARKET_ORDER:MARKET_ORDER,dm:dm,live:live,getDay:getDay,stories:stories,srcA:srcA,inlineMd:inlineMd,foot:foot,avail:avail,todayIST:todayIST,flatT:flatT,mflBlock:mflMarket,regCalendar:regCalendar,loadScript:loadScript,tg0:tg0,cascade:function(r){cascade(r,false);}});
 /* deep link from a search result: #/<id>/read/<key>?hl=<letters and digits of the item>&sec=<heading id>.
    Finds the smallest block whose text contains hl, scrolls it to about a third of the screen and flashes it. */
 function flatT(s){return String(s||'').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]/g,'');}
@@ -874,6 +878,7 @@ var PQ='';/* the ?query part of the hash: search terms, or hl/sec for a deep lin
 function parse(){
   var hq=location.hash.replace(/^#\/?/,'').split('?'),h=decodeURIComponent(hq[0]),p=h.split('/').filter(Boolean),id=M.days[0]&&M.days[0].id;PQ=hq.slice(1).join('?');
   if(p[0]==='search')return {view:'search',day:S.day||id};
+  if(p[0]==='threads')return {view:'threads',day:id};
   if(p[0]==='archive')return {view:'archive',day:id};
   if(p[0]==='topics')return {view:'topics',day:id};
   if((p[0]==='topic'||p[0]==='peer')&&p[1])return {view:p[0],day:id,key:p[1]};
@@ -988,11 +993,11 @@ function route(){
     var segFrom=pv==='read'&&S.view==='read'?segInd:null;
     dropStage();
     var oh=APP.offsetHeight;
-    var nv=S.view==='archive'?archView():mkView(HUBV[S.view]?hubsView(day):S.view==='search'?searchView():S.view==='markets'?viewMarkets(day):S.view==='read'?viewRead(day,S.key):viewToday(day));
+    var nv=S.view==='archive'?archView():mkView(HUBV[S.view]?hubsView(day):S.view==='search'?searchView():S.view==='threads'?threadsView():S.view==='markets'?viewMarkets(day):S.view==='read'?viewRead(day,S.key):viewToday(day));
     if(nv===CUR)nv=mkView(viewArchive()),nv._arch=1;
     function post(){
       APP.setAttribute('aria-busy','false');
-      document.title=(S.view==='today'?'Today\u2019s Brief':HUBV[S.view]&&window.NBHubs?NBHubs.title(S.view,S.key):S.view[0].toUpperCase()+S.view.slice(1))+' · '+shortDay(day.id)+' · NBFC Brief';
+      document.title=(S.view==='today'?'Today\u2019s Brief':S.view==='threads'?'Threads':HUBV[S.view]&&window.NBHubs?NBHubs.title(S.view,S.key):S.view[0].toUpperCase()+S.view.slice(1))+' · '+shortDay(day.id)+' · NBFC Brief';
       document.querySelectorAll('#tabbar a').forEach(function(a){var t=a.dataset.tab;
         a.href=t==='archive'?'#/archive':t==='topics'?'#/topics':t==='today'?'#/'+day.id:'#/'+day.id+'/'+t;
         if(t===tabOf(S.view))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
@@ -1003,6 +1008,7 @@ function route(){
       if(pl&&pl.scrollTo)pl.scrollTo({left:Math.max(0,pc.offsetLeft-(pl.clientWidth-pc.offsetWidth)/2),behavior:first||RM.matches?'auto':'smooth'});
       if(S.view==='search'&&window.NBSearch)NBSearch.mount(nv,PQ,true);
       if(HUBV[S.view]&&window.NBHubs)NBHubs.mount(nv,S.view,S.key,PQ);
+      if(S.view==='threads'&&window.NBCU)NBCU.mountThreads(nv);
       if(S.view==='today')fillCircLater();
       cascade(nv,first);
       if(S.view!=='search'&&/(?:^|&)(?:hl|sec)=/.test(PQ))hitLater(nv,PQ);}
@@ -1012,7 +1018,7 @@ function route(){
       nv.classList.remove('stg');if(nv.parentNode!==APP)APP.appendChild(nv);}
     if(first||!changed||RM.matches||!APP.animate||flying){
       var wasFirst=first;APP.appendChild(nv);commit();if(S.view==='archive')initArchive(nv);post();
-      landBook();if(first)riseTabbar();first=false;if(window.NBCU)NBCU.warm();prefetch(day.id);if(wasFirst){warm(day);prebuildArchive();}return;}
+      landBook();if(first)riseTabbar();first=false;if(window.NBCU){NBCU.warm();if(wasFirst)NBCU.deep();}prefetch(day.id);if(wasFirst){warm(day);prebuildArchive();}return;}
     /* stage: build + lay out hidden, old view untouched and fully visible meanwhile */
     var keepSeg=pv==='read'&&S.view==='read';
     nv.classList.add('stg');APP.appendChild(nv);STG=nv;
@@ -1056,7 +1062,8 @@ if(TPEL)TPEL.addEventListener('click',function(e){var b=e.target.closest('button
   else if(b.id==='themeBtn')themeReveal(b,other());
   else if(b.id==='installBtn'&&installEvt){installEvt.prompt();installEvt.userChoice.finally(function(){installEvt=null;b.hidden=true;});}});
 (function(){var ib=document.getElementById('installBtn');if(ib)ib.innerHTML=ICON.dl;syncThemeBtn();})();
-window.addEventListener('hashchange',route);
+/* #/story/<id> opens the timeline sheet over the current view (cu.js); closing it returns here without a re-route */
+window.addEventListener('hashchange',function(){if(window.NBCU&&NBCU.onHash&&NBCU.onHash())return;route();});
 /* Search: the magnifier in the top pill, or '/' anywhere you are not typing. search.js is fetched on first hover/touch. */
 (function(){var sb=document.getElementById('searchBtn');if(sb){sb.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>';
   ['pointerenter','touchstart','focus'].forEach(function(ev){sb.addEventListener(ev,function(){loadSearch().catch(function(){});},{once:true,passive:true});});}
