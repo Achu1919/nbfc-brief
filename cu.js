@@ -38,7 +38,8 @@ var METL={aum:'AUM',gold_aum:'Gold loan AUM',disbursements:'Disbursements',yield
 var PEERN={'muthoot-finance':['Muthoot Finance','Muthoot Finance'],manappuram:['Manappuram Finance','Manappuram'],'iifl-finance':['IIFL Finance','IIFL Finance'],
   'shriram-finance':['Shriram Finance','Shriram Finance'],'bajaj-finance':['Bajaj Finance','Bajaj Finance']};
 var DK={comments:'Comments close',effective:'Effective',compliance:'Compliance due',other:'Deadline'};
-var IMPACT='Possible impact on Muthoot Fincorp';
+/* the label comes from the data (impact_label); without it each edition keeps the label it shows today */
+var IMPACT=PRIV?'MFL impact':'Possible impact on Muthoot Fincorp';
 
 /* ---------------- state ---------------- */
 var X={gen:'',latestId:'',fixture:false,cont:[],contBy:{},refs:{},sidx:null,pi:[],week:null,storyFile:'',peerFile:''};
@@ -128,6 +129,9 @@ function pi(e){e=O(e);if(!e)return null;var co=Id(e.company);if(!co||co==='mutho
     cmp:A(e.mfl_compare).map(cmpRow).filter(Boolean),impact:S(e.impact),label:S(e.impact_label)||IMPACT};
   return o.date||o.period?o:null;}
 function ingest(j){X={gen:S(j.generated),latestId:D(j.today&&j.today.id),fixture:j._fixture===true,cont:[],contBy:{},refs:{},sidx:null,pi:[],week:null,storyFile:'',peerFile:''};
+  /* the edition's impact label as the data gives it (every card with impact carries the same impact_label), used where
+     a view has no card object (hub feeds built from the search index) */
+  try{X.lab='';A(j.today&&j.today.cards).concat(A(j.latest_circulars)).some(function(c){return c&&S(c.impact_label)&&(X.lab=S(c.impact_label));});}catch(e){}
   try{X.cont=A(j.continuing_stories).map(contItem).filter(Boolean).slice(0,8);X.cont.forEach(function(c){X.contBy[c.sid]=c;});}catch(e){X.cont=[];}
   try{var si=O(j.story_index);if(si){X.sidx={file:okPath(si.file),generated:S(si.generated),threads:N(si.threads),open:N(si.open),bytes:N(si.bytes)};X.storyFile=X.sidx.file;
     var R=O(si.refs)||{};Object.keys(R).forEach(function(k){var id=Id(k),r=refItem(R[k]);if(id&&r)X.refs[id]=r;});}}catch(e){}
@@ -145,7 +149,9 @@ function getJ(p){return fetch('/'+p).then(function(r){if(!r.ok)throw 0;return r.
 function loadStories(){if(L.stories)return Promise.resolve(L.stories);if(!X.storyFile)return Promise.resolve(null);
   if(!L.sp)L.sp=getJ(X.storyFile).then(function(j){j=O(j)||{};var st=O(j.stories)||{},out={};
       Object.keys(st).forEach(function(k){var id=Id(k),s=O(st[k]);if(!id||!s||!S(s.title))return;
+        /* stories.json counts cards (card_count) and editions; update_count is the older contract name */
         out[id]={title:S(s.title),cat:S(s.category),status:S(s.status),opened:D(s.opened),last:D(s.last_update),
+          count:N(s.card_count)!=null?s.card_count:N(s.update_count)!=null?s.update_count:A(s.updates).length,editions:N(s.editions),
           updates:A(s.updates).map(O).filter(function(u){return u&&D(u.date)&&S(u.title);}),next:O(s.next),reg:O(s.reg)?reg(s.reg,null):null,
           continues:A(s.continues).map(Id).filter(Boolean),continuedBy:A(s.continued_by).map(Id).filter(Boolean)};});
       var al={},a=O(j.aliases)||{};Object.keys(a).forEach(function(k){var t=Id(a[k]);if(Id(k)&&t)al[k]=t;});
@@ -282,6 +288,6 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
 window.NBCU={prep:prep,ingest:ingest,warm:warm,loadStories:loadStories,loadPeer:loadPeer,onPeer:onPeer,story:story,
   card:card,cardBits:cardBits,circBits:circBits,regChips:regChips,srcList:srcList,impactP:impactP,
   piSlot:piSlot,piHistory:piHistory,tileNote:tileNote,nudge:nudge,fxBanner:fxBanner,
-  get continuing(){return X.cont;},get week(){return X.week;},get peerIntel(){return X.pi;},get fixture(){return X.fixture;},
+  get impactLabel(){return X.lab||'';},get continuing(){return X.cont;},get week(){return X.week;},get peerIntel(){return X.pi;},get fixture(){return X.fixture;},
   _x:function(){return {X:X,L:L};}};
 })();

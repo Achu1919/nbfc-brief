@@ -50,7 +50,7 @@ function srcA(src){return src&&src.u&&/^https?:/.test(src.u)?'<a href="'+esc(src
 function kindL(d){var tg=(String(d.t).match(TAGRX)||[])[1];if(tg)return tg.charAt(0)+tg.slice(1).toLowerCase();return {Story:'Top story',Circular:'Circular',Calendar:'Calendar',MFL:NB.mflLabel||'Muthoot Fincorp',Weekly:'Weekly',Gold:'Gold rates'}[d.k]||String(d.s||'').split(' \u00b7 ').pop()||d.k;}
 function fcard(d,page){var c=d.c&&d.c!==page?NB.hubChip(d.c):'',s=summ(d),a=srcA(d.src);
   return '<article class="fi g"'+(d.c?' data-hub="'+d.c+'"':'')+'><div class="tagrow">'+c+'<span class="fk">'+esc(clip(kindL(d),40))+'</span></div>'+
-    '<h3>'+esc(clip(ttl(d.t),160))+'</h3>'+(s&&s!==ttl(d.t)?'<p class="sum">'+esc(s)+'</p>':'')+(d.imp?NB.impLine(clip(clean(d.imp),220)):'')+
+    '<h3>'+esc(clip(ttl(d.t),160))+'</h3>'+(s&&s!==ttl(d.t)?'<p class="sum">'+esc(s)+'</p>':'')+(d.imp?NB.impLine(clip(clean(d.imp),220),window.NBCU&&NBCU.impactLabel):'')+
     '<div class="sc-f"><span class="by">'+(a?'Source: '+a:'')+'</span><a class="more press" href="'+esc(d.h)+'">Read full report<span class="sr">: '+esc(clip(d.t,60))+'</span> <span aria-hidden="true">\u2192</span></a></div></article>';}
 function feed(L,page,lim){lim=lim||24;if(!L.length)return '<div class="g card" data-st><p class="note" style="margin:0">Nothing filed under this topic yet.</p></div>';
   var h='',cur='';L.slice(0,lim).forEach(function(d){if(d.d!==cur){if(cur)h+='</div>';cur=d.d;h+='<h3 class="fday" data-st>'+esc(NB.shortDay(d.d))+'</h3><div class="fgrp">';}h+=fcard(d,page);});
@@ -85,7 +85,7 @@ function regCard(d){var r=regOf(d),st=NB.RSTAT[r.status],s=summ(d);
   var dl=[['Ref no.',r.ref_no],['Applies to',r.applies],['Issued',r.issued],['Effective',r.effective]].filter(function(x){return x[1];});
   return '<article class="fi rc g" data-hub="regulation"><div class="tagrow">'+(r.regulator?'<span class="rgb">'+esc(r.regulator.toUpperCase())+'</span>':'')+(st?'<span class="st st-'+r.status+'">'+st+'</span>':'')+'<span class="fk">'+esc(kindL(d))+'</span></div>'+
     '<h3>'+esc(clip(ttl(d.t),160))+'</h3>'+(dl.length?'<dl class="rf">'+dl.map(function(x){return '<div><dt>'+x[0]+'</dt><dd class="'+(x[0]==='Ref no.'?'num':'')+'">'+esc(clip(clean(x[1]),120))+'</dd></div>';}).join('')+'</dl>':'')+
-    (s&&s!==ttl(d.t)?'<p class="sum">'+esc(s)+'</p>':'')+(d.imp?NB.impLine(clip(clean(d.imp),220)):'')+
+    (s&&s!==ttl(d.t)?'<p class="sum">'+esc(s)+'</p>':'')+(d.imp?NB.impLine(clip(clean(d.imp),220),window.NBCU&&NBCU.impactLabel):'')+
     '<div class="sc-f"><span class="by">'+(r.url&&/^https?:/.test(r.url)?'<a href="'+esc(r.url)+'" target="_blank" rel="noopener noreferrer">Circular <span aria-hidden="true">\u2197</span><span class="sr"> (opens the source)</span></a>':'')+'</span><a class="more press" href="'+esc(d.h)+'">Read full report<span class="sr">: '+esc(clip(d.t,60))+'</span> <span aria-hidden="true">\u2192</span></a></div></article>';}
 var MON={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
 function dateIn(s){s=String(s||'');var m=s.match(/(20\d\d)-(\d\d)-(\d\d)/);if(m)return m[0];
