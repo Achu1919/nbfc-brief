@@ -267,8 +267,11 @@ _SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 def _plain(s: str) -> str:
     s = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r"\1", s)
     s = _URL.sub(" ", s)
-    s = re.sub(r"[*_`>#|]+", " ", s)
-    s = re.sub(r"^[^\w(₹$]+", "", s.strip())
+    # '>' is markdown only as a line-start blockquote marker; inside text it is a comparison ("> ₹5 lakh") and is kept.
+    s = re.sub(r"(?m)^[ \t]*(?:>[ \t]?)+", "", s)
+    s = re.sub(r"[*_`#|]+", " ", s)
+    # leading punctuation goes, but a leading comparison or sign before a figure ("> ₹5 lakh", "−1.8%") stays
+    s = re.sub(r"^(?:(?![<>≤≥−+]\s?[₹$\d])[^\w(₹$])+", "", s.strip())
     return re.sub(r"\s+", " ", s).strip()
 
 

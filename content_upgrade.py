@@ -66,6 +66,29 @@ BANNED_NAMES = re.compile(r"\b(?:chittorgarh|ipo ?central|ipowatch|investorgain|
                           r"stockwatch|hdfc ?sky|alphastreet|groww)\b", re.I)
 
 
+# SOURCES.md (Sai, 11 Nov 2026): Chittorgarh is allowed for NCD bid / subscription data ONLY (never IPO data,
+# ratings, results calendars or anything else). Editions up to 11 Nov keep the audited BSE / prospectus sourcing
+# (data/source_replacements.json); dropped history is not restored.
+CHITTORGARH_BIDS_FROM = "2026-11-12"
+BANNED_NAMES_EXCEPT_CHIT = re.compile(BANNED_NAMES.pattern.replace("chittorgarh|", ""), re.I)
+_CHIT_PAGE = re.compile(r"^https?://(?:www\.)?chittorgarh\.com/(?:bond|ncd)\b", re.I)
+_NCD_TXT = re.compile(r"\bNCDs?\b|non-convertible debenture|\bdebentures?\b", re.I)
+_BID_TXT = re.compile(r"\bbids?\b|\bbidding\b|\bsubscri(?:bed|ption)\b|\boversubscri|\d(?:\.\d+)?\s*(?:[x×](?!\w)|times\b)", re.I)
+
+
+def ncd_bid_text(text):
+    """True for NCD bid / subscription data (the one use SOURCES.md allows Chittorgarh for)."""
+    return bool(text and _NCD_TXT.search(text) and _BID_TXT.search(text))
+
+
+def chittorgarh_page(url):
+    return bool(_CHIT_PAGE.match((url or "").strip()))
+
+
+def chit_allowed(edition, text):
+    return bool(edition and edition >= CHITTORGARH_BIDS_FROM and ncd_bid_text(text))
+
+
 def _log(msg):
     print(f"content_upgrade: {msg}", file=sys.stderr)
 
@@ -80,13 +103,22 @@ def _on(h, doms):
     return any(h == d or h.endswith("." + d) for d in doms)
 
 
-def banned(url):
+def banned(url, chit_ok=False):
+    """chit_ok: the row / card is NCD bid data (chit_allowed), so a Chittorgarh NCD page is allowed."""
+    if chit_ok and chittorgarh_page(url):
+        return False
     return _on(_host(url), BANNED_HOSTS) or bool(BANNED_PAGES.match((url or "").strip()))
+
+
+def _names(chit_ok=False):
+    return BANNED_NAMES_EXCEPT_CHIT if chit_ok else BANNED_NAMES
 
 
 def tier(url):
     """1 official / exchange / rating agency / company IR, 2 trusted press, 3 any other host."""
     h = _host(url)
+    if chittorgarh_page(url):
+        return 2  # SOURCES.md tier 2, NCD bid data only
     if _on(h, TIER1_HOSTS):
         return 1
     if _on(h, TIER2_HOSTS):
@@ -467,7 +499,7 @@ def _distinct_names(X, out, labels):
     return out
 
 
-def card_sources(X, lines):
+def card_sources(X, lines, chit_ok=False):
     """All links in the unit (not the impact / MFL view lines), de-duplicated, Tier 1 first, capped at 6.
     Returns (sources, banned_urls, dropped_count)."""
     out, seen, bad, labels = [], set(), [], []
@@ -479,7 +511,7 @@ def card_sources(X, lines):
             url = (m.group(2) or m.group(3) or m.group(4) or "").rstrip(".,;:")
             if not url:
                 continue
-            if banned(url) or X._excluded(url) or BANNED_NAMES.search(m.group(1) or ""):
+            if banned(url, chit_ok) or X._excluded(url) or _names(chit_ok and chittorgarh_page(url)).search(m.group(1) or ""):
                 bad.append(url)
                 continue
             k = _norm_url(url)
@@ -574,6 +606,9 @@ def row_summary(c, report_text):
     return True
 
 
+_GENERIC_COL = re.compile(r"^\s*(value|figure|amount|number|rate|level|close|closing|latest|current|today|data)\b", re.I)
+
+
 def table_prose(X, lines):
     """'| Field | Value | As of |' tables -> 'Field: value.' sentences (header, separator and as-of/source columns dropped)."""
     out, head = [], None
@@ -591,21 +626,31 @@ def table_prose(X, lines):
             continue
         lab, val = keep[0][1], [v for h, v in keep[1:]]
         extra = [f"{h} {v}" if h else v for h, v in keep[2:]]
-        text = f"{lab}: {val[0]}" if val else lab
-        if extra:
-            text += " (" + "; ".join(extra) + ")"
+        if extra and keep[1][0] and not _GENERIC_COL.match(keep[1][0]):
+            # comparison table ('Metric | New norm | Old norm'): every value keeps its column label
+            text = f"{lab}: " + "; ".join(f"{h}: {v}" if h else v for h, v in keep[1:])
+        else:
+            text = f"{lab}: {val[0]}" if val else lab
+            if extra:
+                text += " (" + "; ".join(extra) + ")"
         out.append(text.rstrip(".") + ".")
     return " ".join(out)
 
 
-def fix_table_summary(X, c):
+def fix_table_summary(X, c, report_text=""):
     """A unit whose body is a markdown table used to get a summary made of flattened cells
-    ('Field Value As of Status Closed …'). Prose written before the table wins; otherwise rows become sentences."""
-    lines = (c.get("_u") or {}).get("_lines") or []
+    ('Field Value As of Status Closed …'). Prose written before the table wins; otherwise rows become sentences.
+    Units can lose the '|---|' line; the report text then tells whether the first row is the header."""
+    lines = list((c.get("_u") or {}).get("_lines") or [])
     trows = [l for l in lines if l.strip().startswith("|")]
+    if trows and not any(_TABLE_SEP.match(l) for l in lines) and report_text and re.search(
+            r"(?m)^\s*" + re.escape(trows[0].strip()) + r"\s*\n\s*\|[\s:|-]+\|\s*$", report_text):
+        i = lines.index(trows[0])
+        lines.insert(i + 1, "|---|")
+        trows = [l for l in lines if l.strip().startswith("|")]
     has_head = any(_TABLE_SEP.match(l) for l in lines) or (trows and _looks_head(_cells(trows[0])))
-    if len(trows) < 2 or not has_head or not c.get("summary") or (lines and lines[0].strip().startswith("|")):
-        return False  # a single table row as its own unit already gets a cell-based summary
+    if len(trows) < 2 or not has_head or not c.get("summary"):
+        return False  # a single table row as its own unit is handled by row_summary()
     title = (c.get("title") or "").rstrip("…").strip()
     pre = []
     for l in lines:
@@ -834,7 +879,7 @@ def stories_export(X, days, data_dir, private, problems, deadlines=None, latest_
         today = {}
         if ed < THREAD_FROM:  # sources[] still apply to every edition; threads start on 1 Oct
             for c in d.get("cards") or []:
-                srcs, _, _ = card_sources(X, (c.get("_u") or {}).get("_lines"))
+                srcs, _, _ = card_sources(X, (c.get("_u") or {}).get("_lines"), bool(c.get("_chit_ok")))
                 c["sources"] = srcs or ([src_obj(c["source"], X.source_name)] if c.get("source") and src_obj(c["source"], X.source_name) else [])
                 if srcs:
                     c["source"] = {"name": srcs[0]["name"], "url": srcs[0]["url"]}
@@ -862,7 +907,7 @@ def stories_export(X, days, data_dir, private, problems, deadlines=None, latest_
                 if isinstance(ov.get("continues"), list):
                     ov["continues"] = ",".join(ov["continues"])
             # --- sources[] (both editions)
-            srcs, bad, dropped = card_sources(X, lines)
+            srcs, bad, dropped = card_sources(X, lines, bool(c.get("_chit_ok")))
             for b in bad:
                 problems.append(f"{c['id']}: banned source {b}")
             if dropped and c.get("kind") in ("story", "circular"):
@@ -1046,6 +1091,8 @@ def thread_meta(t):
             title = ov["title"]
     first = t.updates[0][1] if t.updates else t.cards[0][1]
     title = title or (t.reg and first.get("title")) or re.sub(r"^\s*update\s*[:\-–—]\s*", "", first["title"], flags=re.I)
+    if not meta.get("title") and len(title) > THREAD_TITLE_MAX:  # fallback only: clip at a word, no trailing colon
+        title = title[:THREAD_TITLE_MAX - 1].rsplit(" ", 1)[0].rstrip(" :—–-,;") + "…"
     comp, top, regs = set(), set(), set()
     for ed, c in t.cards:
         comp |= set(c["tags"].get("companies") or [])
@@ -1057,11 +1104,29 @@ def thread_meta(t):
     return title, first.get("category"), sorted(comp), sorted(top), sorted(regs)
 
 
+BUILD_DATE = None  # YYYY-MM-DD of this export (apply() sets it from `generated`)
+NEWEST = None      # newest edition id in this export
+
+
+def expire_next(nxt, asof, build_date=None, newest=None):
+    """(next, passed). A next whose date is already behind us is never shown as upcoming. 'Behind us' means before
+    the edition date, and for the newest edition (stories.json, latest.json) before the build date as well, so a
+    build on 13 Nov clears a 12 Nov next even before the 13 Nov edition exists. A cleared next is returned as
+    `passed` {date, date_text, what, source} for the thread's `next_passed`. Older day files keep their snapshot."""
+    if not (nxt and nxt.get("date")):
+        return nxt, None
+    b, nw = build_date or BUILD_DATE, newest or NEWEST
+    ref = max(asof, b) if (b and (nw is None or asof >= nw)) else asof
+    if nxt["date"] < ref:
+        return None, {k: nxt[k] for k in ("date", "date_text", "what", "source") if nxt.get(k) is not None}
+    return nxt, None
+
+
 def thread_next(t, asof):
     """A real, sourced next step: `_threads[id].next` once it was known (`known_from`), else the thread's earliest
     upcoming deadline row (newest edition only). Never guessed; None when neither exists."""
     n = (getattr(t, "meta", None) or {}).get("next")
-    if isinstance(n, dict) and n.get("date") and n.get("source", {}).get("url") and n.get("known_from", "") <= asof <= n["date"]:
+    if isinstance(n, dict) and n.get("date") and n.get("source", {}).get("url") and n.get("known_from", "") <= asof:  # a past date is cleared by expire_next()
         return {"date": n["date"], "date_text": n.get("date_text"), "what": n["what"],
                 "source": dict(n["source"], tier=tier(n["source"]["url"]))}
     if getattr(t, "dl_next", None) and asof == t.dl_asof:
@@ -1092,6 +1157,13 @@ def status_at(t, asof):
     st, nxt = _ov_until(t, asof)
     if not nxt:
         nxt = thread_next(t, asof)
+    nxt, passed = expire_next(nxt, asof)
+    if passed:
+        cov = next((c["id"] for e, c in t.updates if passed["date"] <= e <= asof), None)
+        if cov:
+            passed["covered_by"] = cov  # the update that reported it
+    t.passed = getattr(t, "passed", {})
+    t.passed[asof] = passed
     lc = [h for h in t.lc_history if h["date"] <= asof]
     last_change = lc[-1]["date"] if lc else None
     last_any = max(last_ed, last_change) if last_change else last_ed
@@ -1148,6 +1220,8 @@ def thread_obj(t, asof, continued_by, deadlines=None):
          "opened": t.cards[0][0], "last_update": ups[-1]["date"] if ups else t.cards[-1][0], "closed": closed,
          "continues": conts, "continued_by": sorted(continued_by), "next": nxt, "updates": ups,
          "card_count": len(t.cards), "editions": len({e for e, c in t.cards})}
+    if (getattr(t, "passed", None) or {}).get(asof):
+        o["next_passed"] = t.passed[asof]
     if t.id in EVERGREEN:
         o["evergreen"] = True
     if any(c.get("_auto_joined") for e, c in t.cards):
@@ -1357,30 +1431,32 @@ REPLACEMENTS = "source_replacements.json"
 _PAREN = re.compile(r"\s*\(([^()]*)\)")
 
 
-def scrub_text(t):
+def scrub_text(t, chit_ok=False):
     """Drop banned-source attributions from display text: '(Chittorgarh)', 'Chittorgarh, Nuvama prospectus' ->
     'Nuvama prospectus', 'per Chittorgarh', and any sentence that still names a banned source."""
-    if not t or not BANNED_NAMES.search(t):
+    NAMES = _names(chit_ok)
+    if not t or not NAMES.search(t):
         return t
 
     def paren(m):
         parts = [p for p in re.split(r"\s*[,;·]\s*", m.group(1)) if p.strip()]
-        keep = [p for p in parts if not BANNED_NAMES.search(p)]
+        keep = [p for p in parts if not NAMES.search(p)]
         if len(keep) == len(parts):
             return m.group(0)
         return f" ({', '.join(keep)})" if keep else ""
     t = _PAREN.sub(paren, t)
-    t = re.sub(r",?\s*(?:per|from|on|via|according to)\s+(?:the\s+)?" + BANNED_NAMES.pattern + r"(?:'s)?(?:\s+(?:page|data|issue page|allotment page))?",
+    t = re.sub(r",?\s*(?:per|from|on|via|according to)\s+(?:the\s+)?" + NAMES.pattern + r"(?:'s)?(?:\s+(?:page|data|issue page|allotment page))?",
                "", t, flags=re.I)
-    t = re.sub(r"\s*[-–—]?\s*" + BANNED_NAMES.pattern + r"\s*$", "", t, flags=re.I)
-    if BANNED_NAMES.search(t):
+    t = re.sub(r"\s*[-–—]?\s*" + NAMES.pattern + r"\s*$", "", t, flags=re.I)
+    if NAMES.search(t):
         sents = re.split(r"(?<=[.!?])\s+", t)
-        t = " ".join(x for x in sents if not BANNED_NAMES.search(x))
+        t = " ".join(x for x in sents if not NAMES.search(x))
     return re.sub(r"\s{2,}", " ", t).strip(" ;,") or None
 
 
-def _bad_src(s):
-    return isinstance(s, dict) and (banned(s.get("url")) or bool(BANNED_NAMES.search(str(s.get("name") or s.get("label") or ""))))
+def _bad_src(s, chit_ok=False):
+    ok = chit_ok and chittorgarh_page((s or {}).get("url") if isinstance(s, dict) else None)
+    return isinstance(s, dict) and (banned(s.get("url"), ok) or bool(_names(ok).search(str(s.get("name") or s.get("label") or ""))))
 
 
 def scrub_aggregators(X, days, extras, data_dir, problems):
@@ -1399,7 +1475,8 @@ def scrub_aggregators(X, days, extras, data_dir, problems):
         out = []
         for r in lst or []:
             s_ = r.get("source") if isinstance(r, dict) else None
-            if not _bad_src(s_):
+            ok = isinstance(r, dict) and chit_allowed(ed, " ".join(str(r.get(k) or "") for k in ("name", "label", "value", "note", "key")))
+            if not _bad_src(s_, ok):
                 out.append(r)
                 continue
             rep = rows.get((ed, r.get("name"), s_.get("url")))
@@ -1411,9 +1488,11 @@ def scrub_aggregators(X, days, extras, data_dir, problems):
                 problems.append(f"{ed}: '{r.get('name')}' dropped (aggregator source {s_.get('url')}, no verified replacement)")
         return out
 
-    def fix_ncd(o):
+    def fix_ncd(o, ed=None):
         if not isinstance(o, dict):
             return o
+        if ed and ed >= CHITTORGARH_BIDS_FROM and o.get("bids") and chittorgarh_page((o.get("source") or {}).get("url")):
+            return o  # NCD bid data: the one use SOURCES.md allows Chittorgarh for
         cfg = ncd.get(o.get("issue")) or {}
         if "bids_keep" in cfg and isinstance(o.get("bids"), list):
             o["bids"] = [b for b in o["bids"] if b.get("date") in cfg["bids_keep"]]
@@ -1435,7 +1514,7 @@ def scrub_aggregators(X, days, extras, data_dir, problems):
         if isinstance(d.get("mfl_market"), list):
             d["mfl_market"] = fix_rows(ed, d["mfl_market"])
         if d.get("mfl_ncd"):
-            d["mfl_ncd"] = fix_ncd(d["mfl_ncd"])
+            d["mfl_ncd"] = fix_ncd(d["mfl_ncd"], ed)
         for l in d.get("lessons") or []:
             if isinstance(l, dict) and "sources" in l:
                 l["sources"] = fix_srcs(l["sources"])
@@ -1449,38 +1528,41 @@ def scrub_aggregators(X, days, extras, data_dir, problems):
         for c in d.get("cards") or []:
             u = c.get("_u") or {}
             lines = u.get("_lines") or []
+            ok = chit_allowed(ed, " ".join([c.get("title") or ""] + list(lines)))
+            if ok:
+                c["_chit_ok"] = True
             pairs = [((m.group(2) or m.group(3) or m.group(4) or "").rstrip(".,;:"), m.group(1) or "") for l in lines
                      if not _IMPACT_LINE.search(l) and not _PRIVATE_LINE.match(l) and not X.ANY_COMMENT.match(l)
                      for m in X._LINK.finditer(l)]
             if c.get("source") and c["source"].get("url"):
                 pairs.append((c["source"]["url"], c["source"].get("name") or ""))
-            badset = {u_ for u_, lab in pairs if u_ and (banned(u_) or BANNED_NAMES.search(lab))}
+            badset = {u_ for u_, lab in pairs if u_ and (banned(u_, ok) or _names(ok and chittorgarh_page(u_)).search(lab))}
             links = [u_ for u_, lab in pairs if u_]
             bad = [x for x in links if x in badset]
             if bad:
                 if c["id"] in cards:
                     u.setdefault("_lines", lines).extend(f"Source: [{x['name']}]({x['url']})" for x in cards[c["id"]])
-                    if _bad_src(c.get("source")):
+                    if _bad_src(c.get("source"), ok):
                         c["source"] = {"name": cards[c["id"]][0]["name"], "url": cards[c["id"]][0]["url"]}
                     stats["cards_replaced"] += 1
                 elif all(x in badset for x in links):
                     stats["cards_dropped"] += 1
                     problems.append(f"{c['id']}: dropped (only aggregator sources, no verified replacement)")
                     continue
-                if _bad_src(c.get("source")) or (c.get("source") or {}).get("url") in badset:
+                if _bad_src(c.get("source"), ok) or (c.get("source") or {}).get("url") in badset:
                     good = next((x for x in links if x not in badset), None)
                     c["source"] = {"name": X.source_name(good, ""), "url": good} if good else None
             t0 = c.get("title")
             for k in ("title", "summary", "impact", "impact_deep"):
                 if c.get(k):
-                    c[k] = scrub_text(c[k]) if k != "title" else (scrub_text(c[k]) or c[k])
+                    c[k] = scrub_text(c[k], ok) if k != "title" else (scrub_text(c[k], ok) or c[k])
             if t0 and c.get("title") != t0:
                 c["_title0"] = t0  # story_map title_hash was taken on the published title
             keep.append(c)
         if "cards" in d:
             d["cards"] = keep
     if extras.get("mfl_ncd"):
-        extras["mfl_ncd"] = fix_ncd(extras["mfl_ncd"])
+        extras["mfl_ncd"] = fix_ncd(extras["mfl_ncd"], max((d["id"] for d in days), default=None))
     for l in extras.get("lessons") or []:
         if isinstance(l, dict) and "sources" in l:
             l["sources"] = fix_srcs(l["sources"])
@@ -1493,12 +1575,38 @@ def scrub_aggregators(X, days, extras, data_dir, problems):
     return stats
 
 
+UPDATE_PREFIX = re.compile(r"^\s*Update(?:\s+\d+)?\s*[:\u2014\u2013]\s*", re.I)
+
+
+def strip_update_prefix(title):
+    """'Update: IIFL board approves …' -> 'IIFL board approves …' (also 'Update 3: …'). The published markdown keeps it."""
+    if not title:
+        return title
+    t = UPDATE_PREFIX.sub("", title, count=1)
+    if not t.strip() or t == title:
+        return title
+    return t[0].upper() + t[1:]
+
+
+def _strip_titles(days, extras):
+    n = 0
+    for c in [c for d in days for c in d.get("cards") or []] + list(extras.get("latest_circulars") or []):
+        t = strip_update_prefix(c.get("title"))
+        if t != c.get("title"):
+            c.setdefault("_title0", c["title"])  # story_map title_hash was taken on the published title
+            c["title"] = t
+            n += 1
+    return n
+
+
 def apply(X, days, extras, data_dir, private, generated):
     """Mutates days/extras in place. Returns {filename: object} for the caller to write (same `generated` as
     latest.json); finalize() adds story_index once latest.json is assembled."""
     problems = []
     files = {}
     newest = max(d["id"] for d in days) if days else None
+    global BUILD_DATE, NEWEST
+    BUILD_DATE, NEWEST = (str(generated)[:10] if generated else None), newest
     threads = {}
     try:
         scrub_aggregators(X, days, extras, data_dir, problems)
@@ -1506,6 +1614,7 @@ def apply(X, days, extras, data_dir, private, generated):
         import traceback
         traceback.print_exc()
         _log(f"aggregator scrub skipped: {exc!r}")
+    _strip_titles(days, extras)
     try:
         sobj, cont, threads = stories_export(X, days, data_dir, private, problems, extras.get("deadlines"),
                                              extras.get("latest_circulars"), generated)
@@ -1546,17 +1655,19 @@ def apply(X, days, extras, data_dir, private, generated):
             rtext[r.get("key")] = r.get("content") or ""
         for c in d.get("cards") or []:
             try:
-                if fix_table_summary(X, c) or row_summary(c, rtext.get(REPORT_LONG.get(c.get("report"), c.get("report")), "")):
+                rt = rtext.get(REPORT_LONG.get(c.get("report"), c.get("report")), "")
+                if fix_table_summary(X, c, rt) or row_summary(c, rt):
                     fixed.add(c["id"])
             except Exception as exc:  # never fatal
                 _log(f"{c.get('id')}: summary fix skipped: {exc!r}")
             for k in ("summary", "impact"):
-                if c.get(k) and BANNED_NAMES.search(c[k]):
-                    c[k] = scrub_text(c[k])
+                if c.get(k) and _names(bool(c.get("_chit_ok"))).search(c[k]):
+                    c[k] = scrub_text(c[k], bool(c.get("_chit_ok")))
             if c.get("impact") or c.get("kind") == "circular":
                 c["impact_label"] = IMPACT_LABEL
     cards_by_id = {c["id"]: c for d in days for c in d.get("cards") or []}
     for c in extras.get("latest_circulars") or []:
+        c.pop("_title0", None)
         if c.get("id") in fixed:
             c["summary"] = cards_by_id[c["id"]]["summary"]
         c["impact_label"] = IMPACT_LABEL
@@ -1566,6 +1677,7 @@ def apply(X, days, extras, data_dir, private, generated):
             c.pop("_auto_joined", None)
             c.pop("_status_only", None)
             c.pop("_title0", None)
+            c.pop("_chit_ok", None)
             if not private:
                 for k in PRIVATE_KEYS:
                     c.pop(k, None)

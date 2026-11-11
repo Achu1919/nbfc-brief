@@ -463,3 +463,22 @@ Written by `content_upgrade.py` from `export_json.export()`. `data/latest.json`,
   (`Value: 13,752.4; Previous: …; Change: −253.0 (−1.81%); Effective: …`), source columns left to `sources[]`, empty / '—'
   cells skipped (`summary: null` if nothing is left). Key-figure tables list every row as `Label: value.` and keep
   `>`, `<`, `≤` and signs.
+
+## Step 3 fixes (11 Nov 2026, Site Builder notes)
+
+- **No "Update:" prefix.** Card titles (day files, `stories.json` updates, `continuing_stories[].latest`, week_review)
+  drop a leading `Update:` / `Update N:`. Card ids are unchanged; the published markdown keeps the heading as written.
+- **Comparison signs kept.** `>` is removed only as a line-start blockquote marker; `>`, `<`, `≤`, `≥` and a leading
+  `−` / `+` before a figure stay in titles, summaries and impacts ("(≤₹2.5 lakh, ₹2.5–5 lakh, >₹5 lakh)").
+- **Multi-row tables.** A table whose `|---|` line is not in the card unit is still read with its header (checked against
+  the report text). Comparison / status tables label every value with its column
+  ("NPA trigger: NBFC-ML/UL (post Oct 2024): 90 days overdue; Old NBFC Norm: 360 days overdue.").
+- **`next` expiry.** A thread's `next` is cleared once its date is before the edition date, and for the newest edition
+  (`stories.json`, `latest.json`) before the build date (`generated`). The cleared step is kept as
+  `next_passed {date, date_text?, what, source, covered_by?}`; `covered_by` is the card id of the update that reported it,
+  when there is one. Older day files keep the `next` they had on that day.
+- **Chittorgarh (SOURCES.md, 11 Nov 2026).** Allowed only for NCD bid / subscription data, on its `/bond/` NCD pages
+  (tier 2), from the 12 Nov 2026 edition. Anywhere else it is dropped like any excluded site. Editions up to 11 Nov keep
+  the audited BSE / prospectus sourcing; dropped history is not restored.
+- **Thread titles.** A thread without a `_threads` entry falls back to its first card's title, clipped to 60 chars;
+  `tests/review_checks.py` warns about it instead of failing.

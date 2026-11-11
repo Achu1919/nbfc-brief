@@ -743,7 +743,17 @@
    "title": "SEBI Credit Risk-o-Meter for debt offers",
    "regulators": [
     "sebi"
-   ]
+   ],
+   "next": {
+    "date": "2026-11-21",
+    "date_text": "45 days after the 7 Oct 2026 circular",
+    "what": "Credit Risk-o-Meter disclosure goes live for debt securities",
+    "known_from": "2026-10-23",
+    "source": {
+     "name": "SEBI",
+     "url": "https://www.sebi.gov.in/legal/circulars/oct-2026/introduction-of-credit-risk-o-meter-as-an-additional-disclosure-mechanism-for-debt-securities_105081.html"
+    }
+   }
   },
   "reg-sebi-ho-17-11-24-7-2026-ddhs-pod1-i-23122-2026": {
    "title": "SEBI: merchant banker optional for some debt placements",
@@ -819,5 +829,13 @@
    "title": "Shriram Finance Q2 FY27 results",
    "regulators": []
   }
+ },
+ "2026-10-23-rules-35": {
+  "story_id": "reg-sebi-ho-17-11-22-1-2026-ddhs-pod1",
+  "title_hash": "05ac52af"
+ },
+ "2026-11-04-rules-46": {
+  "story_id": "reg-sebi-ho-17-11-22-1-2026-ddhs-pod1",
+  "title_hash": "4f228923"
  }
 }
