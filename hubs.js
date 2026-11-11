@@ -92,16 +92,20 @@ function dateIn(s){s=String(s||'');var m=s.match(/(20\d\d)-(\d\d)-(\d\d)/);if(m)
   m=s.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?,?\s+(20\d\d)\b/i);
   if(m){var d=new Date(Date.UTC(+m[3],MON[m[2].toLowerCase().slice(0,3)],+m[1]));return d.toISOString().slice(0,10);}return null;}
 function deadlines(){var E=M().ext&&M().ext.deadlines,today=NB.todayIST(),out=[];
-  if(Array.isArray(E))out=E.filter(function(x){return x&&x.date&&x.date>=today;}).map(function(x){return {date:x.date,title:x.title,reg:x.regulator,ref:x.ref_no,url:x.url,h:x.url,dt:typeof x.date_text==='string'?x.date_text:''};});
+  if(Array.isArray(E))out=E.filter(function(x){return x&&x.date&&x.date>=today;}).map(function(x){return {date:x.date,title:x.title,reg:x.regulator,ref:x.ref_no,url:x.url,h:x.url,dt:typeof x.date_text==='string'?x.date_text:'',sid:typeof x.story_id==='string'?x.story_id:''};});
   else{var seen={};(ix()?hubDocs('regulation'):[]).forEach(function(d){if(d.k!=='Calendar'&&!(d.rg&&d.rg.dl))return;var dt=dateIn(d.t)||dateIn(d.rg&&d.rg.dl)||dateIn(d.b);if(!dt||dt<today)return;
     var t=clean(d.t).replace(/^\d{1,2}\s+\w+\s+20\d\d\s*[:\u2013\u2014-]\s*/,'');var f=dt+NB.flatT(t).slice(0,24);if(seen[f])return;seen[f]=1;
     out.push({date:dt,title:t.length>4?t:clean(d.b),reg:regOf(d).regulator,h:d.h});});}
   out.sort(function(a,b){return a.date<b.date?-1:1;});return out.slice(0,10);}
 function dlStrip(){var L=deadlines(),today=+NB.dt(NB.todayIST());if(!L.length)return '';
   return '<div class="sec" data-st><h2 id="h-dl">Upcoming deadlines</h2><span class="aside">'+(M().ext&&M().ext.deadlines?'from the regulatory calendar':'from the regulatory calendar in the briefs')+'</span></div>'+
-    '<ul class="dls" role="list" data-st aria-labelledby="h-dl">'+L.map(function(x){var n=Math.round((+NB.dt(x.date)-today)/864e5),d=NB.dt(x.date);
-      return '<li><a class="dl g press" href="'+esc(x.h||'#/topic/regulation')+'"'+(/^https?:/.test(x.h||'')?' target="_blank" rel="noopener noreferrer"':'')+'><span class="dl-d"><b class="num">'+d.getDate()+'</b><span>'+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+'</span></span>'+
-        '<span class="dl-b"><span class="dl-n num">'+(x.dt?esc(x.dt)+' \u00b7 '+(n===0?'ends today':n===1?'ends tomorrow':'ends in '+n+' days'):n===0?'Today':n===1?'Tomorrow':'In '+n+' days')+(x.reg?' \u00b7 '+esc(String(x.reg).toUpperCase()):'')+'</span><span class="dl-t">'+esc(clip(x.title,110))+'</span></span></a></li>';}).join('')+'</ul>';}
+    /* a proper scroller: clipped inside its own box (no page overflow), edge fade where more cards wait (cu.js) */
+    '<div class="hsc" data-st><ul class="dls fx-sc" role="list" aria-labelledby="h-dl">'+L.map(function(x){var n=Math.round((+NB.dt(x.date)-today)/864e5),d=NB.dt(x.date);
+      /* a deadline with a story thread opens its timeline; the source stays one tap away */
+      var th=null;try{th=x.sid&&window.NBCU?NBCU.thread(x.sid):null;}catch(e){}var href=th?'#/story/'+th.id:(x.h||'#/topic/regulation'),ext=!th&&/^https?:/.test(href);
+      return '<li'+(th?' class="dl-th"':'')+'><a class="dl g press" href="'+esc(href)+'"'+(ext?' target="_blank" rel="noopener noreferrer"':'')+'><span class="dl-d"><b class="num">'+d.getDate()+'</b><span>'+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+'</span></span>'+
+        '<span class="dl-b"><span class="dl-n num">'+(x.dt?esc(x.dt)+' \u00b7 '+(n===0?'ends today':n===1?'ends tomorrow':'ends in '+n+' days'):n===0?'Today':n===1?'Tomorrow':'In '+n+' days')+(x.reg?' \u00b7 '+esc(String(x.reg).toUpperCase()):'')+'</span><span class="dl-t">'+esc(clip(x.title,110))+'</span>'+(th?'<span class="dl-k"><i aria-hidden="true"></i>Timeline</span>':'')+'</span></a>'+
+        (th&&/^https?:/.test(x.h||'')?'<a class="dl-x press" href="'+esc(x.h)+'" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">\u2197</span><span class="sr">Source for '+esc(clip(x.title,60))+' (opens in a new tab)</span></a>':'')+'</li>';}).join('')+'</ul></div>';}
 var RF=[['','All'],['rbi','RBI'],['sebi','SEBI'],['ibbi','IBBI'],['draft','Drafts'],['deadline','Deadlines']];
 function regFilter(L,f){if(!f)return L;if(f==='draft'||f==='deadline')return L.filter(function(d){return regOf(d).status===f;});
   return L.filter(function(d){return (d.tg.regulators||[]).indexOf(f)>=0||String(d.reg&&d.reg.regulator||'').toLowerCase()===f;});}
@@ -155,7 +159,7 @@ function peerHtml(co){var k=PEERK[co],nm=peerName(co),L=coDocs(co),day=M().days[
 var ST={f:'',lim:24};
 function hubBody(slug){var X=ix();if(!X)return loading();var L=hubDocs(slug),day=M().days[0],full=NB.M.byId[day.id];
   if(slug==='regulation'){var cnt=function(f){return regFilter(L,f).length;};
-    return dlStrip()+'<section aria-labelledby="h-rf"><div class="sec" data-st><h2 id="h-rf">Circulars &amp; updates</h2></div>'+chips(RF.map(function(x){return [x[0],x[1],cnt(x[0])];}),ST.f,'data-hf','Filter regulation items')+'<div id="hfeed">'+regFeed(regFilter(L,ST.f),ST.lim)+'</div></section>';}
+    return dlStrip()+cu('regTracked')+'<section aria-labelledby="h-rf"><div class="sec" data-st><h2 id="h-rf">Circulars &amp; updates</h2></div>'+chips(RF.map(function(x){return [x[0],x[1],cnt(x[0])];}),ST.f,'data-hf','Filter regulation items')+'<div id="hfeed">'+regFeed(regFilter(L,ST.f),ST.lim)+'</div></section>';}
   var pre='';
   if(slug==='muthoot-fincorp'){pre=ncdCard();var mb=full&&!full.stub&&NB.mflBlock?NB.mflBlock(full):'';if(mb)pre+=mb;}
   if(slug==='peers')pre=peersBlock();
@@ -172,6 +176,7 @@ function springIn(root){if(NB.RM.matches)return;var T=root.querySelectorAll('[da
   T.forEach(function(t,i){if(!t.animate)return;t.animate([{opacity:0,transform:'translateY(14px) scale(.96)'},{opacity:1,transform:'none'}],{duration:NB.SPRINGS.Rise?NB.SPRINGS.Rise.ms:420,easing:NB.SPRINGS.Rise?NB.SPRINGS.Rise.easing:'cubic-bezier(.2,.9,.25,1.05)',delay:i*NB.STAGGER,fill:'backwards'});});}
 var CUR=null;
 function mount(root,view,key,pq){CUR={root:root,view:view,key:key};
+  if(view==='peer'&&window.NBCU&&NBCU.piFocus)NBCU.piFocus(root,pq);
   /* earlier quarters arrive with data/peer_intel.json (idle prefetch, or now on first use): redraw that section */
   if(view==='peer'&&window.NBCU)NBCU.onPeer(function(){if(!CUR||CUR.root!==root||!root.isConnected)return;var y=window.scrollY;root.innerHTML=peerHtml(key);window.scrollTo(0,y);});
   if(view==='topics')springIn(root);

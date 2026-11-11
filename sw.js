@@ -5,7 +5,7 @@
    over 3 s (or is down), the saved copy is shown and the app offers "New edition available — Refresh". Fonts: cache-first.
    search.js, hubs.js and cu.js are precached with the shell (it is only executed when Search opens); the search index itself lives in IndexedDB. */
 const NS = 'nbfc-brief-';
-const VERSION = 'v9-2026-11-11-cu2';
+const VERSION = 'v10-2026-11-11-cu3';
 const SHELL = `${NS}shell-${VERSION}`;
 const DATA = `${NS}data-v1`;
 const FONTS = `${NS}fonts-v1`;

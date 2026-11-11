@@ -452,6 +452,7 @@ function viewToday(day){
   var sc=storyCards(day);
   if(window.NBCU&&day.id===M.days[0].id){try{main+=NBCU.fxBanner()+NBCU.nudge(day);}catch(e){}}
   if(window.NBCU&&NBCU.contStrip){try{main+=NBCU.contStrip(day);}catch(e){}}
+  if(window.NBCU&&NBCU.weekCard){try{main+=NBCU.weekCard(day);}catch(e){}}
   if(sc)main+=sc;
   else main+=live(day)&&nr&&nr.missing?'<div class="g card empty" data-st><h2>The news desk has not filed yet</h2><p>The 7:00 AM job has not filed for '+esc(day.label)+' yet. This page offers a refresh when it does.</p></div>':'<div class="g card empty" data-st><h2>The news desk did not arrive</h2><p>The 7:00 AM job left no file for '+esc(day.label)+'.</p></div>';
   main+=goldCard(day,false)+circBlock(day);
@@ -733,6 +734,11 @@ function goldRange(b){var k=b.dataset.gk,box=b.closest('.gx-in');GRANGE[k]=+b.da
 /* ---------------- search (optional; search.js loads only when Search is opened) ---------------- */
 var SXP=null;
 function loadSearch(){if(window.NBSearch)return Promise.resolve();if(!SXP)SXP=loadScript('/search.js').catch(function(e){SXP=null;throw e;});return SXP;}
+/* #/week/<week_start>: the weekly review's sections with their story threads (cu.js) */
+function weekView(day){if(window.NBCU&&NBCU.weekView){try{return NBCU.weekView(day,S.key);}catch(e){}}
+  return '<div class="hd" data-st="h"><p class="greet">Read</p><h1>Weekly review</h1></div><div class="g card empty" data-st><p><a href="#/'+day.id+'/read/03-weekly-analysis">Open the weekly desk</a></p></div>'+foot();}
+/* a Today card opens its own unit in the reader: ?card=<id> (cu.js), with hl= as the fallback */
+function cardLink(id,c){try{if(window.NBCU&&NBCU.cardHref&&c&&c.id){var h=NBCU.cardHref(id,c);if(h)return h;}}catch(e){}return readHref(id,'news',c.title,c.section);}
 function threadsView(){if(window.NBCU&&NBCU.threadsView)return NBCU.threadsView();
   return '<div class="hd" data-st="h"><p class="greet">Topics</p><h1>Threads</h1></div><div class="g card empty" data-st><p>Threads are not available in this version yet. Reload once while online.</p></div>';}
 function searchView(){if(window.NBSearch)return NBSearch.html(PQ);
@@ -792,7 +798,7 @@ function dayCards(day){var C=Array.isArray(day.cards)?day.cards.filter(function(
       var sec=String(c.section||'').split(' \u00b7 ').pop()||c.title;(also[p]=also[p]||[]).push(noCites(stripMd(sec)));return false;});
     var st=C.filter(function(c){return c.kind==='story';}),rest=C.filter(function(c){return c.kind!=='story';});
     return st.concat(rest).slice(0,Math.max(4,Math.min(6,st.length||6))).map(function(c){var src=c.source&&c.source.url?{l:c.source.name||'source',u:c.source.url}:null;
-      return {t:noCites(stripMd(c.title)),sum:c.summary||'',imp:c.impact||'',src:src?[src]:[],cat:catOf(c.tags,c.kind==='story'?'Story':'News',c.section,c.category),tags:tg0(c.tags),href:readHref(day.id,'news',c.title,c.section),raw:c,day:day.id,also:also[c.id]||[]};});}
+      return {t:noCites(stripMd(c.title)),sum:c.summary||'',imp:c.impact||'',src:src?[src]:[],cat:catOf(c.tags,c.kind==='story'?'Story':'News',c.section,c.category),tags:tg0(c.tags),href:cardLink(day.id,c),raw:c,day:day.id,also:also[c.id]||[]};});}
   var T=(Array.isArray(day.story_tags)?day.story_tags:[]).filter(function(e){return e&&e.kind==='story';});
   return stories(day).slice(0,6).map(function(s,i){var f=flatT(s.h).slice(0,30),e=null;
     T.forEach(function(x){var g=flatT(x.title).slice(0,30);if(!e&&g.length>=5&&(f.indexOf(g)===0||g.indexOf(f)===0))e=x;});if(!e)e=T[i]||null;
@@ -834,7 +840,7 @@ function fillCircLater(){loadAgp();var el=document.getElementById('lcirc');if(!e
 var HBP=null;
 function loadHubs(){if(window.NBHubs)return Promise.resolve();if(!HBP)HBP=loadSearch().then(function(){return loadScript('/hubs.js');}).catch(function(e){HBP=null;throw e;});return HBP;}
 var HUBV={topics:1,topic:1,peer:1};
-function tabOf(v){return HUBV[v]||v==='threads'?'topics':v==='search'?'':v;}
+function tabOf(v){return HUBV[v]||v==='threads'?'topics':v==='search'?'':v==='week'?'read':v;}
 function hubsView(day){if(window.NBHubs)return NBHubs.html(S.view,S.key,PQ,day);
   return '<div class="hd" data-st="h"><p class="greet">Topics</p><h1>Topics</h1></div><div class="g card empty" data-st><h2>Topics are not available offline yet</h2><p>Open Topics once while online and they will work offline after that.</p></div>';}
 /* Archive: topic dots on the calendar, from the day-level tags in latest.json days[] */
@@ -864,6 +870,7 @@ Object.assign(window.__NB,{toast:toast,priv:SITE_PRIV,HUBS:HUBS,HUB:HUB,hubHas:h
 function flatT(s){return String(s||'').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]/g,'');}
 function hitLater(root,qs){var tries=0;(function go(){if(!root.isConnected)return;if(hit(root,qs)||++tries>12)return;setTimeout(go,120);})();}
 function hit(root,qs){var q={};qs.split('&').forEach(function(x){var i=x.indexOf('=');if(i>0)q[x.slice(0,i)]=decodeURIComponent(x.slice(i+1).replace(/\+/g,' '));});
+  if(q.card&&window.NBCU&&NBCU.cardHit){var ch=null;try{ch=NBCU.cardHit(root,q.card,S.day);}catch(e){}if(ch)return true;}
   var hl=flatT(q.hl).slice(0,40),el=null,BLK='p,li,tr,h2,h3,h4,blockquote,dd,dt,a.story,article,.rule,.rl,.tile';
   if(hl.length>=4){var c=root.querySelectorAll(BLK);for(var i=0;i<c.length;i++){var e=c[i];if(flatT(e.textContent).indexOf(hl)<0)continue;
       var inner=e.querySelector(BLK),best=e;while(inner){var f=null;[].some.call(best.querySelectorAll(BLK),function(n){if(flatT(n.textContent).indexOf(hl)>=0){f=n;return true;}});if(!f||f===best)break;best=f;inner=f.querySelector(BLK);}
@@ -879,6 +886,7 @@ function parse(){
   var hq=location.hash.replace(/^#\/?/,'').split('?'),h=decodeURIComponent(hq[0]),p=h.split('/').filter(Boolean),id=M.days[0]&&M.days[0].id;PQ=hq.slice(1).join('?');
   if(p[0]==='search')return {view:'search',day:S.day||id};
   if(p[0]==='threads')return {view:'threads',day:id};
+  if(p[0]==='week')return {view:'week',day:id,key:p[1]||''};
   if(p[0]==='archive')return {view:'archive',day:id};
   if(p[0]==='topics')return {view:'topics',day:id};
   if((p[0]==='topic'||p[0]==='peer')&&p[1])return {view:p[0],day:id,key:p[1]};
@@ -993,11 +1001,11 @@ function route(){
     var segFrom=pv==='read'&&S.view==='read'?segInd:null;
     dropStage();
     var oh=APP.offsetHeight;
-    var nv=S.view==='archive'?archView():mkView(HUBV[S.view]?hubsView(day):S.view==='search'?searchView():S.view==='threads'?threadsView():S.view==='markets'?viewMarkets(day):S.view==='read'?viewRead(day,S.key):viewToday(day));
+    var nv=S.view==='archive'?archView():mkView(HUBV[S.view]?hubsView(day):S.view==='search'?searchView():S.view==='threads'?threadsView():S.view==='week'?weekView(day):S.view==='markets'?viewMarkets(day):S.view==='read'?viewRead(day,S.key):viewToday(day));
     if(nv===CUR)nv=mkView(viewArchive()),nv._arch=1;
     function post(){
       APP.setAttribute('aria-busy','false');
-      document.title=(S.view==='today'?'Today\u2019s Brief':S.view==='threads'?'Threads':HUBV[S.view]&&window.NBHubs?NBHubs.title(S.view,S.key):S.view[0].toUpperCase()+S.view.slice(1))+' · '+shortDay(day.id)+' · NBFC Brief';
+      document.title=(S.view==='today'?'Today\u2019s Brief':S.view==='threads'?'Threads':S.view==='week'?'Weekly review':HUBV[S.view]&&window.NBHubs?NBHubs.title(S.view,S.key):S.view[0].toUpperCase()+S.view.slice(1))+' · '+shortDay(day.id)+' · NBFC Brief';
       document.querySelectorAll('#tabbar a').forEach(function(a){var t=a.dataset.tab;
         a.href=t==='archive'?'#/archive':t==='topics'?'#/topics':t==='today'?'#/'+day.id:'#/'+day.id+'/'+t;
         if(t===tabOf(S.view))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
@@ -1009,9 +1017,11 @@ function route(){
       if(S.view==='search'&&window.NBSearch)NBSearch.mount(nv,PQ,true);
       if(HUBV[S.view]&&window.NBHubs)NBHubs.mount(nv,S.view,S.key,PQ);
       if(S.view==='threads'&&window.NBCU)NBCU.mountThreads(nv);
+      if(S.view==='week'&&window.NBCU)NBCU.mountWeek(nv,S.key);
+      if(S.view==='read'&&window.NBCU&&NBCU.readMarks){try{NBCU.readMarks(nv,day.id,S.key);}catch(e){}}
       if(S.view==='today')fillCircLater();
       cascade(nv,first);
-      if(S.view!=='search'&&/(?:^|&)(?:hl|sec)=/.test(PQ))hitLater(nv,PQ);}
+      if(S.view!=='search'&&/(?:^|&)(?:hl|sec|card)=/.test(PQ))hitLater(nv,PQ);}
     function commit(){var old=CUR;CUR=nv;STG=null;
       if(old&&old!==nv){if(old.parentNode)park(old);}
       [].slice.call(APP.childNodes).forEach(function(n){if(n!==nv)n.remove();});

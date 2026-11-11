@@ -812,3 +812,66 @@ a.tl-t{min-height:24px;padding:2px 0}a.tl-t:hover{text-decoration:underline}
 .cu-ht .sec{margin-top:var(--sp-5)}
 @media (prefers-reduced-motion:reduce){.cstrip{scroll-behavior:auto}}
 @media (forced-colors:active){.cc,.trow,.cu-sheet{border:1px solid CanvasText}.tl-n::before{border:1px solid CanvasText}}
+
+/* ---------- content upgrade step 3: weekly review, Read thread pills and ?card=, tracked instruments, scroller fades ---------- */
+/* horizontal scrollers: clipped in their own box (no page overflow) and faded on the edge that has more */
+.hsc{margin:0 calc(-1*var(--gut));overflow:hidden;contain:paint}
+.hsc>.dls{margin:0}
+.fx-sc{overscroll-behavior-x:contain;--fl:0px;--fr:0px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 var(--fl),#000 calc(100% - var(--fr)),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 var(--fl),#000 calc(100% - var(--fr)),transparent 100%)}
+.fx-sc.sc-l{--fl:28px}.fx-sc.sc-r{--fr:36px}
+.sx-row.fx-sc{scroll-snap-type:x proximity;scroll-padding:0 12px;padding-right:12px}
+.sx-row.fx-sc>*{scroll-snap-align:start}
+.sx-g{overflow:hidden}
+/* deadlines linked to their threads */
+.dls li{position:relative}
+.dl-k{display:inline-flex;align-items:center;gap:5px;margin-top:2px;font-size:var(--t-12);font-weight:600;color:var(--h-regulation,var(--accent))}
+.dl-k i{width:6px;height:6px;border-radius:3px;background:currentColor}
+.dl-th .dl{padding-right:52px}
+.dl-x{position:absolute;right:2px;top:2px;width:48px;height:48px;display:grid;place-items:center;border-radius:24px;color:var(--text-2);text-decoration:none;font-size:17px}
+.dl-x:hover{background:var(--surface-2)}
+/* Regulation hub: tracked instruments by stage */
+.cu-rt .rt-g{margin:0 0 14px}
+.rt-h{display:flex;align-items:center;gap:8px;margin:4px 2px 8px;font-size:var(--t-13);font-weight:600}
+.rt-n{color:var(--text-2)}.rt-d{color:var(--text-3);font-weight:500;font-size:var(--t-12);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rt-more{margin-top:8px;min-height:44px}
+.rt-g [id^="rt-"] .tlist{margin-top:8px}
+.rrow .tr-k{flex-wrap:wrap}
+/* Read: the thread pill at the end of a unit's heading */
+.md .rpill{margin-left:6px;vertical-align:3px;font-size:11.5px;height:22px;letter-spacing:0}
+.md .rpill::after{top:-13px;bottom:-13px}
+.md .rpill:hover{background:var(--surface-3)}
+/* ?card= and ?pi= highlight: a soft tint and an accent rail that fade out */
+.cu-hit{scroll-margin-top:calc(var(--pill-top,12px) + var(--pill-h,44px) + 24px);border-radius:var(--r-s);transition:background-color .7s var(--ease-out,ease),box-shadow .7s var(--ease-out,ease)}
+.cu-hit-in{background-color:var(--accent-soft);box-shadow:-10px 0 0 var(--accent-soft),10px 0 0 var(--accent-soft),inset 3px 0 0 var(--accent)}
+.pi.cu-hit-in{box-shadow:0 0 0 3px var(--accent)}
+@media (prefers-reduced-motion:reduce){.cu-hit{transition:none}}
+/* weekly: "Stories in this section" */
+.wk-st{margin:14px 0 6px;padding-top:12px;border-top:1px solid var(--hairline)}
+.wk-h{margin:12px 0 6px;font-size:var(--t-12);font-weight:600;color:var(--text-3);text-transform:none}
+.wk-row{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.md .wk-row{padding:0}.md .wk-row li{margin:0}
+.wkc{display:flex;align-items:center;gap:10px;min-height:48px;padding:8px 12px;border-radius:var(--r-m);background:var(--surface-2);color:var(--text-1);text-decoration:none;font-size:var(--t-13);line-height:1.35;min-width:0}
+.wkc i{width:8px;height:8px;border-radius:4px;flex:none;background:var(--hub,var(--accent))}
+.wkc-t{flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.wkc-n{flex:none;font-size:var(--t-12);color:var(--text-3);white-space:nowrap}
+@media (hover:hover){.wkc:hover{background:var(--surface-3)}}
+.wk-un{margin:16px 0 4px}.wk-un .pill{min-height:44px}.wk-un [id^="wku"] .wk-row{margin-top:8px}
+.wk-open{margin:18px 0 0}
+/* Today: this week's review */
+.wkcard{margin-top:var(--sp-5)}
+.wk{padding:16px;border-top:3px solid var(--accent)}
+.wk h2{margin:2px 0 4px;font-size:var(--t-17,17px);font-weight:700;letter-spacing:-.01em}
+.wk-m{margin:0;font-size:var(--t-12);color:var(--text-3)}
+.wk .wk-a{margin-top:12px;width:100%;justify-content:center;min-height:48px}
+/* #/week/<date> */
+.wk-full{margin:0 0 var(--sp-3)}.wk-full .cta{min-height:48px}
+.wks{padding:14px 16px;margin:0 0 10px}
+.wks h3{margin:0 0 6px;font-size:var(--t-15,15px);font-weight:700;line-height:1.3}
+.wks .sum{margin:0 0 6px;font-size:var(--t-13);line-height:1.45;color:var(--text-2)}
+.wks .sc-f{margin-top:10px}
+/* Muthoot Fincorp hub: latest thread as a timeline preview */
+.mflp{padding:14px 16px 10px;margin:0 0 10px;border-left:3px solid var(--hub,var(--accent))}
+.mflp-t{display:block;margin:2px 0 4px;font-size:var(--t-15,15px);font-weight:700;line-height:1.3;color:var(--text-1);text-decoration:none;min-height:24px;overflow-wrap:anywhere}
+.tl.mini{margin:10px 0 0}.tl.mini .tl-n{padding-bottom:12px}
+.tl.mini .tl-t{font-size:var(--t-13);font-weight:600}
+@media (forced-colors:active){.wkc,.wk,.wks,.mflp{border:1px solid CanvasText}.cu-hit-in{outline:2px solid Highlight}}

@@ -8,6 +8,8 @@
       (so they work offline after one online open). Skipped on Save-Data / 2G; then they load on first use.
    3. Renderers: Peer Intelligence cards (Peers hub, peer pages, Today nudge) and the card basics (sources line,
       lifecycle and deadline chips, thread badges, impact label).
+   5. Step 3: Regulation hub stages, the weekly review (Today card and #/week/<date>), Read thread pills and ?card=,
+      #/peer/<slug>?pi=<id>, search documents for threads and Peer Intelligence, and edge fades on scrollers.
    4. Step 2: the Continuing stories strip, the story timeline sheet (#/story/<id>), the Threads list (#/threads),
       "Continuing in this topic" on hubs, and a clean-up for summaries that were flattened from markdown tables.
    Built from one source for both editions; the public file is generated without any private-only code. */
@@ -96,7 +98,7 @@ function reg(r,top){r=O(r)||{};top=O(top)||{};
   else if(D(r.comments_due))dd={date:r.comments_due,text:'',kind:'comments'};
   else if(D(r.effective)&&lc&&lc!=='effective')dd={date:r.effective,text:'',kind:'effective'};
   var fc=O(r.first_covered)||O(top.first_covered);
-  return {lc:lc&&/^[a-z-]{2,24}$/.test(lc)?lc:'',dl:dd,near:near,fc:fc&&D(fc.date)?{date:fc.date,card:S(fc.card_id),report:S(fc.report),title:S(fc.title)}:null};}
+  return {lc:lc&&/^[a-z-]{2,24}$/.test(lc)?lc:'',ref:S(r.ref_no)||S(top.ref_no),dl:dd,near:near,fc:fc&&D(fc.date)?{date:fc.date,card:S(fc.card_id),report:S(fc.report),title:S(fc.title)}:null};}
 function card(c){c=O(c)||{};var r=O(c.reg);
   var o={id:S(c.id),sid:Id(c.story_id),seq:N(c.thread_seq)!=null&&c.thread_seq>=1?Math.round(c.thread_seq):null,upd:c.is_update===true,
     dup:S(c.dup_of),sources:cardSources(c),label:S(c.impact_label)||IMPACT,reg:r?reg(r,null):null,stRef:A(c.stories_ref).map(Id).filter(Boolean)};
@@ -147,8 +149,7 @@ function ingest(j){X={gen:S(j.generated),latestId:D(j.today&&j.today.id),fixture
   /* the archive is fetched only when latest.json says it exists (a pointer, peer_intel or story_index), so the
      current data never triggers a 404 */
   try{var pf=O(j.peer_intel_index);X.peerFile=pf?okPath(pf.file):(Array.isArray(j.peer_intel)||X.sidx)?'data/peer_intel.json':'';}catch(e){}
-  try{var w=O(j.week_review);if(w&&D(w.week_start))X.week={id:D(w.id)||w.week_start,start:w.week_start,end:D(w.week_end),published:D(w.published),
-    storyIds:A(w.story_ids).map(Id).filter(Boolean),sections:A(w.sections).map(O).filter(Boolean),threads:A(w.week_threads).map(O).filter(Boolean)};}catch(e){}
+  try{X.week=wkRead(j.week_review);}catch(e){}
   L={stories:null,peer:null,sp:null,pp:null,cbs:L.cbs||[],warmed:false};}
 
 /* ---------------- lazy files ---------------- */
@@ -162,6 +163,7 @@ function loadStories(){if(L.stories)return Promise.resolve(L.stories);if(!X.stor
           count:N(s.card_count)!=null?s.card_count:N(s.update_count)!=null?s.update_count:A(s.updates).length,editions:N(s.editions),
           updates:A(s.updates).map(upd).filter(Boolean),next:nextOf(s.next),reg:O(s.reg)?reg(s.reg,null):null,
           rg:S(O(s.reg)&&s.reg.regulator)||S(A(s.regulators)[0]),closed:D(s.closed),
+          co:A(s.companies).map(Id).filter(Boolean),tp:A(s.topics).map(Id).filter(Boolean),rgs:A(s.regulators).map(function(x){return S(x).toLowerCase();}).filter(function(x){return /^[a-z]{2,12}$/.test(x);}),
           continues:A(s.continues).map(Id).filter(Boolean),continuedBy:A(s.continued_by).map(Id).filter(Boolean)};});
       var al={},a=O(j.aliases)||{};Object.keys(a).forEach(function(k){var t=Id(a[k]);if(Id(k)&&t)al[k]=t;});
       L.stories={generated:S(j.generated),stale:!!(S(j.generated)&&X.gen&&S(j.generated)<X.gen),stories:out,aliases:al};return L.stories;})
@@ -249,7 +251,7 @@ function piSources(p){var Ls=[];p.ev.forEach(function(e){if(e.src)Ls.push(Object
   /* the same document cited for several figures is one source: drop the page for the dedupe key */
   var seen={};Ls=Ls.filter(function(s){var k=(s.url||s.name).replace(/#.*$/,'');if(seen[k])return false;seen[k]=1;return true;});return srcSort(Ls);}
 function piCard(p,o){o=o||{};var types=evTypes(p);
-  var h='<article class="pi g" data-st data-hub="peers"'+(o.id?' id="'+o.id+'"':'')+'><div class="pi-t">'+types.map(function(t){return '<span class="pi-doc">'+esc(EV[t]||tcase(t))+'</span>';}).join('')+
+  var h='<article class="pi g" data-st data-hub="peers" data-pi="'+esc(p.id)+'"'+(o.id?' id="'+o.id+'"':'')+'><div class="pi-t">'+types.map(function(t){return '<span class="pi-doc">'+esc(EV[t]||tcase(t))+'</span>';}).join('')+
     (p.period?'<span class="pi-doc">'+esc(p.period)+'</span>':'')+(p.date?'<span class="kick pi-d">'+esc(sday(p.date))+'</span>':'')+'</div>'+
     '<h3>'+esc(piTitle(p))+'</h3>'+(p.basis?'<p class="pi-b">'+esc(tcase(p.basis))+' figures, as published by the company</p>':'');
   if(p.met.length){var gid=nid('pg'),nid2=nid('pn'),more=p.met.slice(6),notes=p.met.filter(function(m){return m.note&&m.disc;});
@@ -264,7 +266,7 @@ function piCard(p,o){o=o||{};var types=evTypes(p);
   if(p.nd.length)h+='<p class="pi-s">Not disclosed this quarter</p><ul class="th nd">'+p.nd.map(function(t){return '<li>'+esc(t)+'</li>';}).join('')+'</ul>';
   h+=impactP(p.impact,p.label);
   h+=srcList(piSources(p),'',false);
-  if(o.link)h+='<div class="sc-f"><span class="by">'+esc(p.ev.length+' document'+(p.ev.length===1?'':'s'))+'</span><a class="more press" href="#/peer/'+esc(p.co)+'">'+esc(p.name)+'<span class="sr"> peer page</span> <span aria-hidden="true">\u2192</span></a></div>';
+  if(o.link)h+='<div class="sc-f"><span class="by">'+esc(p.ev.length+' document'+(p.ev.length===1?'':'s'))+'</span><a class="more press" href="'+esc(piHref(p))+'">'+esc(p.name)+'<span class="sr"> peer page</span> <span aria-hidden="true">\u2192</span></a></div>';
   return h+'</article>';}
 /* Peers hub: shown only when entries from the last 21 days exist; no slot and no placeholder otherwise */
 function piSlot(){var Ls=latestPI();if(!Ls.length)return '';
@@ -274,9 +276,9 @@ function piSlot(){var Ls=latestPI();if(!Ls.length)return '';
 /* peer page: that company's entries, newest first; the newest open, older ones one tap away */
 function piHistory(co){var Ls=allPI(co);if(!Ls.length)return '';
   return '<section aria-labelledby="h-ph" class="pis">'+fxBanner()+'<div class="sec" data-st><h2 id="h-ph">Peer Intelligence</h2><span class="aside num">'+Ls.length+' '+(Ls.length===1?'entry':'entries')+'</span></div>'+
-    piCard(Ls[0],{})+(Ls.length>1?'<ul class="pih" role="list" data-st>'+Ls.slice(1).map(function(p){var id=nid('ph');
-      return '<li><button type="button" class="pih-b g press" data-cux="'+id+'" aria-expanded="false" aria-controls="'+id+'"><span class="pih-p">'+esc(p.period||sday(p.date))+'</span><span class="pih-t">'+esc(evTypes(p).map(function(t){return EV[t]||tcase(t);}).join(', '))+'</span><span class="pih-d num">'+(p.date?esc(dm(p.date)+' '+p.date.slice(0,4)):'')+'</span><span class="pih-c" aria-hidden="true"></span></button>'+
-        '<div id="'+id+'" class="pih-x" hidden>'+piCard(p,{}).replace(' data-st','')+'</div></li>';}).join('')+'</ul>':'')+
+    piCard(Ls[0],{})+(Ls.length>1?'<ul class="pih" role="list" data-st>'+Ls.slice(1).map(function(p){var id=nid('ph'),op=!!(PIF.id&&PIF.id===p.id);
+      return '<li><button type="button" class="pih-b g press" data-cux="'+id+'" aria-expanded="'+op+'" aria-controls="'+id+'"><span class="pih-p">'+esc(p.period||sday(p.date))+'</span><span class="pih-t">'+esc(evTypes(p).map(function(t){return EV[t]||tcase(t);}).join(', '))+'</span><span class="pih-d num">'+(p.date?esc(dm(p.date)+' '+p.date.slice(0,4)):'')+'</span><span class="pih-c" aria-hidden="true"></span></button>'+
+        '<div id="'+id+'" class="pih-x"'+(op?'':' hidden')+'>'+piCard(p,{}).replace(' data-st','')+'</div></li>';}).join('')+'</ul>':'')+
     (L.peer||!X.peerFile?'':'<p class="note" data-st>Earlier quarters load when online.</p>')+'</section>';}
 /* tile mention line: "new deck" when a deck or results came out in the last 3 days */
 function tileNote(co){var d0=X.latestId;if(!d0)return '';var p=X.pi.filter(function(x){return x.co===co&&x.ev.some(function(e){return (e.type==='investor-deck'||e.type==='results')&&diff(d0,e.date)<=3&&diff(d0,e.date)>=0;});})[0];
@@ -284,7 +286,7 @@ function tileNote(co){var d0=X.latestId;if(!d0)return '';var p=X.pi.filter(funct
 /* Today: one slim row when a peer filed today */
 function nudge(day){if(!day||day.id!==X.latestId)return '';var Ls=X.pi.filter(function(p){return p.ev.some(function(e){return e.date===day.id;});});if(!Ls.length)return '';
   return Ls.slice(0,2).map(function(p){var t=evTypes(p).filter(function(x){return p.ev.some(function(e){return e.type===x&&e.date===day.id;});}),lab=t.indexOf('investor-deck')>=0?'investor deck':EVL[t[0]]||'filing';
-    return '<a class="pin g press" data-st href="#/peer/'+esc(p.co)+'">'+(NB().hubIcon?NB().hubIcon('peers',18):'')+'<span class="pin-t"><b>New:</b> '+esc(p.name+' '+(p.period?p.period+' ':'')+lab)+'</span><span class="pin-a" aria-hidden="true">\u2192</span></a>';}).join('');}
+    return '<a class="pin g press" data-st href="'+esc(piHref(p))+'">'+(NB().hubIcon?NB().hubIcon('peers',18):'')+'<span class="pin-t"><b>New:</b> '+esc(p.name+' '+(p.period?p.period+' ':'')+lab)+'</span><span class="pin-a" aria-hidden="true">\u2192</span></a>';}).join('');}
 
 /* ================= step 2 ================= */
 /* ---------------- summaries flattened from markdown tables ----------------
@@ -358,7 +360,7 @@ function contStrip(day){if(!day)return '';var live=day.id===X.latestId,list=live
 /* ---------------- story timeline sheet ---------------- */
 var SH={el:null,scrim:null,id:'',under:'#/',pushed:false,opener:null,inert:[],skip:'',last:location.hash};
 function storyHash(h){var m=/^#\/story\/([^?\/#]+)/.exec(h||'');try{return m?decodeURIComponent(m[1]):'';}catch(e){return '';}}
-function readLink(u){var nb=NB();return u.date&&nb.readHref?nb.readHref(u.date,u.report||'01-daily-watch',u.title,''):'';}
+function readLink(u){var nb=NB();if(u.date&&u.card)return cardHref(u.date,{id:u.card,report:u.report,title:u.title});return u.date&&nb.readHref?nb.readHref(u.date,u.report||'01-daily-watch',u.title,''):'';}
 function tierB(s){if(!s)return '';var lab=s.tier?String(s.tier):'',cls=s.tier===1?'p':s.tier===2?'s':'c';
   return '<span class="tl-src">'+(lab?'<span class="tier '+cls+'" aria-hidden="true">'+lab+'</span><span class="sr">Tier '+lab+' source: </span>':'')+esc(s.name)+'</span>';}
 function relRow(ids,lab){var rows=A(ids).map(function(i){var r=thread(i);return r?'<a class="tl-rel press" href="#/story/'+esc(r.id)+'" data-cus><span>'+esc(lab)+'</span> '+esc(r.title)+'</a>':'';}).filter(Boolean);
@@ -472,10 +474,188 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
   var tb=document.getElementById('thbody');if(tb)tb.innerHTML=threadsBody();
   try{history.replaceState(null,'','#/threads'+(TF.f?'?f='+TF.f:''));}catch(x){}SH.last=location.hash;});
 /* a hub's "Continuing in this topic": up to 4 open or dormant threads of that hub, newest first */
-function hubThreads(slug){var list=allThreads().filter(function(t){return t.cat===slug&&(t.status==='open'||t.status==='dormant');}).slice(0,4);
+function hubThreads(slug){var CO=slug==='muthoot-fincorp',s=L.stories;
+  var list=allThreads().filter(function(t){var f=CO&&s&&s.stories[t.id];return (t.cat===slug||(f&&f.cat!=='regulation'&&f.co.indexOf(slug)>=0))&&(t.status==='open'||t.status==='dormant');})
+    .sort(function(a,b){return (b.cat===slug?1:0)-(a.cat===slug?1:0);}).slice(0,4);
   if(!L.stories&&X.storyFile&&!L.sfail)loadStories().then(function(){var el=document.getElementById('cu-ht');if(el&&el.getAttribute('data-slug')===slug)el.outerHTML=hubThreads(slug);});
   if(!list.length)return '<section id="cu-ht" data-slug="'+esc(slug)+'" hidden></section>';
-  return '<section id="cu-ht" data-slug="'+esc(slug)+'" aria-labelledby="h-ht" class="cu-ht"><div class="sec" data-st><h2 id="h-ht">Continuing in this topic</h2><a class="aside" href="#/threads?f='+esc(slug)+'">All threads \u2192</a></div><div data-st>'+tList(list,false)+'</div></section>';}
+  return '<section id="cu-ht" data-slug="'+esc(slug)+'" aria-labelledby="h-ht" class="cu-ht"><div class="sec" data-st><h2 id="h-ht">Continuing in this topic</h2><a class="aside" href="#/threads?f='+esc(slug)+'">All threads \u2192</a></div>'+(CO?mflPreview(list[0])+(list.length>1?'<div data-st>'+tList(list.slice(1),false)+'</div>':''):'<div data-st>'+tList(list,false)+'</div>')+'</section>';}
+
+/* ================= step 3 ================= */
+/* ---------------- card links: #/<date>/read/<desk>?card=<id>&hl=<title letters> ----------------
+   card= finds the unit by the card's own title (any "Update:" prefix ignored on both sides); hl= stays as the
+   fallback for older handlers and for a card whose heading cannot be matched. */
+var RK3={news:'01-daily-watch',rules:'02-regulation',weekly:'03-weekly-analysis'};
+function rk(r){r=S(r);return RK3[r]||(/^0\d-[a-z-]+$/.test(r)?r:'01-daily-watch');}
+function flatT(s){return String(s||'').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]/g,'');}
+function headKey(t){return flatT(plainT(String(t||'').replace(/^[^A-Za-z0-9\u20b9]+/,'')));}
+function cardHref(dayId,c){c=O(c)||{};if(!D(dayId))return '';var id=S(c.id),t=S(c.title),q=[];
+  if(id&&/^[\w.-]{1,80}$/.test(id))q.push('card='+encodeURIComponent(id));
+  if(t){var k=headKey(t).slice(0,40);if(k.length>=4)q.push('hl='+k);}
+  return '#/'+dayId+'/read/'+rk(c.report)+(q.length?'?'+q.join('&'):'');}
+function dayOf(id){var nb=NB();return nb&&nb.M&&nb.M.byId?nb.M.byId[id]||null:null;}
+function repCards(day,key){return A(day&&day.cards).filter(function(c){return O(c)&&S(c.title)&&rk(c.report)===key;});}
+/* a report heading for a card: same title, or one a prefix of the other (12+ letters) */
+function findHead(md,c,lvl){var k=headKey(c.title);if(k.length<6)return null;var hs=md.querySelectorAll(lvl||'h2,h3,h4'),pre=null;
+  for(var i=0;i<hs.length;i++){var h=hs[i],t=h.getAttribute('data-hk');if(t==null){t=headKey(h.textContent);h.setAttribute('data-hk',t);}
+    if(h.hasAttribute('data-card')&&h.getAttribute('data-card')!==S(c.id))continue;
+    if(t===k)return h;if(!pre&&t.length>=12&&k.length>=12&&(t.indexOf(k)===0||k.indexOf(t)===0))pre=h;}
+  return pre;}
+function wkThreads(w){var m={};A(w&&w.threads).forEach(function(x){var id=Id(x.story_id);if(id)m[id]={n:N(x.cards_in_week),inRev:x.mentioned_in_review===true};});return m;}
+function shortT(t,n){t=plainT(t).replace(/^\[[A-Z ]+\]\s*/,'').replace(/\s*\(link\)\s*$/,'');n=n||72;return t.length>n?t.slice(0,n-1).replace(/\s+\S*$/,'')+'\u2026':t;}
+/* "Stories in this section": thread rows, 48 px tall, each with "N this week" */
+function wkChips(ids,wt,max){var seen={},rows=A(ids).map(Id).filter(function(id){if(!id||seen[id])return false;seen[id]=1;return true;})
+    .map(function(id){var t=thread(id);return t?{t:t,n:wt&&wt[t.id]?wt[t.id].n:null}:null;}).filter(Boolean);
+  if(max)rows=rows.sort(function(a,b){return (b.n||0)-(a.n||0);}).slice(0,max);
+  if(!rows.length)return '';
+  return '<ul class="wk-row" role="list">'+rows.map(function(r){var h=hubOf(r.t.cat);
+    return '<li><a class="wkc press" href="#/story/'+esc(r.t.id)+'"'+(h?' data-hub="'+esc(r.t.cat)+'"':'')+'><i aria-hidden="true"></i><span class="wkc-t">'+esc(shortT(r.t.title))+'</span>'+
+      (r.n?'<span class="wkc-n num">'+esc(r.n+' this week')+'</span>':'')+'<span class="sr">. Open the story timeline</span></a></li>';}).join('')+'</ul>';}
+
+/* ---------------- Read: thread pills, weekly section links, ?card= ---------------- */
+function readMarks(root,dayId,key){var day=dayOf(dayId);if(!root||!day||day.stub)return;var md=root.querySelector('.md');if(!md||md.hasAttribute('data-cu3'))return;
+  md.setAttribute('data-cu3','');
+  var cur=root.querySelector('.seg a[aria-current=true]'),m=cur&&/\/read\/([0-9a-z-]+)/.exec(cur.getAttribute('href')||'');key=m?m[1]:key||'01-daily-watch';
+  var wr=key==='03-weekly-analysis'?wkRead(day.week_review):null,sec={},wt=wkThreads(wr);
+  if(wr)wr.sections.forEach(function(s){if(S(s.card_id))sec[s.card_id]=A(s.story_ids);});
+  repCards(day,key).forEach(function(c){var h=findHead(md,c,key==='03-weekly-analysis'?'h2':'h3,h4,h2');if(!h)return;h.setAttribute('data-card',S(c.id));var k=card(c);
+    if(k.sid&&key!=='03-weekly-analysis'){var t=thread(k.sid),lab=k.seq&&k.seq>1?'Update '+k.seq:'';
+      if(t||k.seq)h.insertAdjacentHTML('beforeend',' <a class="thr rpill press" href="#/story/'+esc(k.sid)+'" aria-label="'+esc('Thread'+(lab?', '+lab:'')+(t?': '+shortT(t.title,80):'')+'. Open the story timeline')+'"><span aria-hidden="true">'+dots(k.seq||1)+'Thread'+(lab?' \u00b7 '+esc(lab):'')+'</span></a>');}
+    if(key==='03-weekly-analysis'){var ids=sec[S(c.id)]||k.stRef,box=h.closest('section.mds')||h.parentNode,ch=wkChips(ids,wt);
+      if(ch&&box&&!box.querySelector('.wk-st'))box.insertAdjacentHTML('beforeend','<div class="wk-st"><p class="wk-h">Stories in this section</p>'+ch+'</div>');}});
+  if(wr){var un=wr.threads.filter(function(x){return x.mentioned_in_review!==true;}).map(function(x){return Id(x.story_id);}).filter(function(id){return id&&thread(id);});
+    if(un.length){var id=nid('wku');md.insertAdjacentHTML('beforeend','<div class="wk-un"><button type="button" class="pill press" data-cux="'+id+'" aria-expanded="false" aria-controls="'+id+'">Threads this week that the review didn\u2019t cover \u00b7 '+un.length+'</button><div id="'+id+'" hidden>'+wkChips(un,wt)+'</div></div>');}
+    md.insertAdjacentHTML('beforeend','<p class="wk-open"><a class="cta ghost press" href="#/week/'+esc(wr.start)+'">Weekly review: sections and threads <span aria-hidden="true">\u2192</span></a></p>');}}
+/* ?card=<id>: scroll to the unit (its heading and the text under it) and highlight it for a few seconds.
+   true = done; null = not found here (the caller falls back to hl=) */
+var HIT=null;
+function cardHit(root,cid,dayId){var md=root.querySelector('.md');if(!md)return null;cid=S(cid);if(!cid)return null;
+  var h=null;[].some.call(md.querySelectorAll('[data-card]'),function(x){if(x.getAttribute('data-card')===cid){h=x;return true;}return false;});
+  if(!h){var day=dayOf(dayId),c=A(day&&day.cards).filter(function(x){return O(x)&&x.id===cid;})[0];if(c)h=findHead(md,c);}
+  if(!h)return null;
+  var lv=+h.tagName.slice(1),unit=[];
+  if(lv===2&&h.parentNode&&h.parentNode.matches&&h.parentNode.matches('section.mds'))unit=[h.parentNode];
+  else{unit=[h];var n=h.nextElementSibling;while(n&&!(/^H[1-6]$/.test(n.tagName)&&+n.tagName.slice(1)<=lv)){unit.push(n);n=n.nextElementSibling;}}
+  if(HIT){clearTimeout(HIT.t);HIT.u.forEach(function(e){e.classList.remove('cu-hit','cu-hit-in');});}
+  unit.forEach(function(e){e.classList.add('cu-hit');});void h.offsetWidth;unit.forEach(function(e){e.classList.add('cu-hit-in');});
+  HIT={u:unit,t:setTimeout(function(){unit.forEach(function(e){e.classList.remove('cu-hit-in');});setTimeout(function(){unit.forEach(function(e){e.classList.remove('cu-hit');});},700);},3200)};
+  var y=h.getBoundingClientRect().top+scrollY-Math.min(140,innerHeight*.18);window.scrollTo({top:Math.max(0,y),behavior:rm()?'auto':'smooth'});
+  return true;}
+
+/* ---------------- weekly review: the Today card and #/week/<week_start> ---------------- */
+function wkRead(w){w=O(w);if(!w||!D(w.week_start))return null;
+  return {id:D(w.id)||w.week_start,start:w.week_start,end:D(w.week_end),published:D(w.published),prefix:S(w.report_card_prefix),
+    storyIds:A(w.story_ids).map(Id).filter(Boolean),sections:A(w.sections).map(O).filter(function(s){return s&&S(s.title);}),threads:A(w.week_threads).map(O).filter(Boolean)};}
+function pubOf(w){return w.published||(w.end?shift(w.end,1):shift(w.start,7));}
+function wkRange(w){var a=dObj(w.start),e=w.end||shift(w.start,6),b=dObj(e);
+  return a.getMonth()===b.getMonth()?a.getDate()+'\u2013'+b.getDate()+' '+MON[b.getMonth()]:dm(w.start)+' \u2013 '+dm(e);}
+function wkOf(day){if(day&&day.id===X.latestId&&X.week)return X.week;return wkRead(day&&day.week_review);}
+function wkMatch(w,key){return w&&(w.start===key||w.id===key||pubOf(w)===key);}
+/* Today: shown from the Monday it is published for 7 days (week_review stays in latest.json that long) */
+function weekCard(day){var w=wkOf(day);if(!w||!day)return '';var p=pubOf(w),n=diff(day.id,p);if(n<0||n>6)return '';
+  var wt=wkThreads(w),ids=w.storyIds.length?w.storyIds:w.threads.filter(function(x){return x.mentioned_in_review===true;}).map(function(x){return x.story_id;});
+  var ch=wkChips(ids,wt,3),ns=w.sections.length;
+  return '<section aria-labelledby="h-wk" class="wkcard"><div class="wk g" data-st><p class="kick">Weekly review \u00b7 '+esc(sday(p))+'</p>'+
+    '<h2 id="h-wk">'+(n===0?'This week\u2019s review':'This week\u2019s review')+'</h2><p class="wk-m num">'+esc(['Week of '+wkRange(w),ns?cnt(ns,'section'):'',ids.length?cnt(ids.length,'thread'):''].filter(Boolean).join(' \u00b7 '))+'</p>'+
+    (ch?'<p class="wk-h">Threads in the review</p>'+ch:'')+
+    '<a class="cta press wk-a" href="#/week/'+esc(w.start)+'">Open the weekly review <span aria-hidden="true">\u2192</span></a></div></section>';}
+var WK={key:'',day:null};
+function weekBody(w,pday){var wt=wkThreads(w),p=pubOf(w),cards=pday&&!pday.stub?repCards(pday,'03-weekly-analysis'):[],byId={},sec={};
+  cards.forEach(function(c){byId[S(c.id)]=c;});w.sections.forEach(function(s){if(S(s.card_id))sec[s.card_id]=A(s.story_ids);});
+  var list=cards.length?cards.map(function(c){return {id:S(c.id),title:S(c.section)||S(c.title),sum:S(c.summary),ids:sec[S(c.id)]||card(c).stRef,c:c};})
+    :w.sections.map(function(s){return {id:S(s.card_id),title:S(s.title),sum:'',ids:A(s.story_ids),c:{id:S(s.card_id),report:'weekly',title:S(s.title)}};});
+  var x='<section aria-labelledby="h-wks"><div class="sec" data-st><h2 id="h-wks">Sections</h2><span class="aside num">'+list.length+'</span></div>';
+  x+=list.map(function(s){var sm=s.sum?NB().clip?NB().clip(cleanSum(s.sum),240):cleanSum(s.sum):'',ch=wkChips(s.ids,wt),href=cardHref(p,s.c);
+    return '<article class="wks g" data-st><h3>'+esc(plainT(s.title))+'</h3>'+(sm?'<p class="sum">'+esc(sm)+'</p>':'')+
+      (ch?'<p class="wk-h">Stories in this section</p>'+ch:'')+'<div class="sc-f"><span class="by num">'+(ch?esc(cnt(A(s.ids).length,'thread')):'No linked thread')+'</span><a class="more press" href="'+esc(href)+'">Read this section<span class="sr">: '+esc(s.title)+'</span> <span aria-hidden="true">\u2192</span></a></div></article>';}).join('')+'</section>';
+  var un=w.threads.filter(function(t){return t.mentioned_in_review!==true;}).map(function(t){return Id(t.story_id);}).filter(function(id){return id&&thread(id);});
+  if(un.length){var id=nid('wku');x+='<section aria-labelledby="h-wku" class="wk-un"><div class="sec" data-st><h2 id="h-wku">Not in the review</h2><span class="aside num">'+un.length+'</span></div><div data-st>'+
+    '<button type="button" class="pill press" data-cux="'+id+'" aria-expanded="false" aria-controls="'+id+'">Threads this week that the review didn\u2019t cover</button><div id="'+id+'" hidden>'+wkChips(un,wt)+'</div></div></section>';}
+  if(!cards.length&&pday!==undefined)x+='<p class="note" role="status" data-st>Section summaries load with the '+esc(sday(p))+' edition when online.</p>';
+  return x;}
+function weekView(day,key){key=S(key);var w=wkMatch(X.week,key)?X.week:wkMatch(wkOf(day),key)?wkOf(day):null;WK={key:key,day:null};
+  var p=w?pubOf(w):'';
+  var hd='<div class="hd hubhd g" data-st="h"><a class="hback press" href="'+(p?'#/'+esc(p)+'/read/03-weekly-analysis':'#/read')+'"><span aria-hidden="true">\u2039</span> Weekly desk</a>'+
+    '<div class="hh"><div><p class="greet">Weekly review</p><h1>'+(w?'Week of '+esc(wkRange(w)):'Weekly review')+'</h1></div></div>'+
+    '<p class="hsub">'+(w?esc('Published '+sday(p)+' \u00b7 '+cnt(w.sections.length,'section')+' \u00b7 '+cnt(w.storyIds.length,'thread')+' in the review'):'')+'</p></div>';
+  var body=w?weekBody(w,dayOf(p)&&!dayOf(p).stub?dayOf(p):undefined):'<div class="g card empty" data-st role="status" id="wk-miss"><h2>Looking for this weekly review\u2026</h2><p>It loads from the edition it was published in.</p></div>';
+  return hd+(w?'<p class="wk-full" data-st><a class="cta press" href="#/'+esc(p)+'/read/03-weekly-analysis">Read the full weekly <span aria-hidden="true">\u2192</span></a></p>':'')+'<div id="wkbody">'+body+'</div>'+(NB().foot?NB().foot():'');}
+/* after the route: load the edition the review was published in (summaries), or find an older week in its day file */
+function mountWeek(root,key){key=S(key);var w=wkMatch(X.week,key)?X.week:null,nb=NB();if(!nb||!nb.getDay)return;
+  var p=w?pubOf(w):D(key)?shift(key,7):'';
+  if(!p){miss();return;}
+  var d0=dayOf(p);if(w&&d0&&!d0.stub&&L.stories)return;
+  function miss(){var m=root.querySelector('#wk-miss');if(m)m.innerHTML='<h2>This weekly review isn\u2019t in the saved editions</h2><p><a href="#/archive">Open the archive</a> or the <a href="#/read">latest Read desk</a>.</p>';}
+  (nb.M.byId[p]?nb.getDay(p):Promise.resolve(null)).then(function(day){if(!root.isConnected)return;var ww=w||wkRead(day&&day.week_review);
+    if(!ww||!wkMatch(ww,key)&&!wkMatch(ww,p)){miss();return;}
+    if(!w){var v=document.createElement('div');v.innerHTML=weekView(day,ww.start);var hd=root.querySelector('.hubhd'),nh=v.querySelector('.hubhd');if(hd&&nh)hd.replaceWith(nh);
+      var fl=v.querySelector('.wk-full'),b0=root.querySelector('#wkbody');if(fl&&b0)b0.parentNode.insertBefore(fl,b0);}
+    var b=root.querySelector('#wkbody');if(b)b.innerHTML=weekBody(ww,day&&!day.stub?day:null);}).catch(miss);
+  if(!L.stories&&X.storyFile&&!L.sfail)loadStories().then(function(){var b=root.querySelector('#wkbody');if(!b||!root.isConnected)return;var ww=w||wkRead((dayOf(p)||{}).week_review);if(ww)b.innerHTML=weekBody(ww,dayOf(p)&&!dayOf(p).stub?dayOf(p):null);});}
+
+/* ---------------- Regulation hub: tracked instruments by stage ---------------- */
+var STG=[['draft','Draft','Open for comment or not yet final'],['final','Final','Issued, not yet in force'],['effective','Effective','In force']];
+function regRow(t){var r=t.reg,dl=r?dlChip(r.dl,NB().todayIST()):'';
+  return '<li><a class="trow rrow g press" href="#/story/'+esc(t.id)+'" data-hub="regulation"><span class="tr-k">'+(t.rg?'<span class="rgb">'+esc(t.rg.toUpperCase())+'</span>':'')+lcChip(r&&r.lc)+dl+'</span>'+
+    '<span class="tr-t">'+esc(shortT(t.title,140))+'</span><span class="tr-m num">'+esc([r&&r.ref?r.ref:'',t.opened?'first covered '+dm(t.opened):'',t.last&&t.last!==t.opened?'last '+dm(t.last):''].filter(Boolean).join(' \u00b7 '))+'</span>'+
+    '<span class="tr-a" aria-hidden="true">\u203a</span></a></li>';}
+function regTracked(){var s=L.stories;
+  if(!s){if(X.storyFile&&!L.sfail)loadStories().then(function(){var el=document.getElementById('cu-rt');if(el&&L.stories)el.outerHTML=regTracked();});return '<section id="cu-rt" hidden></section>';}
+  var g={},other=[],n=0,today=NB().todayIST();
+  Object.keys(s.stories).forEach(function(id){var f=s.stories[id];if(!f.reg||!f.reg.lc)return;n++;var t={id:id,title:f.title,cat:f.cat,status:f.status,opened:f.opened,last:f.last,reg:f.reg,rg:f.rg||(f.rgs[0]||'')};
+    if(LC[f.reg.lc]&&f.reg.lc!=='superseded'&&f.reg.lc!=='withdrawn')(g[f.reg.lc]=g[f.reg.lc]||[]).push(t);else other.push(t);});
+  if(!n)return '<section id="cu-rt" hidden></section>';
+  function soon(t){var d=t.reg&&t.reg.dl;return d&&d.date>=today?d.date:'9';}
+  function ord(a,b){var x=soon(a),y=soon(b);if(x!==y)return x<y?-1:1;return (a.last||'')<(b.last||'')?1:(a.last||'')>(b.last||'')?-1:0;}
+  var x='<section id="cu-rt" aria-labelledby="h-rt" class="cu-rt"><div class="sec" data-st><h2 id="h-rt">Tracked instruments</h2><span class="aside num">'+esc(cnt(n,'circular'))+' \u00b7 by stage</span></div>';
+  STG.forEach(function(st){var L2=(g[st[0]]||[]).sort(ord);if(!L2.length)return;var id=nid('rt');
+    x+='<div class="rt-g" data-st><h3 class="rt-h"><span class="st st-'+st[0]+'">'+st[1]+'</span><span class="rt-n num">'+L2.length+'</span><span class="rt-d">'+st[2]+'</span></h3>'+
+      tList0(L2.slice(0,4))+(L2.length>4?'<button type="button" class="pill press rt-more" data-cux="'+id+'" aria-expanded="false" aria-controls="'+id+'">Show all '+L2.length+'</button><div id="'+id+'" hidden>'+tList0(L2.slice(4))+'</div>':'')+'</div>';});
+  if(other.length){var id2=nid('rt');other.sort(ord);
+    x+='<div class="rt-g" data-st><button type="button" class="pill press rt-more" data-cux="'+id2+'" aria-expanded="false" aria-controls="'+id2+'">Superseded, withdrawn or other \u00b7 '+other.length+'</button><div id="'+id2+'" hidden>'+tList0(other)+'</div></div>';}
+  return x+'<p class="note" data-st>Deadline chips count days from today on this device. Tap a circular for its timeline.</p></section>';}
+function tList0(L2){return '<ul class="tlist" role="list">'+L2.map(regRow).join('')+'</ul>';}
+
+/* ---------------- Muthoot Fincorp hub: the thread timeline preview ---------------- */
+function mflPreview(t){var f=thread(t.id);if(!f||!f.ups.length)return '';var ups=f.ups.slice().reverse().slice(0,3);
+  return '<div class="mflp g" data-st data-hub="muthoot-fincorp"><p class="kick">Latest thread</p><a class="mflp-t press" href="#/story/'+esc(t.id)+'">'+esc(shortT(t.title,110))+'<span class="sr">. Open the story timeline</span></a>'+
+    '<ol class="tl mini" role="list">'+ups.map(function(u){var href=readLink(u),now=u.date===X.latestId;
+      return '<li class="tl-n'+(now?' now':'')+'"><p class="tl-d num">'+esc(sday(u.date)+(now?' \u00b7 Today':''))+(u.kind==='status'?' <span class="tl-m">Status</span>':'')+'</p>'+
+        (href?'<a class="tl-t press" href="'+esc(href)+'">'+esc(plainT(u.title))+'</a>':'<p class="tl-t">'+esc(plainT(u.title))+'</p>')+'</li>';}).join('')+'</ol>'+
+    '<div class="sc-f"><span class="by num">'+esc(cnt(f.full?f.ups.length:(f.count||f.ups.length),'update')+(f.opened?' \u00b7 since '+dm(f.opened):''))+'</span><a class="more press" href="#/story/'+esc(t.id)+'">Full timeline <span aria-hidden="true">\u2192</span></a></div></div>';}
+
+/* ---------------- search documents: threads and Peer Intelligence ---------------- */
+function threadTitles(){var o={};allThreads().forEach(function(t){o[t.id]=plainT(t.title);});return o;}
+function searchDocs(){var p0=loadStories().then(function(){return loadPeer();},function(){return null;});
+  return p0.then(function(){return null;},function(){return null;}).then(function(){var out=[],s=L.stories,lat=X.latestId;
+    if(s)Object.keys(s.stories).forEach(function(id){var f=s.stories[id],sn={};f.updates.forEach(function(u){if(u.src)sn[u.src.name]=1;});
+      out.push({d:f.last||f.opened||lat,k:'Thread',s:'Threads \u00b7 '+(hubName(f.cat)||'Story'),t:plainT(f.title),b:f.updates.slice(-8).reverse().map(function(u){return plainT(u.title);}).join(' \u00b7 '),
+        sn:Object.keys(sn).join(' '),src:null,h:'#/story/'+id,c:f.cat,sid:id,lc:f.reg&&LC[f.reg.lc]?f.reg.lc:'',tg:{companies:f.co,regulators:f.rgs,topics:f.tp}});});
+    else allThreads().forEach(function(t){out.push({d:t.last||t.opened||lat,k:'Thread',s:'Threads \u00b7 '+(hubName(t.cat)||'Story'),t:plainT(t.title),b:'',h:'#/story/'+t.id,c:t.cat,sid:t.id,lc:'',tg:{companies:[],regulators:[],topics:[]}});});
+    var seen={};(L.peer||[]).concat(X.pi).forEach(function(p){if(seen[p.id])return;seen[p.id]=1;var b=[];
+      p.met.forEach(function(m){b.push(m.label+(m.disc?'':' not disclosed'));});p.guid.forEach(function(g){b.push(g.text);});p.quotes.forEach(function(q){b.push(q.text+(q.who?' ('+q.who+')':''));});
+      p.nd.forEach(function(t){b.push(t);});p.cmp.forEach(function(r){b.push(r.label+' with Muthoot Fincorp');});if(p.impact)b.push(p.impact);
+      out.push({d:D(p.date)||lat,k:'Peer intel',s:'Peers \u00b7 '+p.name,t:piTitle(p),b:b.join(' \u00b7 '),sn:piSources(p).map(function(x){return x.name;}).join(' '),src:null,
+        h:piHref(p),c:'peers',tg:{companies:[p.co],regulators:[],topics:['results']}});});
+    return out.filter(function(o){return D(o.d);});});}
+
+/* ---------------- #/peer/<slug>?pi=<id>: open, scroll to and highlight one entry ---------------- */
+var PIF={id:''};
+function piHref(p){return '#/peer/'+p.co+(p.id?'?pi='+encodeURIComponent(p.id):'');}
+function piFocus(root,pq){var m=/(?:^|&)pi=([^&]+)/.exec(pq||'');if(!m){PIF.id='';return;}var id;try{id=decodeURIComponent(m[1]);}catch(e){return;}PIF.id=id;var tries=0;
+  (function go(){if(!root.isConnected)return;var el=null;[].some.call(root.querySelectorAll('[data-pi]'),function(x){if(x.getAttribute('data-pi')===id){el=x;return true;}return false;});
+    if(!el){if(++tries<24)setTimeout(go,150);else if(L.peer||!X.peerFile){var nb=NB();if(nb&&nb.toast)nb.toast('This Peer Intelligence entry isn\u2019t in this edition\u2019s data');}return;}
+    var box=el.closest('.pih-x');if(box&&box.hidden){box.hidden=false;var b=root.querySelector('[aria-controls="'+box.id+'"]');if(b)b.setAttribute('aria-expanded','true');}
+    el.classList.add('cu-hit');void el.offsetWidth;el.classList.add('cu-hit-in');setTimeout(function(){el.classList.remove('cu-hit-in');setTimeout(function(){el.classList.remove('cu-hit');},700);},3200);
+    var y=el.getBoundingClientRect().top+scrollY-Math.min(120,innerHeight*.15);window.scrollTo({top:Math.max(0,y),behavior:rm()?'auto':'smooth'});})();}
+
+/* ---------------- horizontal scrollers: fade the edge that has more to show ---------------- */
+function scEdge(el){var w=el.scrollWidth-el.clientWidth,x=Math.abs(el.scrollLeft);el.classList.toggle('sc-l',w>2&&x>2);el.classList.toggle('sc-r',w>2&&x<w-2);}
+function scAll(){[].forEach.call(document.querySelectorAll('.fx-sc'),scEdge);}
+document.addEventListener('scroll',function(e){var t=e.target;if(t&&t.classList&&t.classList.contains('fx-sc'))scEdge(t);},true);
+(function(){var raf=0;function q(){if(!raf)raf=requestAnimationFrame(function(){raf=0;scAll();});}
+  window.addEventListener('resize',q);
+  if(window.MutationObserver){var mo=new MutationObserver(q);var go=function(){var a=document.getElementById('app');if(a)mo.observe(a,{childList:true,subtree:true});else setTimeout(go,50);};go();}})();
 
 /* ---------------- interactions (delegated) ---------------- */
 function reveal(el){var R=NB()&&NB().RM;if(!el.animate||(R&&R.matches))return;var sp=NB().SPRINGS&&NB().SPRINGS.Rise;
@@ -489,6 +669,8 @@ window.NBCU={prep:prep,ingest:ingest,warm:warm,loadStories:loadStories,loadPeer:
   card:card,cardBits:cardBits,circBits:circBits,regChips:regChips,srcList:srcList,impactP:impactP,
   piSlot:piSlot,piHistory:piHistory,tileNote:tileNote,nudge:nudge,fxBanner:fxBanner,
   cleanSum:cleanSum,contStrip:contStrip,onHash:onHash,deep:deepLink,openStory:function(id){location.hash='#/story/'+id;},closeStory:requestClose,threadsView:threadsView,mountThreads:mountThreads,hubThreads:hubThreads,thread:thread,
+  cardHref:cardHref,readMarks:readMarks,cardHit:cardHit,weekCard:weekCard,weekView:weekView,mountWeek:mountWeek,regTracked:regTracked,
+  searchDocs:searchDocs,threadTitles:threadTitles,piFocus:piFocus,scAll:scAll,
   get impactLabel(){return X.lab||'';},get continuing(){return X.cont;},get week(){return X.week;},get peerIntel(){return X.pi;},get fixture(){return X.fixture;},
   _x:function(){return {X:X,L:L};}};
 })();

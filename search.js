@@ -6,7 +6,7 @@
    that is used instead. Tags: story/circular/calendar "tags" {companies,regulators,topics} win; otherwise
    simple keyword heuristics fill them in. Labels: latest.json "tag_labels", else Title Case with acronyms. */
 (function(){'use strict';
-var NB=window.__NB,esc=NB.esc,IDXV=6,DBN=NB.ns+'-search',RKEY=NB.ns+'-recent';
+var NB=window.__NB,esc=NB.esc,IDXV=7,DBN=NB.ns+'-search',RKEY=NB.ns+'-recent';
 /* ---------- text ---------- */
 var STOP={};'the a an and or of to in on for by with at is are was were be as it its from that this into than has have had not no'.split(' ').forEach(function(w){STOP[w]=1;});
 function norm(s){return String(s==null?'':s).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'');}
@@ -19,10 +19,12 @@ var ACR={rbi:'RBI',sebi:'SEBI',ibbi:'IBBI',mca:'MCA',nhb:'NHB',irdai:'IRDAI',ncd
 var NAMES={rating:'Ratings',circular:'Circulars','gold-loan':'Gold loan','gold-price':'Gold price','asset-quality':'Asset quality','digital-lending':'Digital lending',
   'housing-finance':'Housing finance','vehicle-finance':'Vehicle finance','m-and-a':'M&A','iifl-finance':'IIFL Finance','l-and-t-finance':'L&T Finance','m-and-m-finance':'M&M Finance'};
 var LABELS={};
-function label(g,s){var L=LABELS[g]||{};if(L[s])return L[s];if(NAMES[s])return NAMES[s];
+function label(g,s){if(g==='thread')return 'In a story thread';if(g==='stage'&&LCN[s])return LCN[s];var L=LABELS[g]||{};if(L[s])return L[s];if(NAMES[s])return NAMES[s];
   return s.split('-').map(function(w){return ACR[w]||(w.charAt(0).toUpperCase()+w.slice(1));}).join(' ').replace(/ And /g,' & ');}
-var PRIMARY={topics:['gold-loan','ncd','rating','results','circular'],regulators:['rbi','sebi','ibbi'],companies:['muthoot-fincorp','muthoot-finance','manappuram','bajaj-finance','shriram-finance','iifl-finance']};
-var GROUPS=[['topics','Topic','tp'],['regulators','Regulator','rg'],['companies','Company','co']];
+var PRIMARY={topics:['gold-loan','ncd','rating','results','circular'],regulators:['rbi','sebi','ibbi'],companies:['muthoot-fincorp','muthoot-finance','manappuram','bajaj-finance','shriram-finance','iifl-finance'],stage:['draft','final','effective'],thread:['thread']};
+/* stage (circular lifecycle) and thread filters come from the cards' reg.lifecycle and story_id (index v7) */
+var GROUPS=[['topics','Topic','tp'],['regulators','Regulator','rg'],['companies','Company','co'],['stage','Stage','st'],['thread','Thread','th']];
+var LCN={draft:'Draft',final:'Final',effective:'Effective',superseded:'Superseded',withdrawn:'Withdrawn'};
 var H_REG=[['rbi',/\brbi\b|reserve bank/i],['sebi',/\bsebi\b/i],['ibbi',/\bibbi\b|insolvency and bankruptcy board/i],['mca',/\bmca\b|ministry of corporate affairs/i],
   ['nhb',/\bnhb\b|national housing bank/i],['irdai',/\birdai\b/i]];
 var H_TOP=[['gold-loan',/gold[- ]loans?\b|gold[- ]lend|loans? against gold|gold[- ]backed|\bglc\b/i],['ncd',/\bncds?\b|debenture/i],
@@ -98,7 +100,13 @@ function docsOf(day){var out=[],id=day.id,match=matcher(day);
     else if(tg){hit.tg=tg;hit.ht=0;}
     if(c.category)hit.c=c.category;else if(NB.catOf)hit.c=NB.catOf(hit.tg,hit.k,hit.s,null);
     if(c.summary)hit.sm=String(c.summary).slice(0,300);if(c.impact)hit.imp=String(c.impact).slice(0,300);if(src&&!hit.src)hit.src=src;
-    if(c.reg&&typeof c.reg==='object')hit.reg=c.reg;});
+    if(c.reg&&typeof c.reg==='object')hit.reg=c.reg;
+    /* v7: thread id, lifecycle stage, source names ("BSE" finds cards citing BSE), the weekly section's threads, and the card link */
+    if(typeof c.story_id==='string'&&c.story_id)hit.sid=c.story_id;
+    var lc=c.reg&&typeof c.reg==='object'&&c.reg.lifecycle;if(typeof lc==='string'&&LCN[lc])hit.lc=lc;
+    var sn=(Array.isArray(c.sources)?c.sources:[]).concat(c.source?[c.source]:[]).map(function(x){return x&&typeof x.name==='string'?x.name:'';}).filter(Boolean);if(sn.length)hit.sn=sn.join(' ');
+    if(Array.isArray(c.stories_ref)&&c.stories_ref.length)hit.sr=c.stories_ref.filter(function(x){return typeof x==='string';}).slice(0,8);
+    if(c.id&&window.NBCU&&NBCU.cardHref){try{var ch=NBCU.cardHref(id,c);if(ch)hit.h=ch;}catch(e){}}});
   out.forEach(function(d){delete d._f;});
   return out;}
 /* "Label: value" fields merged into a body: pull out the impact line and the circular fields for the topic pages */
@@ -173,14 +181,23 @@ function segment(day,r,out,match){
   endSec();}
 /* ---------- index ---------- */
 var IX=null; /* {gen, docs, vocab:[sorted], post:{tok:[docIdx]}, latest} */
-function compile(pack){var docs=pack.docs,post={};
+/* threads and Peer Intelligence (cu.js, from data/stories.json and data/peer_intel.json) are added at load time,
+   never stored, so they follow those files; IX.docs stays the day documents that the topic pages read */
+var EXT=[],TT={};
+function extLoad(){if(!window.NBCU||!NBCU.searchDocs)return Promise.resolve(false);
+  return NBCU.searchDocs().then(function(L){var out=[];(L||[]).forEach(function(o){var tg=o.tg;delete o.tg;push(out,o,{companies:(tg&&tg.companies)||[],regulators:(tg&&tg.regulators)||[],topics:(tg&&tg.topics)||[]});});
+    EXT=out;try{TT=NBCU.threadTitles()||{};}catch(e){TT={};}if(IX&&IX.pack)compile(IX.pack);return !!out.length;}).catch(function(){return false;});}
+function compile(pack){var day=pack.docs,docs=day.concat(EXT),post={};
   docs.forEach(function(d,i){var tt={},all={};toks(d.t).forEach(function(t){tt[t]=1;all[t]=1;});
+    d.tg.stage=d.lc&&LCN[d.lc]?[d.lc]:[];d.tg.thread=d.sid?['thread']:[];
+    if(d.sn)toks(d.sn).forEach(function(t){all[t]=1;});
+    if(d.sr)d.sr.forEach(function(id){if(TT[id])toks(TT[id]).forEach(function(t){all[t]=1;});});
     (d.w||'').split(' ').forEach(function(t){if(t)all[t]=1;});
     ['companies','regulators','topics'].forEach(function(g){(d.tg[g]||[]).forEach(function(s){toks(label(g,s)+' '+s).forEach(function(t){all[t]=1;});});});
     d._tt=tt;d._t=flat(d.t);d._b=flat(d.b);
     for(var t in all){(post[t]||(post[t]=[])).push(i);}});
   var latest=docs.reduce(function(a,d){return d.d>a?d.d:a;},'');
-  IX={gen:pack.gen,docs:docs,post:post,vocab:Object.keys(post).sort(),latest:latest,n:pack.n,ms:pack.ms,bytes:pack.bytes};return IX;}
+  IX={pack:pack,all:docs,gen:pack.gen,docs:day,post:post,vocab:Object.keys(post).sort(),latest:latest,n:pack.n,ms:pack.ms,bytes:pack.bytes};return IX;}
 function prefix(tok){var V=IX.vocab,lo=0,hi=V.length;while(lo<hi){var m=(lo+hi)>>1;if(V[m]<tok)lo=m+1;else hi=m;}
   var r=[];for(var i=lo;i<V.length&&V[i].lastIndexOf(tok,0)===0&&r.length<400;i++)r.push(V[i]);return r;}
 /* IndexedDB, with a quiet no-op when it is unavailable (private mode) */
@@ -211,7 +228,7 @@ function ensure(prog){if(building)return building;
   }).then(function(x){building=null;return x;},function(e){building=null;throw e;});
   return building;}
 /* ---------- query ---------- */
-function run(q,f){if(!IX)return [];var qt=toks(q),docs=IX.docs,cand=null;
+function run(q,f){if(!IX)return [];var qt=toks(q),docs=IX.all,cand=null;
   qt.forEach(function(tk){var alts=ALIAS[tk]||[tk],set={};
     alts.forEach(function(a){(a.length<2&&!/\d/.test(a)?(IX.post[a]?[a]:[]):prefix(a)).forEach(function(v){IX.post[v].forEach(function(i){set[i]=1;});});});
     if(cand===null)cand=set;else{var n={};for(var i in cand)if(set[i])n[i]=1;cand=n;}});
@@ -224,7 +241,7 @@ function run(q,f){if(!IX)return [];var qt=toks(q),docs=IX.docs,cand=null;
       if(d._tt[a])best=Math.max(best,6);else if(Object.keys(d._tt).some(function(t){return t.lastIndexOf(a,0)===0;}))best=Math.max(best,4);
       else if(d._b.indexOf(a)>=0)best=Math.max(best,2);else best=Math.max(best,1);});s+=best;});
     if(qt.length>1&&qf){if(d._t.indexOf(qf)>=0)s+=8;else if(d._b.indexOf(qf)>=0)s+=4;}
-    if(d.k==='Story'||d.k==='Circular'||d.k==='MFL')s+=1.5;if(d.k==='News'||d.k==='Rules'||d.k==='Weekly'&&/summary|numbers/i.test(d.s))s-=.5;
+    if(d.k==='Story'||d.k==='Circular'||d.k==='MFL'||d.k==='Peer intel')s+=1.5;if(d.k==='Thread'&&qt.length&&qt.some(function(t){return d._tt[t];}))s+=8;if(d.k==='News'||d.k==='Rules'||d.k==='Weekly'&&/summary|numbers/i.test(d.s))s-=.5;
     var age=lat?Math.max(0,(lat-NB.dt(d.d))/864e5):0;s=qt.length?s*(1+.8*Math.exp(-age/14)):-age;
     return {d:d,s:s};});
   res.sort(function(a,b){return b.s-a.s||(a.d.d<b.d.d?1:a.d.d>b.d.d?-1:0);});return res;}
@@ -239,27 +256,29 @@ function snip(b,re,n){n=n||170;if(!b)return '';var p=0;if(re){re.lastIndex=0;var
   var st=Math.max(0,p-50);if(st>0){var sp=b.indexOf(' ',st);if(sp>0&&sp<p)st=sp+1;}
   var s=b.slice(st,st+n);if(st+n<b.length)s=s.replace(/\s+\S*$/,'')+'…';return (st>0?'…':'')+s;}
 /* ---------- view ---------- */
-var ST={q:'',f:{tp:[],rg:[],co:[]},more:false,shown:40,y:0,lastKey:''};
+var ST={q:'',f:{tp:[],rg:[],co:[],st:[],th:[]},more:false,shown:40,y:0,lastKey:''};
 function readQs(qs){var p=new URLSearchParams(qs||'');ST.q=p.get('q')||'';GROUPS.forEach(function(G){ST.f[G[2]]=(p.get(G[2])||'').split(',').filter(Boolean);});}
 function qsNow(){var p=[];if(ST.q)p.push('q='+encodeURIComponent(ST.q));GROUPS.forEach(function(G){if(ST.f[G[2]].length)p.push(G[2]+'='+ST.f[G[2]].map(encodeURIComponent).join(','));});return p.join('&');}
 var ICO='<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.4"/><path d="M12.6 12.6l4.4 4.4"/></svg>';
 function html(qs){readQs(qs);var n=NB.M.days.length;
-  return '<header class="hd sx-hd" data-st="h"><p class="greet">Search</p><h1>Search editions</h1><p class="hsub" id="sxMeta">'+n+' editions · stories, circulars, calendar, weekly</p></header>'+
+  return '<header class="hd sx-hd" data-st="h"><p class="greet">Search</p><h1>Search editions</h1><p class="hsub" id="sxMeta">'+n+' editions · stories, circulars, threads, peer results, weekly</p></header>'+
   '<div class="sx-bar" data-st><form class="sx-f g" role="search" id="sxF" action="#"><label class="sr" for="sxq">Search all editions</label>'+ICO+
   '<input id="sxq" type="search" enterkeyhint="search" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Gold loan, NCD, Muthoot…" value="'+esc(ST.q)+'" aria-describedby="sxCnt" aria-controls="sxRes">'+
   '<button type="button" class="sx-x press" id="sxX" aria-label="Clear search"'+(ST.q?'':' hidden')+'>×</button></form></div>'+
   '<div class="sx-fl" id="sxFl" data-st></div>'+
   '<p class="sx-cnt" id="sxCnt" role="status" aria-live="polite" aria-atomic="true"></p>'+
   '<ol class="sx-res" id="sxRes" aria-label="Search results"></ol><div id="sxMore"></div>';}
-function counts(){var c={tp:{},rg:{},co:{}};if(!IX)return c;IX.docs.forEach(function(d){GROUPS.forEach(function(G){(d.tg[G[0]]||[]).forEach(function(s){c[G[2]][s]=(c[G[2]][s]||0)+1;});});});return c;}
+function counts(){var c={tp:{},rg:{},co:{},st:{},th:{}};if(!IX)return c;IX.all.forEach(function(d){GROUPS.forEach(function(G){(d.tg[G[0]]||[]).forEach(function(s){c[G[2]][s]=(c[G[2]][s]||0)+1;});});});return c;}
 function filtersHtml(){var cn=counts();
   return GROUPS.map(function(G){var g=G[0],k=G[2],prim=PRIMARY[g].slice(),sel=ST.f[k];
-    if(g==='companies'){prim=prim.filter(function(s){return cn.co[s];});}
+    if(g==='companies'||g==='stage'||g==='thread'){prim=prim.filter(function(s){return cn[k][s]||sel.indexOf(s)>=0;});}
     var extra=Object.keys(cn[k]).filter(function(s){return prim.indexOf(s)<0;}).sort(function(a,b){return cn[k][b]-cn[k][a]||(a<b?-1:1);});
     sel.forEach(function(s){if(prim.indexOf(s)<0&&extra.indexOf(s)<0)extra.unshift(s);});
+    if(g==='stage'||g==='thread')extra=[];
     var showX=ST.more?extra:extra.filter(function(s){return sel.indexOf(s)>=0;});
+    if(!prim.length&&!showX.length&&!extra.length)return '';
     function pill(s){var on=sel.indexOf(s)>=0;return '<button type="button" class="sx-p press" data-g="'+k+'" data-s="'+esc(s)+'" aria-pressed="'+on+'">'+esc(label(g,s))+(cn[k][s]?'<span class="sx-n num" aria-hidden="true">'+cn[k][s]+'</span>':'')+'</button>';}
-    return '<div class="sx-g" role="group" aria-label="'+G[1]+'"><span class="sx-gl" aria-hidden="true">'+G[1]+'</span><div class="sx-row">'+prim.concat(showX).map(pill).join('')+
+    return '<div class="sx-g" role="group" aria-label="'+G[1]+'"><span class="sx-gl" aria-hidden="true">'+G[1]+'</span><div class="sx-row fx-sc">'+prim.concat(showX).map(pill).join('')+
       (extra.length&&!ST.more?'<button type="button" class="sx-p sx-more press" data-more="1" aria-expanded="false">More <span aria-hidden="true">+'+extra.length+'</span></button>':'')+'</div></div>';}).join('')+
     (ST.more?'<button type="button" class="sx-less press" data-more="0" aria-expanded="true">Fewer filters</button>':'')+
     (anyF()?'<button type="button" class="sx-less press" data-clear="1">Clear filters</button>':'');}
@@ -272,7 +291,7 @@ var root=null,inp=null,deb=0,lastRes=[];
 function render(more){if(!root||!root.isConnected)return;var res=document.getElementById('sxRes'),cnt=document.getElementById('sxCnt'),mb=document.getElementById('sxMore');
   if(!IX){cnt.textContent='Building the search index…';res.innerHTML='';mb.innerHTML='';return;}
   var hasQ=toks(ST.q).length>0;
-  if(!hasQ&&!anyF()){lastRes=[];var rc=recent();cnt.textContent='Search '+IX.docs.length.toLocaleString('en-IN')+' items across '+NB.M.days.length+' editions.';
+  if(!hasQ&&!anyF()){lastRes=[];var rc=recent();cnt.textContent='Search '+IX.all.length.toLocaleString('en-IN')+' items across '+NB.M.days.length+' editions.';
     res.innerHTML='';mb.innerHTML='<div class="sx-empty">'+(rc.length?'<p class="sx-gl">Recent</p><div class="sx-row">'+rc.map(function(x){return '<a class="sx-p press" href="#/search?'+esc(x)+'">'+esc(recLabel(x))+'</a>';}).join('')+'</div>':'')+
       '<p class="sx-gl">Try</p><div class="sx-row">'+['gold loan','NCD','Muthoot','repo','rating'].map(function(x){return '<a class="sx-p press" href="#/search?q='+encodeURIComponent(x)+'">'+esc(x)+'</a>';}).join('')+'</div></div>';return;}
   var key=ST.q+'|'+qsNow();if(!more){lastRes=run(ST.q,ST.f);ST.shown=40;}
@@ -312,7 +331,9 @@ function mount(nv,qs,focus){root=nv;inp=nv.querySelector('#sxq');readQs(qs);var 
   nv.addEventListener('keydown',function(e){var a=e.target.closest&&e.target.closest('.sx-a');if(!a)return;var all=[].slice.call(root.querySelectorAll('.sx-a')),i=all.indexOf(a);
     if(e.key==='ArrowDown'&&all[i+1]){e.preventDefault();all[i+1].focus();}else if(e.key==='ArrowUp'){e.preventDefault();(all[i-1]||inp).focus();}
     else if(e.key==='Escape'){e.preventDefault();inp.focus();}});
+  /* threads and Peer Intelligence join the index once their files are in (cached offline after one visit) */
+  (IX&&!IX.stale?Promise.resolve(IX):ensure()).then(function(){return EXT.length?false:extLoad();}).then(function(ch){if(ch&&root===nv&&nv.isConnected){paintF();render();}}).catch(function(){});
   if(focus)inp.focus({preventScroll:true});
   else if(ST.y&&NB.searchBack){scrollTo(0,ST.y);}}
-window.NBSearch={html:html,mount:mount,ensure:ensure,run:function(q,f){return run(q,f||{tp:[],rg:[],co:[]});},ix:function(){return IX;},docsOf:docsOf,label:label};
+window.NBSearch={html:html,mount:mount,ensure:ensure,run:function(q,f){return run(q,f||{tp:[],rg:[],co:[],st:[],th:[]});},extLoad:extLoad,ix:function(){return IX;},docsOf:docsOf,label:label};
 })();
