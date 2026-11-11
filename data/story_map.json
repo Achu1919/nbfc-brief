@@ -1,0 +1,355 @@
+{
+ "_comment": "Backfill scope A (Sai, 11 Nov 2026): story ids for cards from 1 Oct 2026. Keys are card ids; title_hash guards against card renumbering.",
+ "_aliases": {
+  "2026-11-06-muthoot-fincorp-ncd-status": "mfl-ncd-2026-tranche-1",
+  "2026-11-07-muthoot-fincorp-tranche-i-ncd": "mfl-ncd-2026-tranche-1"
+ },
+ "2026-10-23-news-1": {
+  "story_id": "gold-loan-asset-quality-2026",
+  "title_hash": "38a20620"
+ },
+ "2026-10-24-news-1": {
+  "story_id": "shriram-finance-q2fy27-results",
+  "title_hash": "7eaa19e1",
+  "milestone": "results"
+ },
+ "2026-10-25-news-1": {
+  "story_id": "gold-loan-asset-quality-2026",
+  "title_hash": "8e964cb1"
+ },
+ "2026-10-25-news-2": {
+  "story_id": "shriram-finance-q2fy27-results",
+  "title_hash": "64a05240"
+ },
+ "2026-10-26-news-1": {
+  "story_id": "nbfc-rural-stress-2026",
+  "title_hash": "7088e9f1"
+ },
+ "2026-10-26-news-2": {
+  "story_id": "gold-price-weekly",
+  "title_hash": "065f77e6"
+ },
+ "2026-10-26-weekly-50": {
+  "stories_ref": [
+   "shriram-finance-q2fy27-results",
+   "gold-loan-asset-quality-2026"
+  ],
+  "title_hash": "3abcc2cf"
+ },
+ "2026-10-26-weekly-53": {
+  "stories_ref": [
+   "shriram-finance-q2fy27-results"
+  ],
+  "title_hash": "8bc70d6e"
+ },
+ "2026-10-26-weekly-54": {
+  "stories_ref": [
+   "shriram-finance-q2fy27-results",
+   "gold-loan-asset-quality-2026"
+  ],
+  "title_hash": "05ee4698"
+ },
+ "2026-10-26-weekly-55": {
+  "stories_ref": [
+   "shriram-finance-q2fy27-results",
+   "gold-loan-asset-quality-2026"
+  ],
+  "title_hash": "45082eef"
+ },
+ "2026-10-26-weekly-59": {
+  "stories_ref": [
+   "shriram-finance-q2fy27-results"
+  ],
+  "title_hash": "3a5b3d5d"
+ },
+ "2026-10-27-news-1": {
+  "story_id": "nbfc-rural-stress-2026",
+  "title_hash": "2cfbe7e3"
+ },
+ "2026-10-27-news-2": {
+  "story_id": "gold-price-weekly",
+  "title_hash": "376d7a4c"
+ },
+ "2026-10-28-news-1": {
+  "story_id": "gold-price-weekly",
+  "title_hash": "08a4fc9e"
+ },
+ "2026-10-28-news-2": {
+  "story_id": "nbfc-rural-stress-2026",
+  "title_hash": "693ea651"
+ },
+ "2026-10-29-news-2": {
+  "story_id": "markets-daily-close",
+  "title_hash": "d1173812"
+ },
+ "2026-10-29-news-3": {
+  "story_id": "gold-price-weekly",
+  "title_hash": "f137807a"
+ },
+ "2026-10-30-news-2": {
+  "story_id": "nbfc-funding-cost-2026",
+  "title_hash": "bcd79deb"
+ },
+ "2026-10-31-news-1": {
+  "story_id": "gold-price-weekly",
+  "title_hash": "7032b5d7"
+ },
+ "2026-10-31-news-2": {
+  "story_id": "markets-daily-close",
+  "title_hash": "5eb58c47"
+ },
+ "2026-10-31-news-3": {
+  "story_id": "nbfc-rural-stress-2026",
+  "title_hash": "a5106b6a"
+ },
+ "2026-11-01-news-1": {
+  "story_id": "muthoot-finance-q2fy27-results",
+  "title_hash": "4e798b9c",
+  "milestone": "results"
+ },
+ "2026-11-01-news-2": {
+  "story_id": "gold-loan-asset-quality-2026",
+  "title_hash": "d89b7870"
+ },
+ "2026-11-01-news-3": {
+  "story_id": "gold-price-weekly",
+  "title_hash": "5f7c55cb"
+ },
+ "2026-11-02-news-1": {
+  "story_id": "muthoot-finance-q2fy27-results",
+  "title_hash": "a36e9387"
+ },
+ "2026-11-02-news-3": {
+  "story_id": "nbfc-rural-stress-2026",
+  "title_hash": "8fc69354"
+ },
+ "2026-11-02-weekly-39": {
+  "stories_ref": [
+   "muthoot-finance-q2fy27-results",
+   "gold-loan-asset-quality-2026"
+  ],
+  "title_hash": "3abcc2cf"
+ },
+ "2026-11-02-weekly-42": {
+  "stories_ref": [
+   "muthoot-finance-q2fy27-results",
+   "nbfc-rural-stress-2026"
+  ],
+  "title_hash": "8bc70d6e"
+ },
+ "2026-11-02-weekly-44": {
+  "stories_ref": [
+   "muthoot-finance-q2fy27-results",
+   "nbfc-rural-stress-2026",
+   "gold-loan-asset-quality-2026"
+  ],
+  "title_hash": "45082eef"
+ },
+ "2026-11-02-weekly-48": {
+  "stories_ref": [
+   "muthoot-finance-q2fy27-results"
+  ],
+  "title_hash": "2ff2b976"
+ },
+ "2026-11-02-weekly-49": {
+  "stories_ref": [
+   "nbfc-rural-stress-2026"
+  ],
+  "title_hash": "0d204efc"
+ },
+ "2026-11-02-weekly-50": {
+  "stories_ref": [
+   "nbfc-rural-stress-2026"
+  ],
+  "title_hash": "7686a667"
+ },
+ "2026-11-03-news-1": {
+  "story_id": "muthoot-finance-q2fy27-results",
+  "title_hash": "c46e1ee9"
+ },
+ "2026-11-03-news-2": {
+  "story_id": "mfl-gold-ltv",
+  "title_hash": "7011d87f"
+ },
+ "2026-11-03-news-3": {
+  "story_id": "markets-daily-close",
+  "title_hash": "66891ce3"
+ },
+ "2026-11-05-news-1": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "7104c9f4"
+ },
+ "2026-11-05-news-2": {
+  "story_id": "gold-price-weekly",
+  "title_hash": "7afe6e83"
+ },
+ "2026-11-06-news-1": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "2c2a1d3c",
+  "milestone": "closed-subscription"
+ },
+ "2026-11-06-news-2": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "e61c4ef2",
+  "dup": true
+ },
+ "2026-11-06-news-3": {
+  "story_id": "muthoot-microfin-q2fy27-results",
+  "title_hash": "d78b2839",
+  "milestone": "results"
+ },
+ "2026-11-06-news-4": {
+  "story_id": "rbi-psl-draft-directions-2026",
+  "title_hash": "969a554c"
+ },
+ "2026-11-07-news-1": {
+  "story_id": "gold-loan-nbfc-credit-growth-2026",
+  "title_hash": "40a39ab6"
+ },
+ "2026-11-07-news-2": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "4678b79a"
+ },
+ "2026-11-07-news-3": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "e61c4ef2",
+  "dup": true
+ },
+ "2026-11-08-news-1": {
+  "story_id": "markets-daily-close",
+  "title_hash": "ae28bfb7"
+ },
+ "2026-11-08-news-2": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "da4a21b0"
+ },
+ "2026-11-08-news-3": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "e61c4ef2",
+  "dup": true
+ },
+ "2026-11-09-news-1": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "7321ff20",
+  "milestone": "allotment"
+ },
+ "2026-11-09-news-2": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "e61c4ef2",
+  "dup": true
+ },
+ "2026-11-09-news-3": {
+  "story_id": "markets-daily-close",
+  "title_hash": "35f26f9f"
+ },
+ "2026-11-09-rules-21": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "ed84c7a5",
+  "dup": true
+ },
+ "2026-11-09-weekly-60": {
+  "stories_ref": [
+   "mfl-ncd-2026-tranche-1",
+   "muthoot-microfin-q2fy27-results",
+   "rbi-psl-draft-directions-2026",
+   "gold-loan-nbfc-credit-growth-2026"
+  ],
+  "title_hash": "3abcc2cf"
+ },
+ "2026-11-09-weekly-61": {
+  "stories_ref": [
+   "muthoot-microfin-q2fy27-results"
+  ],
+  "title_hash": "a7ec734f"
+ },
+ "2026-11-09-weekly-62": {
+  "stories_ref": [
+   "rbi-psl-draft-directions-2026",
+   "gold-loan-nbfc-credit-growth-2026"
+  ],
+  "title_hash": "9fed418e"
+ },
+ "2026-11-09-weekly-63": {
+  "stories_ref": [
+   "muthoot-microfin-q2fy27-results"
+  ],
+  "title_hash": "8bc70d6e"
+ },
+ "2026-11-09-weekly-64": {
+  "stories_ref": [
+   "muthoot-microfin-q2fy27-results",
+   "gold-loan-nbfc-credit-growth-2026"
+  ],
+  "title_hash": "05ee4698"
+ },
+ "2026-11-09-weekly-65": {
+  "stories_ref": [
+   "muthoot-microfin-q2fy27-results"
+  ],
+  "title_hash": "45082eef"
+ },
+ "2026-11-09-weekly-66": {
+  "stories_ref": [
+   "mfl-ncd-2026-tranche-1"
+  ],
+  "title_hash": "0e05536d"
+ },
+ "2026-11-09-weekly-67": {
+  "stories_ref": [
+   "muthoot-microfin-q2fy27-results"
+  ],
+  "title_hash": "e9df2282"
+ },
+ "2026-11-09-weekly-69": {
+  "stories_ref": [
+   "mfl-ncd-2026-tranche-1",
+   "rbi-psl-draft-directions-2026"
+  ],
+  "title_hash": "2ff2b976"
+ },
+ "2026-11-09-weekly-70": {
+  "stories_ref": [
+   "rbi-psl-draft-directions-2026",
+   "gold-loan-nbfc-credit-growth-2026"
+  ],
+  "title_hash": "0d204efc"
+ },
+ "2026-11-09-weekly-71": {
+  "stories_ref": [
+   "mfl-ncd-2026-tranche-1"
+  ],
+  "title_hash": "7686a667"
+ },
+ "2026-11-10-news-1": {
+  "story_id": "iifl-finance-blackstone-raise-2026",
+  "title_hash": "00be7639"
+ },
+ "2026-11-10-news-2": {
+  "story_id": "gold-risk-weight-review-2026",
+  "title_hash": "dc457f05"
+ },
+ "2026-11-10-rules-25": {
+  "story_id": "gold-risk-weight-review-2026",
+  "title_hash": "781ad313",
+  "dup": true
+ },
+ "2026-11-11-news-1": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "0203110a",
+  "milestone": "listed"
+ },
+ "2026-11-11-news-2": {
+  "story_id": "iifl-finance-blackstone-raise-2026",
+  "title_hash": "5efd1031",
+  "milestone": "board-approval"
+ },
+ "2026-11-11-news-3": {
+  "story_id": "gold-price-weekly",
+  "title_hash": "74df1b39"
+ },
+ "2026-11-11-rules-19": {
+  "story_id": "mfl-ncd-2026-tranche-1",
+  "title_hash": "33f9201c",
+  "dup": true
+ }
+}
