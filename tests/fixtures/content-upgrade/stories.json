@@ -1,0 +1,101 @@
+{
+ "_note": "EXAMPLE DATA, not real. Fixture for the dev-only ?fixture=content-upgrade switch.",
+ "schema_version": 1,
+ "generated": "fixture",
+ "aliases": {
+  "mfl-ncd-tranche-1": "mfl-ncd-2026-tranche-1"
+ },
+ "stories": {
+  "mfl-ncd-2026-tranche-1": {
+   "title": "Muthoot Fincorp Tranche I public NCD: open, close, allotment, listing",
+   "category": "muthoot-fincorp",
+   "companies": [
+    "muthoot-fincorp"
+   ],
+   "topics": [
+    "ncd",
+    "funding"
+   ],
+   "regulators": [],
+   "status": "open",
+   "opened": "2026-10-23",
+   "last_update": "2026-11-11",
+   "closed": null,
+   "continues": [
+    "mfl-ncd-shelf-2026"
+   ],
+   "continued_by": [],
+   "next": {
+    "date": null,
+    "date_text": null,
+    "what": "Final allotted amount and deemed date of allotment"
+   },
+   "updates": [
+    {
+     "date": "2026-10-23",
+     "card_id": "2026-10-23-news-2",
+     "report": "01-daily-watch",
+     "title": "Tranche I opens",
+     "milestone": "open",
+     "source": {
+      "name": "BSE",
+      "tier": 1
+     }
+    },
+    {
+     "date": "2026-11-06",
+     "card_id": "2026-11-06-news-1",
+     "report": "01-daily-watch",
+     "title": "Closes at 2.67x",
+     "milestone": "close",
+     "source": {
+      "name": "BSE",
+      "tier": 1
+     }
+    },
+    {
+     "date": "2026-11-11",
+     "card_id": "2026-11-11-news-1",
+     "report": "01-daily-watch",
+     "title": "Admitted to dealings on BSE, F group",
+     "milestone": "listing",
+     "source": {
+      "name": "BSE",
+      "tier": 1
+     }
+    }
+   ],
+   "card_count": 24,
+   "editions": 21
+  },
+  "iifl-finance-blackstone-raise-2026": {
+   "title": "IIFL Finance: Blackstone-led preferential raise",
+   "category": "deals",
+   "companies": [
+    "iifl-finance"
+   ],
+   "topics": [
+    "funding"
+   ],
+   "regulators": [],
+   "status": "open",
+   "opened": "2026-11-09",
+   "last_update": "2026-11-11",
+   "closed": null,
+   "continues": [],
+   "continued_by": [],
+   "next": null,
+   "updates": [
+    {
+     "date": "2026-11-09",
+     "card_id": "2026-11-09-news-3",
+     "report": "01-daily-watch",
+     "title": "Raise reported",
+     "milestone": null
+    }
+   ],
+   "card_count": 2,
+   "editions": 2
+  }
+ }
+}

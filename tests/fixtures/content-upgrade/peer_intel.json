@@ -1,0 +1,109 @@
+{
+ "_note": "EXAMPLE DATA, not real figures. Fixture for the dev-only ?fixture=content-upgrade switch. Earlier quarters for the peer-page history.",
+ "schema_version": 1,
+ "generated": "fixture",
+ "entries": {
+  "pi-manappuram-q1fy27": {
+   "id": "pi-manappuram-q1fy27",
+   "company": "manappuram",
+   "company_name": "Manappuram Finance",
+   "period": "Q1 FY27",
+   "basis": "consolidated",
+   "events": [
+    {
+     "type": "results",
+     "date": "2026-08-12",
+     "source": {
+      "name": "NSE filing (example)",
+      "url": "https://www.nseindia.com/",
+      "tier": 1
+     }
+    },
+    {
+     "type": "call-transcript",
+     "date": "2026-08-14",
+     "source": {
+      "name": "Call transcript (example)",
+      "url": "https://www.manappuram.com/",
+      "tier": 1
+     }
+    }
+   ],
+   "metrics": [
+    {
+     "key": "gold_aum",
+     "label": "Gold AUM",
+     "unit": "₹ cr",
+     "value": 11630,
+     "disclosed": true,
+     "computed": false,
+     "source": {
+      "name": "Investor presentation (example)",
+      "url": "https://www.manappuram.com/",
+      "page": 7,
+      "tier": 1
+     }
+    },
+    {
+     "key": "gnpa",
+     "label": "GNPA",
+     "unit": "%",
+     "value": 2.4,
+     "disclosed": true,
+     "computed": false,
+     "source": {
+      "name": "Investor presentation (example)",
+      "url": "https://www.manappuram.com/",
+      "page": 12,
+      "tier": 1
+     }
+    }
+   ],
+   "guidance": [],
+   "quotes": [],
+   "non_disclosures": [],
+   "mfl_compare": [],
+   "impact": "",
+   "impact_label": "Possible impact on Muthoot Fincorp"
+  },
+  "pi-muthoot-finance-q1fy27": {
+   "id": "pi-muthoot-finance-q1fy27",
+   "company": "muthoot-finance",
+   "company_name": "Muthoot Finance",
+   "period": "Q1 FY27",
+   "basis": "standalone",
+   "events": [
+    {
+     "type": "results",
+     "date": "2026-08-13",
+     "source": {
+      "name": "BSE filing (example)",
+      "url": "https://www.bseindia.com/",
+      "tier": 1
+     }
+    }
+   ],
+   "metrics": [
+    {
+     "key": "aum",
+     "label": "AUM",
+     "unit": "₹ cr",
+     "value": 133900,
+     "disclosed": true,
+     "computed": false,
+     "source": {
+      "name": "BSE filing (example)",
+      "url": "https://www.bseindia.com/",
+      "tier": 1
+     }
+    }
+   ],
+   "guidance": [],
+   "quotes": [],
+   "non_disclosures": [],
+   "mfl_compare": [],
+   "impact": "",
+   "impact_label": "Possible impact on Muthoot Fincorp"
+  }
+ }
+}

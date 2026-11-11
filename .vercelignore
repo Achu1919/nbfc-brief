@@ -4,6 +4,7 @@
 !/data.js
 !/vercel.json
 !/app.js
+!/cu.js
 !/search.js
 !/hubs.js
 !/app.css
@@ -13,3 +14,10 @@
 !/icons/**
 !/data
 !/data/**
+# example data for the dev-only ?fixture=content-upgrade switch (cu.js uses it only on localhost and branch previews)
+!/tests
+/tests/*
+!/tests/fixtures
+/tests/fixtures/*
+!/tests/fixtures/content-upgrade
+!/tests/fixtures/content-upgrade/**

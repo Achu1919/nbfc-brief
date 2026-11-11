@@ -45,12 +45,12 @@ function bars(ser,w,h){var mx=Math.max.apply(0,ser.concat([1])),bw=w/ser.length;
   return '<svg class="hspk" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" aria-hidden="true" focusable="false">'+ser.map(function(v,i){var bh=v?Math.max(2,Math.round((h-1)*v/mx)):1;
     return '<rect x="'+(i*bw+1).toFixed(1)+'" y="'+(h-bh)+'" width="'+Math.max(1,bw-2).toFixed(1)+'" height="'+bh+'" rx="1"'+(v?'':' class="z"')+'/>';}).join('')+'</svg>';}
 function summ(d){var s=d.sm||d.b||'';if(d.imp){var k=s.indexOf(d.imp);if(k>0)s=s.slice(0,k);}
-  s=s.replace(/(?:^|\s)(?:Possible impact on Muthoot Fincorp|Why it matters[^:]{0,24}|MFL (?:impact|note|angle)|FP&A [a-z]+):\s.*$/i,'').trim();return clip(clean(s),260);}
+  s=s.replace(/(?:^|\s)(?:Possible impact on Muthoot Fincorp|Why it matters[^:]{0,24}|MFL (?:impact|note|angle)|FP&A [a-z]+):\s.*$/i,'').trim();s=clean(s);if(window.NBCU&&NBCU.cleanSum)s=NBCU.cleanSum(s);return clip(s,260);}
 function srcA(src){return src&&src.u&&/^https?:/.test(src.u)?'<a href="'+esc(src.u)+'" target="_blank" rel="noopener noreferrer">'+esc(clip(src.l||'source',40))+'</a>':'';}
 function kindL(d){var tg=(String(d.t).match(TAGRX)||[])[1];if(tg)return tg.charAt(0)+tg.slice(1).toLowerCase();return {Story:'Top story',Circular:'Circular',Calendar:'Calendar',MFL:NB.mflLabel||'Muthoot Fincorp',Weekly:'Weekly',Gold:'Gold rates'}[d.k]||String(d.s||'').split(' \u00b7 ').pop()||d.k;}
 function fcard(d,page){var c=d.c&&d.c!==page?NB.hubChip(d.c):'',s=summ(d),a=srcA(d.src);
   return '<article class="fi g"'+(d.c?' data-hub="'+d.c+'"':'')+'><div class="tagrow">'+c+'<span class="fk">'+esc(clip(kindL(d),40))+'</span></div>'+
-    '<h3>'+esc(clip(ttl(d.t),160))+'</h3>'+(s&&s!==ttl(d.t)?'<p class="sum">'+esc(s)+'</p>':'')+(d.imp?NB.impLine(clip(clean(d.imp),220)):'')+
+    '<h3>'+esc(clip(ttl(d.t),160))+'</h3>'+(s&&s!==ttl(d.t)?'<p class="sum">'+esc(s)+'</p>':'')+(d.imp?NB.impLine(clip(clean(d.imp),220),window.NBCU&&NBCU.impactLabel):'')+
     '<div class="sc-f"><span class="by">'+(a?'Source: '+a:'')+'</span><a class="more press" href="'+esc(d.h)+'">Read full report<span class="sr">: '+esc(clip(d.t,60))+'</span> <span aria-hidden="true">\u2192</span></a></div></article>';}
 function feed(L,page,lim){lim=lim||24;if(!L.length)return '<div class="g card" data-st><p class="note" style="margin:0">Nothing filed under this topic yet.</p></div>';
   var h='',cur='';L.slice(0,lim).forEach(function(d){if(d.d!==cur){if(cur)h+='</div>';cur=d.d;h+='<h3 class="fday" data-st>'+esc(NB.shortDay(d.d))+'</h3><div class="fgrp">';}h+=fcard(d,page);});
@@ -85,23 +85,27 @@ function regCard(d){var r=regOf(d),st=NB.RSTAT[r.status],s=summ(d);
   var dl=[['Ref no.',r.ref_no],['Applies to',r.applies],['Issued',r.issued],['Effective',r.effective]].filter(function(x){return x[1];});
   return '<article class="fi rc g" data-hub="regulation"><div class="tagrow">'+(r.regulator?'<span class="rgb">'+esc(r.regulator.toUpperCase())+'</span>':'')+(st?'<span class="st st-'+r.status+'">'+st+'</span>':'')+'<span class="fk">'+esc(kindL(d))+'</span></div>'+
     '<h3>'+esc(clip(ttl(d.t),160))+'</h3>'+(dl.length?'<dl class="rf">'+dl.map(function(x){return '<div><dt>'+x[0]+'</dt><dd class="'+(x[0]==='Ref no.'?'num':'')+'">'+esc(clip(clean(x[1]),120))+'</dd></div>';}).join('')+'</dl>':'')+
-    (s&&s!==ttl(d.t)?'<p class="sum">'+esc(s)+'</p>':'')+(d.imp?NB.impLine(clip(clean(d.imp),220)):'')+
+    (s&&s!==ttl(d.t)?'<p class="sum">'+esc(s)+'</p>':'')+(d.imp?NB.impLine(clip(clean(d.imp),220),window.NBCU&&NBCU.impactLabel):'')+
     '<div class="sc-f"><span class="by">'+(r.url&&/^https?:/.test(r.url)?'<a href="'+esc(r.url)+'" target="_blank" rel="noopener noreferrer">Circular <span aria-hidden="true">\u2197</span><span class="sr"> (opens the source)</span></a>':'')+'</span><a class="more press" href="'+esc(d.h)+'">Read full report<span class="sr">: '+esc(clip(d.t,60))+'</span> <span aria-hidden="true">\u2192</span></a></div></article>';}
 var MON={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
 function dateIn(s){s=String(s||'');var m=s.match(/(20\d\d)-(\d\d)-(\d\d)/);if(m)return m[0];
   m=s.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?,?\s+(20\d\d)\b/i);
   if(m){var d=new Date(Date.UTC(+m[3],MON[m[2].toLowerCase().slice(0,3)],+m[1]));return d.toISOString().slice(0,10);}return null;}
 function deadlines(){var E=M().ext&&M().ext.deadlines,today=NB.todayIST(),out=[];
-  if(Array.isArray(E))out=E.filter(function(x){return x&&x.date&&x.date>=today;}).map(function(x){return {date:x.date,title:x.title,reg:x.regulator,ref:x.ref_no,url:x.url,h:x.url};});
+  if(Array.isArray(E))out=E.filter(function(x){return x&&x.date&&x.date>=today;}).map(function(x){return {date:x.date,title:x.title,reg:x.regulator,ref:x.ref_no,url:x.url,h:x.url,dt:typeof x.date_text==='string'?x.date_text:'',sid:typeof x.story_id==='string'?x.story_id:''};});
   else{var seen={};(ix()?hubDocs('regulation'):[]).forEach(function(d){if(d.k!=='Calendar'&&!(d.rg&&d.rg.dl))return;var dt=dateIn(d.t)||dateIn(d.rg&&d.rg.dl)||dateIn(d.b);if(!dt||dt<today)return;
     var t=clean(d.t).replace(/^\d{1,2}\s+\w+\s+20\d\d\s*[:\u2013\u2014-]\s*/,'');var f=dt+NB.flatT(t).slice(0,24);if(seen[f])return;seen[f]=1;
     out.push({date:dt,title:t.length>4?t:clean(d.b),reg:regOf(d).regulator,h:d.h});});}
   out.sort(function(a,b){return a.date<b.date?-1:1;});return out.slice(0,10);}
 function dlStrip(){var L=deadlines(),today=+NB.dt(NB.todayIST());if(!L.length)return '';
   return '<div class="sec" data-st><h2 id="h-dl">Upcoming deadlines</h2><span class="aside">'+(M().ext&&M().ext.deadlines?'from the regulatory calendar':'from the regulatory calendar in the briefs')+'</span></div>'+
-    '<ul class="dls" role="list" data-st aria-labelledby="h-dl">'+L.map(function(x){var n=Math.round((+NB.dt(x.date)-today)/864e5),d=NB.dt(x.date);
-      return '<li><a class="dl g press" href="'+esc(x.h||'#/topic/regulation')+'"'+(/^https?:/.test(x.h||'')?' target="_blank" rel="noopener noreferrer"':'')+'><span class="dl-d"><b class="num">'+d.getDate()+'</b><span>'+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+'</span></span>'+
-        '<span class="dl-b"><span class="dl-n num">'+(n===0?'Today':n===1?'Tomorrow':'In '+n+' days')+(x.reg?' \u00b7 '+esc(String(x.reg).toUpperCase()):'')+'</span><span class="dl-t">'+esc(clip(x.title,110))+'</span></span></a></li>';}).join('')+'</ul>';}
+    /* a proper scroller: clipped inside its own box (no page overflow), edge fade where more cards wait (cu.js) */
+    '<div class="hsc" data-st><ul class="dls fx-sc" role="list" aria-labelledby="h-dl">'+L.map(function(x){var n=Math.round((+NB.dt(x.date)-today)/864e5),d=NB.dt(x.date);
+      /* a deadline with a story thread opens its timeline; the source stays one tap away */
+      var th=null;try{th=x.sid&&window.NBCU?NBCU.thread(x.sid):null;}catch(e){}var href=th?'#/story/'+th.id:(x.h||'#/topic/regulation'),ext=!th&&/^https?:/.test(href);
+      return '<li'+(th?' class="dl-th"':'')+'><a class="dl g press" href="'+esc(href)+'"'+(ext?' target="_blank" rel="noopener noreferrer"':'')+'><span class="dl-d"><b class="num">'+d.getDate()+'</b><span>'+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+'</span></span>'+
+        '<span class="dl-b"><span class="dl-n num">'+(x.dt?esc(x.dt)+' \u00b7 '+(n===0?'ends today':n===1?'ends tomorrow':'ends in '+n+' days'):n===0?'Today':n===1?'Tomorrow':'In '+n+' days')+(x.reg?' \u00b7 '+esc(String(x.reg).toUpperCase()):'')+'</span><span class="dl-t">'+esc(clip(x.title,110))+'</span>'+(th?'<span class="dl-k"><i aria-hidden="true"></i>Timeline</span>':'')+'</span></a>'+
+        (th&&/^https?:/.test(x.h||'')?'<a class="dl-x press" href="'+esc(x.h)+'" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">\u2197</span><span class="sr">Source for '+esc(clip(x.title,60))+' (opens in a new tab)</span></a>':'')+'</li>';}).join('')+'</ul></div>';}
 var RF=[['','All'],['rbi','RBI'],['sebi','SEBI'],['ibbi','IBBI'],['draft','Drafts'],['deadline','Deadlines']];
 function regFilter(L,f){if(!f)return L;if(f==='draft'||f==='deadline')return L.filter(function(d){return regOf(d).status===f;});
   return L.filter(function(d){return (d.tg.regulators||[]).indexOf(f)>=0||String(d.reg&&d.reg.regulator||'').toLowerCase()===f;});}
@@ -126,14 +130,16 @@ function ncdCard(){var N=M().ext&&M().ext.mfl_ncd;
     '<p class="ncdl">'+NCDL+'</p><h3>'+esc(clip(ttl(d.t),160))+'</h3>'+(summ(d)?'<p class="sum">'+esc(summ(d))+'</p>':'')+
     '<div class="sc-f"><span class="by">'+(srcA(d.src)?'Source: '+srcA(d.src):'')+'</span><a class="more press" href="'+esc(d.h)+'">Read full report <span aria-hidden="true">\u2192</span></a></div></div></section>';}
 /* ---------- peers ---------- */
+/* Peer Intelligence (cu.js): empty string when there are no entries or cu.js is missing */
+function cu(f,a){var C=window.NBCU;if(!C||!C[f])return '';try{return C[f](a)||'';}catch(e){return '';}}
 function peerName(co){return lab('companies',co)||co;}
 function peerTile(co){var k=PEERK[co],day=M().days[0],full=NB.M.byId[day.id];var it=k&&full&&!full.stub?NB.item(full,k):null,n=coDocs(co).length;
   return '<a class="ptile g press" href="#/peer/'+co+'" data-hub="peers"><span class="pt-n">'+esc(peerName(co))+'</span>'+
     (it?'<span class="pt-v num">\u20b9'+esc(String(it.value).replace(/^\u20b9/,''))+'</span>'+NB.chg(it):'<span class="pt-v none">'+(k?'no close today':'not listed in the tables')+'</span>')+
-    (k?NB.gChart(k,day.id,96,26,false):'')+'<span class="pt-c num">'+plural(n,'mention')+'</span></a>';}
+    (k?NB.gChart(k,day.id,96,26,false):'')+'<span class="pt-c num">'+plural(n,'mention')+cu('tileNote',co)+'</span></a>';}
 function peersBlock(){var X=ix(),cnt={};if(X)hubDocs('peers').forEach(function(d){(d.tg.companies||[]).forEach(function(c){if(!MFLCO[c]&&!PEERK[c])cnt[c]=(cnt[c]||0)+1;});});
   var others=Object.keys(cnt).sort(function(a,b){return cnt[b]-cnt[a];}).slice(0,16);
-  return '<section aria-labelledby="h-pl"><div class="sec" data-st><h2 id="h-pl">Listed gold-loan &amp; NBFC peers</h2><span class="aside">NSE close</span></div><div class="ptiles" data-st>'+PEERORD.map(peerTile).join('')+'</div>'+
+  return cu('piSlot')+'<section aria-labelledby="h-pl"><div class="sec" data-st><h2 id="h-pl">Listed gold-loan &amp; NBFC peers</h2><span class="aside">NSE close</span></div><div class="ptiles" data-st>'+PEERORD.map(peerTile).join('')+'</div>'+
     '<p class="note" data-st>Muthoot Finance is a separate listed company and a peer, not Muthoot Fincorp.</p></section>'+
     (others.length?'<section aria-labelledby="h-po"><div class="sec" data-st><h2 id="h-po">Other companies in the briefs</h2></div><div class="pills wrapp" data-st>'+others.map(function(c){return '<a class="pill press" href="#/peer/'+c+'">'+esc(peerName(c))+' <span class="num">'+cnt[c]+'</span></a>';}).join('')+'</div></section>':'');}
 function peerHtml(co){var k=PEERK[co],nm=peerName(co),L=coDocs(co),day=M().days[0],full=NB.M.byId[day.id],it=k&&full&&!full.stub?NB.item(full,k):null;
@@ -147,13 +153,13 @@ function peerHtml(co){var k=PEERK[co],nm=peerName(co),L=coDocs(co),day=M().days[
     (k?'<section aria-labelledby="h-pc"><div class="sec" data-st><h2 id="h-pc">Price</h2><span class="aside">NSE close, from the briefs</span></div><div class="g card pchart" data-st><div class="gx-in" data-gk="'+k+'" data-gd="'+day.id+'">'+NB.gChartBlock(k,day.id)+'</div></div></section>':
       '<div class="g card" data-st><p class="note" style="margin:0">No price series: the briefs do not track a share price for '+esc(nm)+'.</p></div>')+
     '<section aria-labelledby="h-pf"><div class="sec" data-st><h2 id="h-pf">Key facts</h2></div><div class="g card" data-st><dl class="rf">'+facts.map(function(x){return '<div><dt>'+esc(x[0])+'</dt><dd class="num">'+esc(String(x[1]))+'</dd></div>';}).join('')+'</dl>'+
-      (src&&/^https?:/.test(src)?'<p class="by">Source: <a href="'+esc(src)+'" target="_blank" rel="noopener noreferrer">price source</a></p>':'')+'</div></section>'+
+      (src&&/^https?:/.test(src)?'<p class="by">Source: <a href="'+esc(src)+'" target="_blank" rel="noopener noreferrer">price source</a></p>':'')+'</div></section>'+cu('piHistory',co)+
     '<section aria-labelledby="h-pn"><div class="sec" data-st><h2 id="h-pn">News</h2><span class="aside num">'+plural(L.length,'item')+'</span></div><div id="hfeed">'+feed(L,'peers')+'</div></section>'+NB.foot();}
 /* ---------- pages ---------- */
 var ST={f:'',lim:24};
 function hubBody(slug){var X=ix();if(!X)return loading();var L=hubDocs(slug),day=M().days[0],full=NB.M.byId[day.id];
   if(slug==='regulation'){var cnt=function(f){return regFilter(L,f).length;};
-    return dlStrip()+'<section aria-labelledby="h-rf"><div class="sec" data-st><h2 id="h-rf">Circulars &amp; updates</h2></div>'+chips(RF.map(function(x){return [x[0],x[1],cnt(x[0])];}),ST.f,'data-hf','Filter regulation items')+'<div id="hfeed">'+regFeed(regFilter(L,ST.f),ST.lim)+'</div></section>';}
+    return dlStrip()+cu('regTracked')+'<section aria-labelledby="h-rf"><div class="sec" data-st><h2 id="h-rf">Circulars &amp; updates</h2></div>'+chips(RF.map(function(x){return [x[0],x[1],cnt(x[0])];}),ST.f,'data-hf','Filter regulation items')+'<div id="hfeed">'+regFeed(regFilter(L,ST.f),ST.lim)+'</div></section>';}
   var pre='';
   if(slug==='muthoot-fincorp'){pre=ncdCard();var mb=full&&!full.stub&&NB.mflBlock?NB.mflBlock(full):'';if(mb)pre+=mb;}
   if(slug==='peers')pre=peersBlock();
@@ -162,7 +168,7 @@ function hubBody(slug){var X=ix();if(!X)return loading();var L=hubDocs(slug),day
   var label=slug==='muthoot-fincorp'?'News timeline':slug==='peers'?'Peer news':slug==='gold'?'Gold-loan news':'Latest';
   return pre+'<section aria-labelledby="h-hf"><div class="sec" data-st><h2 id="h-hf">'+label+'</h2><span class="aside num">'+plural(L.length,'item')+'</span></div><div id="hfeed">'+feed(L,slug,ST.lim)+'</div></section>';}
 function hubHtml(slug){if(!HUB[slug])return '<div class="hd" data-st="h"><p class="greet">Topics</p><h1>Topic not found</h1></div><div class="g card empty" data-st><p>There is no topic called \u201c'+esc(slug)+'\u201d. <a href="#/topics">See all topics</a>.</p></div>';
-  return hubHd(slug,subOf(slug))+'<div id="hbody">'+hubBody(slug)+'</div>'+NB.foot();}
+  return hubHd(slug,subOf(slug))+cu('hubThreads',slug)+'<div id="hbody">'+hubBody(slug)+'</div>'+NB.foot();}
 function html(view,key,pq){ST={f:'',lim:24};var m=String(pq||'').match(/(?:^|&)f=([a-z-]+)/);if(m)ST.f=m[1];
   if(view==='topics')return topicsHtml();if(view==='peer')return peerHtml(key);return hubHtml(key);}
 function title(view,key){return view==='topics'?'Topics':view==='peer'?peerName(key):HUB[key]?HUB[key].n:'Topics';}
@@ -170,12 +176,15 @@ function springIn(root){if(NB.RM.matches)return;var T=root.querySelectorAll('[da
   T.forEach(function(t,i){if(!t.animate)return;t.animate([{opacity:0,transform:'translateY(14px) scale(.96)'},{opacity:1,transform:'none'}],{duration:NB.SPRINGS.Rise?NB.SPRINGS.Rise.ms:420,easing:NB.SPRINGS.Rise?NB.SPRINGS.Rise.easing:'cubic-bezier(.2,.9,.25,1.05)',delay:i*NB.STAGGER,fill:'backwards'});});}
 var CUR=null;
 function mount(root,view,key,pq){CUR={root:root,view:view,key:key};
+  if(view==='peer'&&window.NBCU&&NBCU.piFocus)NBCU.piFocus(root,pq);
+  /* earlier quarters arrive with data/peer_intel.json (idle prefetch, or now on first use): redraw that section */
+  if(view==='peer'&&window.NBCU)NBCU.onPeer(function(){if(!CUR||CUR.root!==root||!root.isConnected)return;var y=window.scrollY;root.innerHTML=peerHtml(key);window.scrollTo(0,y);if(NBCU.piFocus)NBCU.piFocus(root,pq);});
   if(view==='topics')springIn(root);
   if(!root.dataset.hb){root.dataset.hb=1;root.addEventListener('click',onClick);}
   if(ix()&&!ix().stale)return;
   SR.ensure().then(function(){if(!CUR||CUR.root!==root||!root.isConnected)return;var y=window.scrollY;
     if(view==='topics'){var g=root.querySelector('#hubGrid');if(g){g.innerHTML=HUBS.map(tile).join('');}return;}
-    if(view==='peer'){root.innerHTML=peerHtml(key);window.scrollTo(0,y);return;}
+    if(view==='peer'){root.innerHTML=peerHtml(key);window.scrollTo(0,y);if(window.NBCU&&NBCU.piFocus)NBCU.piFocus(root,pq);return;}
     var hb=root.querySelector('#hbody'),hs=root.querySelector('#hsub');if(hb)hb.innerHTML=hubBody(key);if(hs&&HUB[key])hs.innerHTML=subOf(key);window.scrollTo(0,y);}).catch(function(){
     var hb=root.querySelector('#hbody .hload,.hload');if(hb)hb.outerHTML='<div class="g card" data-st><p class="note" style="margin:0">The topic index could not be built (offline?). Try again when you are online.</p></div>';});}
 function onClick(e){var t=e.target.closest('button');if(!t||!CUR)return;var root=CUR.root;

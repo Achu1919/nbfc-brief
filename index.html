@@ -20,6 +20,7 @@ if(t!=='light'&&t!=='dark')t=window.matchMedia&&matchMedia('(prefers-color-schem
 document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='dark'?'#0E0F12':'#F3F1EC';})();
 </script>
 <link rel="stylesheet" href="/app.css">
+<script src="/cu.js" defer></script>
 <script src="/app.js" defer></script>
 </head>
 <body>

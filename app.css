@@ -643,3 +643,237 @@ html.tfade body,html.tfade .g,html.tfade .lg,html.tfade .pill{transition:backgro
 @media (min-width:900px){.hub-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.scards{grid-template-columns:1fr}.fgrp{grid-template-columns:repeat(2,minmax(0,1fr))}.ptiles{grid-template-columns:repeat(5,minmax(0,1fr))}}
 @media (hover:hover){.htile:hover,.circ:hover,.dl:hover,.ptile:hover{border-color:var(--border-strong)}.hchip:hover{background:color-mix(in srgb,var(--hub) 18%,transparent)}}
 @media (forced-colors:active){.hchip,.rgb,.st,.hh-i{border:1px solid CanvasText}.htile::before{background:CanvasText}}
+
+/* ---------------- content upgrade, step 1 (cu.js): chips, sources, thread badges, Peer Intelligence ---------------- */
+.st-final{color:var(--accent);background:var(--accent-soft)}
+.st-effective{color:var(--up);background:color-mix(in srgb,var(--up) 12%,transparent)}
+.st-superseded,.st-withdrawn{color:var(--text-3);background:var(--surface-2);text-decoration:line-through}
+.st-other{color:var(--text-2);background:var(--surface-2)}
+.st-soon{color:var(--down);background:color-mix(in srgb,var(--down) 11%,transparent)}
+.st-soon::before{content:"";width:6px;height:6px;border-radius:3px;background:currentColor;margin-right:6px;flex:none}
+.ci-t{flex-wrap:wrap;row-gap:6px}
+.ci-b{display:flex;margin-top:2px}
+/* thread badge */
+.thr{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:var(--r-pill);font-size:var(--t-12);font-weight:600;color:var(--text-2);background:var(--surface-2);white-space:nowrap}
+.thr i{display:inline-flex;gap:3px}.thr i b{width:5px;height:5px;border-radius:3px;background:var(--text-3);opacity:.55}
+.thr i b:last-child{background:var(--hub,var(--accent));opacity:1}
+.thr.st-only i b{background:var(--warn);opacity:1}
+/* sources: "Source: BSE +2" and the list it opens */
+.by.srcl{overflow:visible;white-space:normal;line-height:1.6}
+p.by.srcl{margin-top:12px}
+.by.srcl a{color:var(--text-2)}
+.more-src{position:relative;display:inline-flex;align-items:center;justify-content:center;height:26px;min-width:36px;padding:0 9px;margin-left:4px;border:0;border-radius:var(--r-pill);
+  background:var(--surface-2);color:var(--text-2);font:600 var(--t-12)/1 var(--sans);cursor:pointer;vertical-align:middle;-webkit-tap-highlight-color:transparent}
+.more-src::after{content:"";position:absolute;inset:-11px -6px}
+.more-src[aria-expanded=true]{background:var(--accent-soft);color:var(--accent)}
+.srcs{margin-top:12px;padding-top:10px;border-top:1px solid var(--hairline)}
+.srcs-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 4px;font-size:var(--t-12);font-weight:650;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase}
+.srcs-h .srcs-a{letter-spacing:0;text-transform:none;font-weight:500}
+.srcs ol{list-style:none;display:grid;gap:0;margin:0;padding:0}
+.srcs li>a,.srcs li>.nolink{display:flex;align-items:center;gap:10px;min-height:48px;text-decoration:none;color:var(--text-1);font-size:var(--t-13)}
+.srcs .sn{min-width:0;overflow-wrap:anywhere;line-height:1.35}
+.srcs .k{color:var(--text-3);margin-left:auto;padding-left:8px;font-size:var(--t-12);white-space:nowrap}
+.tier{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;font-size:10.5px;font-weight:750;flex:none}
+.tier.p{color:var(--on-accent);background:var(--accent)}
+.tier.s{color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 30%,transparent)}
+.tier.c{color:var(--text-2);background:transparent;box-shadow:inset 0 0 0 1px var(--border-strong)}
+.tier.n{visibility:hidden}
+.also{margin-top:8px;font-size:var(--t-12);color:var(--text-3)}
+/* Today: Peer Intelligence nudge, and the example-data flag on fixture previews */
+.pin{--hub:var(--h-peers);display:flex;align-items:center;gap:10px;min-height:52px;padding:10px 14px;margin-bottom:12px;text-decoration:none;color:var(--text-1);font-size:var(--t-13);line-height:1.4}
+.pin .hic{color:var(--h-peers);flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.pin-t{flex:1;min-width:0}.pin-t b{font-weight:650}
+.pin-a{color:var(--accent);font-weight:600}
+.cu-fx{margin:0 0 12px;padding:6px 12px;border:1px dashed var(--border-strong);border-radius:var(--r-pill);font-size:11px;line-height:1.35;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-3);text-align:center}
+.cu-fx b{color:var(--text-2)}
+/* Peer Intelligence card */
+.pi{--hub:var(--h-peers);padding:18px 18px 14px;border-left:3px solid var(--hub)}
+.pi-gap{height:12px}
+.pi-t{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pi-d{margin-left:auto}
+.pi-doc{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:6px;font-size:var(--t-12);font-weight:650;color:var(--text-2);background:var(--surface-2)}
+.pi h3{font-size:var(--t-17);font-weight:650;line-height:1.35;letter-spacing:-.01em;margin:10px 0 4px;color:var(--text-1)}
+.pi-b{margin:0 0 12px;font-size:var(--t-12);color:var(--text-3)}
+.pi-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.pim{min-width:0;padding:10px 12px;border-radius:12px;background:var(--surface-2)}
+.pim-l{display:block;font-size:var(--t-12);color:var(--text-3)}
+.pim b{display:block;margin-top:2px;font-size:var(--t-17);font-weight:650;color:var(--text-1);overflow-wrap:anywhere}
+.pim b.na{font-size:var(--t-15);font-weight:600;color:var(--text-2)}
+.pim i{display:block;font-style:normal;font-size:var(--t-12);color:var(--text-3)}
+.pi-s{margin:14px 0 6px;font-size:var(--t-12);font-weight:650;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase}
+.pi ul.th{list-style:none;margin:0 0 4px;padding:0;display:grid;gap:6px;font-size:var(--t-13);color:var(--text-2);line-height:1.5}
+.pi ul.th li{position:relative;padding-left:14px}
+.pi ul.th li::before{content:"";position:absolute;left:2px;top:.62em;width:5px;height:5px;border-radius:3px;background:var(--hub)}
+.pi ul.nd li::before{background:var(--text-3)}
+.pi-src,.pi-src a{color:var(--text-3)}
+.piq{margin:0 0 10px;padding-left:12px;border-left:2px solid var(--hub)}
+.piq p{font-size:var(--t-15);line-height:1.5;color:var(--text-1)}
+.piq footer{margin-top:2px;font-size:var(--t-12);color:var(--text-3)}
+.piq footer a{color:var(--text-2)}
+.pi .why.sm{border-left-color:var(--hub)}
+.pi .sc-f .by{white-space:nowrap}
+.pi-n{margin-top:10px}
+/* With Muthoot Fincorp: sourced facts only, no better/worse colouring */
+.cmp{margin:4px 0 12px}
+.cmp-h{display:flex;justify-content:space-between;gap:8px;margin:0 0 4px;font-size:var(--t-12);font-weight:650;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase}
+.cmp-h .cmp-a{letter-spacing:0;text-transform:none;font-weight:500}
+.cmp table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:var(--t-13)}
+.cmp col.c1{width:34%}
+.cmp th,.cmp td{padding:8px 0 8px 6px;border-bottom:1px solid var(--hairline);text-align:right;vertical-align:top;overflow-wrap:anywhere}
+.cmp thead th{font-weight:600;color:var(--text-3);padding-top:6px;padding-bottom:6px}
+.cmp th:first-child{text-align:left;padding-left:0}
+.cmp tbody th{font-weight:500;color:var(--text-1)}
+.cmp td{color:var(--text-1)}
+.cmp small{display:block;margin-top:1px;font-size:11.5px;font-weight:450;color:var(--text-3);line-height:1.35}
+.cmp small a{color:var(--text-2)}
+.cmp td.na{color:var(--text-2)}
+/* peer page history */
+.pih{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+.pih-b{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:10px 14px;color:var(--text-1);font:inherit;font-size:var(--t-13);text-align:left;cursor:pointer}
+.pih-p{font-weight:650;white-space:nowrap}.pih-t{flex:1;min-width:0;color:var(--text-2)}.pih-d{color:var(--text-3);font-size:var(--t-12);white-space:nowrap}
+.pih-c{width:8px;height:8px;border-right:2px solid var(--text-3);border-bottom:2px solid var(--text-3);transform:rotate(45deg) translateY(-2px);transition:transform .25s var(--ease-out);flex:none}
+.pih-b[aria-expanded=true] .pih-c{transform:rotate(225deg) translateY(-2px)}
+.pih-x{margin-top:8px}
+@media (prefers-reduced-motion:reduce){.pih-c{transition:none}}
+@media (forced-colors:active){.thr,.pi-doc,.more-src,.tier{border:1px solid CanvasText}}
+.pi-more{display:flex;flex-wrap:wrap;gap:8px;margin:-4px 0 12px}
+.pi-more .pill[aria-expanded=true]{background:var(--accent-soft);color:var(--accent)}
+.pi-notes{margin:-4px 0 12px!important}
+.pi-notes b{color:var(--text-1);font-weight:600}
+
+/* ---------- content upgrade step 2: Continuing strip, story timeline sheet, Threads ---------- */
+/* Continuing stories strip (A1): horizontal snap scroller, never wider than the screen */
+.cont .sec{margin-top:var(--sp-5)}
+.cstrip{display:flex;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;margin:0 calc(-1*var(--gut));padding:2px var(--gut) 8px;scroll-snap-type:x mandatory;scroll-padding:0 var(--gut);list-style:none}
+.cstrip::-webkit-scrollbar{display:none}
+.cstrip li{flex:0 0 min(78%,320px);scroll-snap-align:start;display:flex}
+.cstrip li:only-child{flex-basis:100%}
+.cc{position:relative;display:flex;flex-direction:column;gap:6px;width:100%;min-height:148px;padding:14px 14px 12px;text-decoration:none;color:var(--text-1);border-top:3px solid var(--hub,var(--accent));overflow:hidden}
+.cc-k{display:flex;align-items:center;gap:5px;font-size:var(--t-12);font-weight:600;color:var(--text-2)}
+.cc-k .hic{color:var(--hub);flex:none}.cc-s{margin-left:auto;color:var(--text-3);font-weight:500;white-space:nowrap}
+.cc-t{font-size:var(--t-15,15px);font-weight:650;line-height:1.3;letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.cc-l,.cc-nx{font-size:var(--t-13);line-height:1.4;color:var(--text-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.cc-l b,.cc-nx b{color:var(--text-1);font-weight:650}
+.cc-rail{display:flex;align-items:center;margin-top:auto;padding-top:6px;padding-right:84px;min-width:0}
+.cc-rail b{width:7px;height:7px;border-radius:4px;background:var(--surface-3);flex:none}
+.cc-rail s{flex:1;height:2px;background:var(--surface-3);text-decoration:none;min-width:6px}
+.cc-rail b.on{background:var(--hub,var(--accent));box-shadow:0 0 0 3px color-mix(in srgb,var(--hub,var(--accent)) 22%,transparent)}
+.cc-n{position:absolute;right:14px;bottom:10px;font-size:var(--t-12);color:var(--text-3);white-space:nowrap}
+/* the thread badge on a card opens the timeline: a larger invisible hit area (48 px) around the pill */
+a.thr{position:relative;text-decoration:none}
+a.thr::after{content:"";position:absolute;left:-4px;right:-4px;top:-12px;bottom:-12px}
+/* timeline bottom sheet (F1) */
+html.cu-lock{overflow:hidden}
+.sh-scrim{position:fixed;inset:0;z-index:70;background:rgba(10,10,12,.42)}
+.cu-sheet{position:fixed;left:0;right:0;bottom:0;z-index:71;margin:0 auto;max-width:640px;max-height:86vh;max-height:86dvh;display:flex;flex-direction:column;
+  background:var(--surface-1);border-radius:24px 24px 0 0;box-shadow:var(--elev-3);border-top:1px solid var(--hairline);will-change:transform}
+.sh-b{overflow-y:auto;overscroll-behavior:contain;padding:0 20px calc(20px + env(safe-area-inset-bottom))}
+.sh-h{position:sticky;top:0;z-index:2;display:flex;justify-content:center;align-items:center;height:44px;margin:0 -20px;background:var(--surface-1);touch-action:none;cursor:grab}
+.sh-grab{width:40px;height:5px;border-radius:3px;background:var(--surface-3)}
+.sh-x{position:absolute;right:6px;top:0;width:48px;height:48px;display:grid;place-items:center;border-radius:24px;font-size:24px;line-height:1;color:var(--text-2)}
+.sh-x:hover{background:var(--surface-2)}
+.sh-c{margin-top:2px}
+.cu-sheet h2{font-size:var(--t-20,20px);font-weight:700;letter-spacing:-.02em;line-height:1.25;margin:8px 0 6px;overflow-wrap:anywhere}
+.sh-m{font-size:var(--t-13);color:var(--text-3);margin:0 0 10px}
+.tl-rel{display:flex;align-items:center;gap:6px;min-height:48px;padding:6px 12px;margin:0 0 8px;border-radius:var(--r-m);background:var(--surface-2);font-size:var(--t-13);color:var(--text-1);text-decoration:none;line-height:1.35;overflow-wrap:anywhere}
+.tl-rel span{color:var(--text-3);font-weight:600;flex:none}
+.tl{list-style:none;position:relative;margin:14px 0 4px;padding:0}
+.tl::before{content:"";position:absolute;left:7px;top:10px;bottom:10px;width:2px;background:var(--surface-3);border-radius:2px}
+.tl-n{position:relative;padding:0 0 18px 30px}
+.tl-n::before{content:"";position:absolute;left:2px;top:4px;width:12px;height:12px;border-radius:7px;background:var(--surface-1);box-shadow:inset 0 0 0 2px var(--text-3)}
+.tl-n.now::before{background:var(--hub,var(--accent));box-shadow:0 0 0 4px color-mix(in srgb,var(--hub,var(--accent)) 24%,transparent)}
+.tl-nx::before{box-shadow:inset 0 0 0 2px var(--text-3);background:var(--surface-1);outline:2px dashed var(--text-3);outline-offset:2px}
+.tl-st::before{box-shadow:inset 0 0 0 2px var(--warn)}
+.tl-d{font-size:var(--t-12);font-weight:600;color:var(--text-3);margin:0 0 2px}
+.tl-m{display:inline-flex;align-items:center;height:18px;padding:0 6px;margin-left:4px;border-radius:var(--r-pill);font-size:10.5px;font-weight:650;color:var(--text-2);background:var(--surface-2);vertical-align:1px}
+.tl-t{display:block;font-size:var(--t-15,15px);font-weight:650;line-height:1.35;color:var(--text-1);text-decoration:none;margin:0;overflow-wrap:anywhere}
+a.tl-t{min-height:24px;padding:2px 0}a.tl-t:hover{text-decoration:underline}
+.tl-s{font-size:var(--t-13);color:var(--text-2);line-height:1.45;margin:4px 0 0;overflow-wrap:anywhere}
+.tl-sr{margin:6px 0 0}.tl-src{display:inline-flex;align-items:center;gap:6px;font-size:var(--t-12);color:var(--text-2)}
+.tl-src .tier{width:18px;height:18px;border-radius:5px;font-size:10px}
+.sh-n{margin:4px 0 8px}
+.sh-a{display:flex;gap:10px;margin-top:10px;position:sticky;bottom:0;padding:10px 0 2px;background:linear-gradient(to bottom,transparent,var(--surface-1) 30%)}
+.sh-a a{flex:1;display:inline-flex;justify-content:center;align-items:center;text-align:center;min-height:48px;padding:0 12px;border-radius:999px;font-size:var(--t-13);font-weight:650;text-decoration:none;color:var(--text-1);background:var(--surface-2)}
+.sh-a a.pri{background:var(--inv);color:var(--on-inv)}
+.cu-ts{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:var(--r-pill);font-size:11.5px;font-weight:600;color:var(--text-2);background:var(--surface-2)}
+.cu-ts-open{color:var(--up);background:color-mix(in srgb,var(--up) 12%,transparent)}
+.cu-ts-closed{color:var(--text-3)}
+/* Threads list (C3) and "Continuing in this topic" (C1) */
+.th-f{margin:var(--sp-4) 0 0}
+.th-f .pill{min-height:40px}
+.tlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.trow{position:relative;display:grid;grid-template-columns:1fr auto;gap:2px 10px;min-height:64px;padding:12px 14px;text-decoration:none;color:var(--text-1);border-left:3px solid var(--hub,var(--surface-3))}
+.tr-k{display:flex;align-items:center;gap:6px;font-size:var(--t-12);font-weight:600;color:var(--text-2);grid-column:1}
+.tr-k:empty{display:none}.tr-k .hic{color:var(--hub)}
+.tr-t{grid-column:1;font-size:var(--t-15,15px);font-weight:650;line-height:1.3;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.tr-m{grid-column:1;font-size:var(--t-12);color:var(--text-3)}
+.tr-a{grid-column:2;grid-row:1/span 3;align-self:center;font-size:22px;color:var(--text-3)}
+.tc-b{margin-bottom:10px}
+.cu-ht .sec{margin-top:var(--sp-5)}
+@media (prefers-reduced-motion:reduce){.cstrip{scroll-behavior:auto}}
+@media (forced-colors:active){.cc,.trow,.cu-sheet{border:1px solid CanvasText}.tl-n::before{border:1px solid CanvasText}}
+
+/* ---------- content upgrade step 3: weekly review, Read thread pills and ?card=, tracked instruments, scroller fades ---------- */
+/* horizontal scrollers: clipped in their own box (no page overflow) and faded on the edge that has more */
+.hsc{margin:0 calc(-1*var(--gut));overflow:hidden;contain:paint}
+.hsc>.dls{margin:0}
+.fx-sc{overscroll-behavior-x:contain;--fl:0px;--fr:0px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 var(--fl),#000 calc(100% - var(--fr)),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 var(--fl),#000 calc(100% - var(--fr)),transparent 100%)}
+.fx-sc.sc-l{--fl:28px}.fx-sc.sc-r{--fr:36px}
+.sx-row.fx-sc{scroll-snap-type:x proximity;scroll-padding:0 12px;padding-right:12px}
+.sx-row.fx-sc>*{scroll-snap-align:start}
+.sx-g{overflow:hidden}
+/* deadlines linked to their threads */
+.dls li{position:relative}
+.dl-k{display:inline-flex;align-items:center;gap:5px;margin-top:2px;font-size:var(--t-12);font-weight:600;color:var(--h-regulation,var(--accent))}
+.dl-k i{width:6px;height:6px;border-radius:3px;background:currentColor}
+.dl-th .dl{padding-right:52px}
+.dl-x{position:absolute;right:2px;top:2px;width:48px;height:48px;display:grid;place-items:center;border-radius:24px;color:var(--text-2);text-decoration:none;font-size:17px}
+.dl-x:hover{background:var(--surface-2)}
+/* Regulation hub: tracked instruments by stage */
+.cu-rt .rt-g{margin:0 0 14px}
+.rt-h{display:flex;align-items:center;gap:8px;margin:4px 2px 8px;font-size:var(--t-13);font-weight:600}
+.rt-n{color:var(--text-2)}.rt-d{color:var(--text-3);font-weight:500;font-size:var(--t-12);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rt-more{margin-top:8px;min-height:44px}
+.rt-g [id^="rt-"] .tlist{margin-top:8px}
+.rrow .tr-k{flex-wrap:wrap}
+/* Read: the thread pill at the end of a unit's heading */
+.md .rpill{margin-left:6px;vertical-align:3px;font-size:11.5px;height:22px;letter-spacing:0}
+.md .rpill::after{top:-13px;bottom:-13px}
+.md .rpill:hover{background:var(--surface-3)}
+/* ?card= and ?pi= highlight: a soft tint and an accent rail that fade out */
+.cu-hit{scroll-margin-top:calc(var(--pill-top,12px) + var(--pill-h,44px) + 24px);border-radius:var(--r-s);transition:background-color .7s var(--ease-out,ease),box-shadow .7s var(--ease-out,ease)}
+.cu-hit-in{background-color:var(--accent-soft);box-shadow:-10px 0 0 var(--accent-soft),10px 0 0 var(--accent-soft),inset 3px 0 0 var(--accent)}
+.pi.cu-hit-in{box-shadow:0 0 0 3px var(--accent)}
+@media (prefers-reduced-motion:reduce){.cu-hit{transition:none}}
+/* weekly: "Stories in this section" */
+.wk-st{margin:14px 0 6px;padding-top:12px;border-top:1px solid var(--hairline)}
+.wk-h{margin:12px 0 6px;font-size:var(--t-12);font-weight:600;color:var(--text-3);text-transform:none}
+.wk-row{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.md .wk-row{padding:0}.md .wk-row li{margin:0}
+.wkc{display:flex;align-items:center;gap:10px;min-height:48px;padding:8px 12px;border-radius:var(--r-m);background:var(--surface-2);color:var(--text-1);text-decoration:none;font-size:var(--t-13);line-height:1.35;min-width:0}
+.wkc i{width:8px;height:8px;border-radius:4px;flex:none;background:var(--hub,var(--accent))}
+.wkc-t{flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.wkc-n{flex:none;font-size:var(--t-12);color:var(--text-3);white-space:nowrap}
+@media (hover:hover){.wkc:hover{background:var(--surface-3)}}
+.wk-un{margin:16px 0 4px}.wk-un .pill{min-height:44px}.wk-un [id^="wku"] .wk-row{margin-top:8px}
+.wk-open{margin:18px 0 0}
+/* Today: this week's review */
+.wkcard{margin-top:var(--sp-5)}
+.wk{padding:16px;border-top:3px solid var(--accent)}
+.wk h2{margin:2px 0 4px;font-size:var(--t-17,17px);font-weight:700;letter-spacing:-.01em}
+.wk-m{margin:0;font-size:var(--t-12);color:var(--text-3)}
+.wk .wk-a{margin-top:12px;width:100%;justify-content:center;min-height:48px}
+/* #/week/<date> */
+.wk-full{margin:0 0 var(--sp-3)}.wk-full .cta{min-height:48px}
+.wks{padding:14px 16px;margin:0 0 10px}
+.wks h3{margin:0 0 6px;font-size:var(--t-15,15px);font-weight:700;line-height:1.3}
+.wks .sum{margin:0 0 6px;font-size:var(--t-13);line-height:1.45;color:var(--text-2)}
+.wks .sc-f{margin-top:10px}
+/* Muthoot Fincorp hub: latest thread as a timeline preview */
+.mflp{padding:14px 16px 10px;margin:0 0 10px;border-left:3px solid var(--hub,var(--accent))}
+.mflp-t{display:block;margin:2px 0 4px;font-size:var(--t-15,15px);font-weight:700;line-height:1.3;color:var(--text-1);text-decoration:none;min-height:24px;overflow-wrap:anywhere}
+.tl.mini{margin:10px 0 0}.tl.mini .tl-n{padding-bottom:12px}
+.tl.mini .tl-t{font-size:var(--t-13);font-weight:600}
+@media (forced-colors:active){.wkc,.wk,.wks,.mflp{border:1px solid CanvasText}.cu-hit-in{outline:2px solid Highlight}}
+/* Next node: its source */
+.tl-sa{display:inline-flex;align-items:center;min-height:24px;text-decoration:none;color:inherit}.tl-sa:hover{text-decoration:underline}
