@@ -325,6 +325,39 @@ if wr is not None:
         if not str(sec.get("card_id", "")).startswith(wr.get("report_card_prefix", "?")): err(f"week_review section {sec.get('card_id')}")
         if SOLICIT.search(sec.get("title") or ""): err("week_review section wording")
 
+
+# Site Builder follow-up (11 Nov 2026)
+if (D / "peer_intel_private.json").exists(): err("data/peer_intel_private.json must never exist in the public repo")
+LABEL = "Possible impact on Muthoot Fincorp"
+FLAT = re.compile(r"^(field|metric|item|#)\s+(value|number|figure|status|item)\b", re.I)
+pi_path = D / "peer_intel.json"
+if pi_path.exists():
+    pj = json.loads(pi_path.read_text(encoding="utf-8"))
+    if j.get("peer_intel_index") != {"file": "data/peer_intel.json", "generated": j.get("generated"), "count": len(pj.get("entries") or {})}:
+        err(f"peer_intel_index {j.get('peer_intel_index')}")
+    if pj.get("generated") != j.get("generated"): err("peer_intel.json: generated differs from latest.json")
+    for e in (pj.get("entries") or {}).values():
+        for r in e.get("mfl_compare") or []:
+            if r.get("peer_value") is None or not r.get("peer_period") or not (r.get("peer_source") or {}).get("url"):
+                err(f"{e.get('id')}: mfl_compare {r.get('key')} lacks peer_value/peer_period/peer_source")
+for f in sorted(D.glob("2026-*.json")) + [D / "latest.json"]:
+    jj = json.loads(f.read_text(encoding="utf-8"))
+    cs = (jj.get("cards") or ((jj.get("today") or {}).get("cards")) or []) + (jj.get("latest_circulars") or [])
+    for c in cs:
+        w = f"{f.name} {c.get('id')}"
+        sm = c.get("summary") or ""
+        if FLAT.match(sm) or re.search(r"\|\s|-{3}", sm): err(f"{w}: flattened table summary")
+        nm = [x.get("name") for x in c.get("sources") or []]
+        if len(nm) != len(set(nm)): err(f"{w}: duplicate source names {nm}")
+        if (c.get("impact") or c.get("kind") == "circular") and c.get("impact_label") != LABEL: err(f"{w}: impact_label")
+for r in j.get("continuing_stories") or []:
+    lt = r.get("latest") or {}
+    if not lt.get("card_id"): err(f"continuing {r.get('story_id')}: latest.card_id")
+    if re.search(r"\bstatus\s*$", lt.get("title") or "", re.I) and lt.get("kind") != "status": err(f"continuing {r.get('story_id')}: status card not kind status")
+WINDOW = re.compile(r"\b\d{1,3}[- ]day (?:window|period) from|\b\d{1,2}(?:\s+[A-Za-z]{3,9})?\s*[–—-]\s*\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)", re.I)
+for x in j.get("deadlines") or []:
+    if WINDOW.search(x.get("title") or "") and not x.get("date_text"): err(f"deadline {x.get('date')}: range without date_text")
+
 print(f"{len(ids)} day(s) checked, {len(errs)} problem(s)")
 for e in errs[:50]: print(" -", e)
 sys.exit(1 if errs else 0)
