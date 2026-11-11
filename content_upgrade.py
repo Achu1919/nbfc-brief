@@ -320,6 +320,10 @@ def parse_peer_unit(X, lines, ov, edition):
                                  "prev_period": prev.upper().replace("FY", " FY").replace("  ", " ") if prev else None,
                                  "qoq_pct": _num(row.get(qcol)) if qcol else None,
                                  "yoy_pct": _num(row.get(ycol)) if ycol else None, "source": src})
+            if cur and prev:  # a prior column that is not the immediately preceding quarter never yields a computed QoQ
+                rc, rp = _period_rank(cur.replace(" ", "")), _period_rank(prev.replace(" ", ""))
+                if rc[0] * 4 + rc[1] - (rp[0] * 4 + rp[1]) != 1:
+                    e["metrics"][-1]["prev_kind"] = "yoy" if rc[0] - rp[0] == 1 and rc[1] == rp[1] else "other"
             continue
         cols = [] if not s.startswith("|") else cols
         links = X._links(s)
