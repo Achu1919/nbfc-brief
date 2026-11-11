@@ -652,6 +652,8 @@ def stories_export(X, days, data_dir, private, problems, deadlines=None, latest_
             if mp and mp.get("title_hash") and mp["title_hash"] != title_hash(c["title"]):
                 problems.append(f"story_map {c['id']}: title_hash mismatch; mapping skipped")
                 mp = None
+            if mp and "story_id" in mp and mp["story_id"] is None:  # mapped out: never threaded
+                ov, mp = dict(ov, _none=True), None
             if mp:
                 ov = dict({k: v for k, v in mp.items() if k not in ("title_hash", "story_id")}, **ov)
                 ov.setdefault("id", mp.get("story_id"))
@@ -684,10 +686,13 @@ def stories_export(X, days, data_dir, private, problems, deadlines=None, latest_
                 if not STORY_ID.match(sid) or len(sid) > 60:
                     problems.append(f"{c['id']}: bad story id {sid!r}")
                     sid = None
-            if not sid and c.get("reg"):
+            if ov.get("_none"):
+                continue
+            if not sid and c.get("reg") and (c["reg"].get("ref_no") or _reg_ovs(c)):  # inferred, ref-less reg rows are not threads
                 sid = reg_story_id(c["reg"], c["id"])
             auto = False
-            if not sid and c.get("kind") in ("story", "circular"):
+            # regulation-report notes without a reg comment (quiet-day notes, watchlist sweeps) are threaded only by override or map
+            if not sid and c.get("kind") in ("story", "circular") and not (c.get("report") in ("rules", "02-regulation") and not (c.get("reg") or {}).get("ref_no") and not _reg_ovs(c)):
                 sid, auto = f"{ed}-{slug(' '.join(re.sub(r'^\s*update\s*[:\-–—]\s*', '', c['title'], flags=re.I).split()[:5]), 49)}", True
             if not sid:
                 continue
