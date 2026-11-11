@@ -557,20 +557,24 @@ function wkMatch(w,key){return w&&(w.start===key||w.id===key||pubOf(w)===key);}
 /* Today: shown from the Monday it is published for 7 days (week_review stays in latest.json that long) */
 function weekCard(day){var w=wkOf(day);if(!w||!day)return '';var p=pubOf(w),n=diff(day.id,p);if(n<0||n>6)return '';
   var wt=wkThreads(w),ids=w.storyIds.length?w.storyIds:w.threads.filter(function(x){return x.mentioned_in_review===true;}).map(function(x){return x.story_id;});
-  var ch=wkChips(ids,wt,3),ns=w.sections.length;
+  var pd=dayOf(p),ch=wkChips(ids,wt,3),ns=pd&&!pd.stub?wkList(w,pd).length:0;ids=wkIds(ids);
   return '<section aria-labelledby="h-wk" class="wkcard"><div class="wk g" data-st><p class="kick">Weekly review \u00b7 '+esc(sday(p))+'</p>'+
     '<h2 id="h-wk">'+(n===0?'This week\u2019s review':'This week\u2019s review')+'</h2><p class="wk-m num">'+esc(['Week of '+wkRange(w),ns?cnt(ns,'section'):'',ids.length?cnt(ids.length,'thread'):''].filter(Boolean).join(' \u00b7 '))+'</p>'+
     (ch?'<p class="wk-h">Threads in the review</p>'+ch:'')+
     '<a class="cta ghost press wk-a" href="#/week/'+esc(w.start)+'">Open the weekly review <span aria-hidden="true">\u2192</span></a></div></section>';}
 var WK={key:'',day:null};
-function weekBody(w,pday){var wt=wkThreads(w),p=pubOf(w),cards=pday&&!pday.stub?repCards(pday,'03-weekly-analysis'):[],byId={},sec={};
-  cards.forEach(function(c){byId[S(c.id)]=c;});w.sections.forEach(function(s){if(S(s.card_id))sec[s.card_id]=A(s.story_ids);});
-  var list=cards.length?cards.map(function(c){return {id:S(c.id),title:S(c.section)||S(c.title),sum:S(c.summary),ids:sec[S(c.id)]||card(c).stRef,c:c};})
-    :w.sections.map(function(s){return {id:S(s.card_id),title:S(s.title),sum:'',ids:A(s.story_ids),c:{id:S(s.card_id),report:'weekly',title:S(s.title)}};});
+function wkIds(ids){var seen={};return A(ids).map(Id).filter(function(id){if(!id||seen[id]||!thread(id))return false;seen[id]=1;return true;});}
+function wkSub(w,ns){return 'Published '+sday(pubOf(w))+' \u00b7 '+cnt(ns,'section')+' \u00b7 '+cnt(wkIds(w.storyIds).length,'thread')+' in the review';}
+function wkList(w,pday){var cards=pday&&!pday.stub?repCards(pday,'03-weekly-analysis'):[],sec={};
+  w.sections.forEach(function(s){if(S(s.card_id))sec[s.card_id]=A(s.story_ids);});
+  return cards.length?cards.map(function(c){return {id:S(c.id),title:S(c.section)||S(c.title),sum:S(c.summary),ids:sec[S(c.id)]||card(c).stRef,c:c};})
+    :w.sections.map(function(s){return {id:S(s.card_id),title:S(s.title),sum:'',ids:A(s.story_ids),c:{id:S(s.card_id),report:'weekly',title:S(s.title)}};});}
+function weekBody(w,pday){var wt=wkThreads(w),p=pubOf(w),cards=pday&&!pday.stub?repCards(pday,'03-weekly-analysis'):[];
+  var list=wkList(w,pday);
   var x='<section aria-labelledby="h-wks"><div class="sec" data-st><h2 id="h-wks">Sections</h2><span class="aside num">'+list.length+'</span></div>';
   x+=list.map(function(s){var sm=s.sum?NB().clip?NB().clip(cleanSum(s.sum),240):cleanSum(s.sum):'',ch=wkChips(s.ids,wt),href=cardHref(p,s.c);
     return '<article class="wks g" data-st><h3>'+esc(plainT(s.title))+'</h3>'+(sm?'<p class="sum">'+esc(sm)+'</p>':'')+
-      (ch?'<p class="wk-h">Stories in this section</p>'+ch:'')+'<div class="sc-f"><span class="by num">'+(ch?esc(cnt(A(s.ids).length,'thread')):'No linked thread')+'</span><a class="more press" href="'+esc(href)+'">Read this section<span class="sr">: '+esc(s.title)+'</span> <span aria-hidden="true">\u2192</span></a></div></article>';}).join('')+'</section>';
+      (ch?'<p class="wk-h">Stories in this section</p>'+ch:'')+'<div class="sc-f"><span class="by num">'+(ch?esc(cnt((ch.match(/<li\b/g)||[]).length,'thread')):'No linked thread')+'</span><a class="more press" href="'+esc(href)+'">Read this section<span class="sr">: '+esc(s.title)+'</span> <span aria-hidden="true">\u2192</span></a></div></article>';}).join('')+'</section>';
   var un=w.threads.filter(function(t){return t.mentioned_in_review!==true;}).map(function(t){return Id(t.story_id);}).filter(function(id){return id&&thread(id);});
   if(un.length){var id=nid('wku');x+='<section aria-labelledby="h-wku" class="wk-un"><div class="sec" data-st><h2 id="h-wku">Not in the review</h2><span class="aside num">'+un.length+'</span></div><div data-st>'+
     '<button type="button" class="pill press" data-cux="'+id+'" aria-expanded="false" aria-controls="'+id+'">Threads this week that the review didn\u2019t cover</button><div id="'+id+'" hidden>'+wkChips(un,wt)+'</div></div></section>';}
@@ -580,21 +584,22 @@ function weekView(day,key){key=S(key);var w=wkMatch(X.week,key)?X.week:wkMatch(w
   var p=w?pubOf(w):'';
   var hd='<div class="hd hubhd g" data-st="h"><a class="hback press" href="'+(p?'#/'+esc(p)+'/read/03-weekly-analysis':'#/read')+'"><span aria-hidden="true">\u2039</span> Weekly desk</a>'+
     '<div class="hh"><div><p class="greet">Weekly review</p><h1>'+(w?'Week of '+esc(wkRange(w)):'Weekly review')+'</h1></div></div>'+
-    '<p class="hsub">'+(w?esc('Published '+sday(p)+' \u00b7 '+cnt(w.sections.length,'section')+' \u00b7 '+cnt(w.storyIds.length,'thread')+' in the review'):'')+'</p></div>';
+    '<p class="hsub">'+(w?esc(wkSub(w,wkList(w,dayOf(p)&&!dayOf(p).stub?dayOf(p):null).length)):'')+'</p></div>';
   var body=w?weekBody(w,dayOf(p)&&!dayOf(p).stub?dayOf(p):undefined):'<div class="g card empty" data-st role="status" id="wk-miss"><h2>Looking for this weekly review\u2026</h2><p>It loads from the edition it was published in.</p></div>';
   return hd+(w?'<p class="wk-full" data-st><a class="cta press" href="#/'+esc(p)+'/read/03-weekly-analysis">Read the full weekly <span aria-hidden="true">\u2192</span></a></p>':'')+'<div id="wkbody">'+body+'</div>'+(NB().foot?NB().foot():'');}
 /* after the route: load the edition the review was published in (summaries), or find an older week in its day file */
 function mountWeek(root,key){key=S(key);var w=wkMatch(X.week,key)?X.week:null,nb=NB();if(!nb||!nb.getDay)return;
   var p=w?pubOf(w):D(key)?shift(key,7):'';
   if(!p){miss();return;}
-  var d0=dayOf(p);if(w&&d0&&!d0.stub&&L.stories)return;
+  var d0=dayOf(p);if(w&&d0&&!d0.stub&&L.stories){wkSync(root,w);return;}
   function miss(){var m=root.querySelector('#wk-miss');if(m)m.innerHTML='<h2>This weekly review isn\u2019t in the saved editions</h2><p><a href="#/archive">Open the archive</a> or the <a href="#/read">latest Read desk</a>.</p>';}
   (nb.M.byId[p]?nb.getDay(p):Promise.resolve(null)).then(function(day){if(!root.isConnected)return;var ww=w||wkRead(day&&day.week_review);
     if(!ww||!wkMatch(ww,key)&&!wkMatch(ww,p)){miss();return;}
     if(!w){var v=document.createElement('div');v.innerHTML=weekView(day,ww.start);var hd=root.querySelector('.hubhd'),nh=v.querySelector('.hubhd');if(hd&&nh)hd.replaceWith(nh);
       var fl=v.querySelector('.wk-full'),b0=root.querySelector('#wkbody');if(fl&&b0)b0.parentNode.insertBefore(fl,b0);}
-    var b=root.querySelector('#wkbody');if(b)b.innerHTML=weekBody(ww,day&&!day.stub?day:null);}).catch(miss);
-  if(!L.stories&&X.storyFile&&!L.sfail)loadStories().then(function(){var b=root.querySelector('#wkbody');if(!b||!root.isConnected)return;var ww=w||wkRead((dayOf(p)||{}).week_review);if(ww)b.innerHTML=weekBody(ww,dayOf(p)&&!dayOf(p).stub?dayOf(p):null);});}
+    var b=root.querySelector('#wkbody');if(b){b.innerHTML=weekBody(ww,day&&!day.stub?day:null);wkSync(root,ww);}}).catch(miss);
+  if(!L.stories&&X.storyFile&&!L.sfail)loadStories().then(function(){var b=root.querySelector('#wkbody');if(!b||!root.isConnected)return;var ww=w||wkRead((dayOf(p)||{}).week_review);if(ww){b.innerHTML=weekBody(ww,dayOf(p)&&!dayOf(p).stub?dayOf(p):null);wkSync(root,ww);}});}
+function wkSync(root,w){var h=root.querySelector('.hubhd .hsub'),n=root.querySelectorAll('#wkbody .wks').length,a=root.querySelector('#h-wks + .aside');if(h&&w)h.textContent=wkSub(w,n);if(a)a.textContent=String(n);}
 
 /* ---------------- Regulation hub: tracked instruments by stage ---------------- */
 var STG=[['draft','Draft','Open for comment or not yet final'],['final','Final','Issued, not yet in force'],['effective','Effective','In force']];
