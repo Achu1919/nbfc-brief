@@ -1,0 +1,617 @@
+{
+ "_note": "EXAMPLE DATA, not real figures. Used only by the dev-only ?fixture=content-upgrade switch on localhost and branch previews (never production). Shapes follow the agreed data contract (plan 14 + 15). Tokens: @D = the real edition's date, @D+6 = six days later, @R+1:+3 = a date range text, @card:N = id of the edition's N-th news card.",
+ "latest": {
+  "continuing_stories": [
+   {
+    "story_id": "mfl-ncd-2026-tranche-1",
+    "title": "Muthoot Fincorp Tranche I public NCD: open, close, allotment, listing",
+    "category": "muthoot-fincorp",
+    "companies": [
+     "muthoot-fincorp"
+    ],
+    "status": "open",
+    "opened": "2026-10-23",
+    "last_update": "@D",
+    "update_count": 17,
+    "latest": {
+     "date": "@D",
+     "card_id": "@card:0",
+     "report": "01-daily-watch",
+     "kind": "update",
+     "title": "Admitted to dealings on BSE, F group",
+     "summary": "Example summary.",
+     "source": {
+      "name": "BSE",
+      "url": "https://www.bseindia.com/downloads/UploadDocs/Notices/20261109-30/20261109-30.pdf",
+      "tier": 1
+     }
+    },
+    "recent": [
+     {
+      "date": "2026-11-06",
+      "card_id": "2026-11-06-news-1",
+      "report": "01-daily-watch",
+      "title": "Closes at 2.67x"
+     }
+    ],
+    "next": {
+     "date": null,
+     "date_text": null,
+     "what": "Final allotted amount and deemed date of allotment"
+    }
+   },
+   {
+    "story_id": "iifl-finance-blackstone-raise-2026",
+    "title": "IIFL Finance: Blackstone-led preferential raise",
+    "category": "deals",
+    "companies": [
+     "iifl-finance"
+    ],
+    "status": "open",
+    "opened": "@D-2",
+    "last_update": "@D",
+    "update_count": 2,
+    "latest": {
+     "date": "@D",
+     "card_id": "@card:1",
+     "report": "01-daily-watch",
+     "kind": "update",
+     "title": "Board approves the raise",
+     "summary": "Example summary."
+    },
+    "next": {
+     "date": null,
+     "date_text": null,
+     "what": "Shareholder and regulatory approvals"
+    }
+   },
+   {
+    "story_id": "reg-example-draft-directions",
+    "title": "Example: RBI draft directions on gold-loan valuation",
+    "category": "regulation",
+    "companies": [],
+    "status": "open",
+    "opened": "@D-6",
+    "last_update": "@D",
+    "update_count": 2,
+    "latest": {
+     "date": "@D-6",
+     "card_id": "example-card",
+     "report": "02-regulation",
+     "kind": "status",
+     "title": "Comments close in 9 days",
+     "lifecycle_change": null
+    },
+    "next": {
+     "date": "@D+9",
+     "date_text": null,
+     "what": "Comments close"
+    },
+    "reg": {
+     "regulator": "RBI",
+     "lifecycle": "draft",
+     "comments_due": "@D+9",
+     "effective": null,
+     "deadline_near": true
+    }
+   }
+  ],
+  "story_index": {
+   "file": "tests/fixtures/content-upgrade/stories.json",
+   "generated": "fixture",
+   "threads": 3,
+   "open": 3,
+   "bytes": 3000,
+   "archives": [],
+   "refs": {
+    "mfl-ncd-2026-tranche-1": {
+     "title": "Muthoot Fincorp Tranche I public NCD",
+     "category": "muthoot-fincorp",
+     "status": "open",
+     "opened": "2026-10-23",
+     "last_update": "@D",
+     "update_count": 17,
+     "continues": [
+      "mfl-ncd-shelf-2026"
+     ],
+     "continued_by": [],
+     "next": {
+      "date": null,
+      "date_text": null,
+      "what": "Final allotted amount"
+     }
+    },
+    "mfl-ncd-shelf-2026": {
+     "title": "Muthoot Fincorp NCD shelf prospectus",
+     "category": "muthoot-fincorp",
+     "status": "closed",
+     "opened": "2026-10-01",
+     "last_update": "2026-10-20",
+     "update_count": 3,
+     "continues": [],
+     "continued_by": [
+      "mfl-ncd-2026-tranche-1"
+     ],
+     "next": null
+    },
+    "iifl-finance-blackstone-raise-2026": {
+     "title": "IIFL Finance: Blackstone-led preferential raise",
+     "category": "deals",
+     "status": "open",
+     "opened": "@D-2",
+     "last_update": "@D",
+     "update_count": 2,
+     "continues": [],
+     "continued_by": [],
+     "next": null
+    },
+    "reg-example-draft-directions": {
+     "title": "Example: RBI draft directions on gold-loan valuation",
+     "category": "regulation",
+     "status": "open",
+     "opened": "@D-6",
+     "last_update": "@D-6",
+     "update_count": 2,
+     "continues": [],
+     "continued_by": [],
+     "next": {
+      "date": "@D+9",
+      "date_text": null,
+      "what": "Comments close"
+     }
+    }
+   }
+  },
+  "peer_intel_index": {
+   "file": "tests/fixtures/content-upgrade/peer_intel.json"
+  },
+  "peer_intel": [
+   {
+    "id": "pi-manappuram-q2fy27",
+    "story_id": "manappuram-q2fy27-results",
+    "company": "manappuram",
+    "company_name": "Manappuram Finance",
+    "period": "Q2 FY27",
+    "basis": "consolidated",
+    "events": [
+     {
+      "type": "results",
+      "date": "@D",
+      "source": {
+       "name": "NSE filing (example)",
+       "url": "https://www.nseindia.com/",
+       "tier": 1
+      }
+     },
+     {
+      "type": "investor-deck",
+      "date": "@D",
+      "source": {
+       "name": "Investor presentation (example)",
+       "url": "https://www.manappuram.com/",
+       "tier": 1
+      }
+     }
+    ],
+    "metrics": [
+     {
+      "key": "gold_aum",
+      "label": "Gold AUM",
+      "unit": "₹ cr",
+      "value": 12340,
+      "prev_value": 11630,
+      "prev_period": "Q1 FY27",
+      "qoq_pct": 6.1,
+      "yoy_pct": null,
+      "computed": true,
+      "disclosed": true,
+      "source": {
+       "name": "Investor presentation (example)",
+       "url": "https://www.manappuram.com/",
+       "page": 7,
+       "tier": 1
+      }
+     },
+     {
+      "key": "gnpa",
+      "label": "GNPA",
+      "unit": "%",
+      "value": null,
+      "prev_value": null,
+      "disclosed": false,
+      "note": "Example: not disclosed this quarter",
+      "last_disclosed_period": "Q1 FY27"
+     },
+     {
+      "key": "yield",
+      "label": "Yield on gold book",
+      "unit": "%",
+      "value": 19.8,
+      "prev_value": 20.1,
+      "prev_period": "Q1 FY27",
+      "qoq_pct": null,
+      "computed": false,
+      "disclosed": true,
+      "note": "as defined by the company",
+      "source": {
+       "name": "Investor presentation (example)",
+       "url": "https://www.manappuram.com/",
+       "page": 9,
+       "tier": 1
+      }
+     },
+     {
+      "key": "gold_tonnes",
+      "label": "Gold holding",
+      "unit": "tonnes",
+      "value": 58.2,
+      "prev_value": 57.4,
+      "prev_period": "Q1 FY27",
+      "qoq_pct": 1.4,
+      "computed": true,
+      "disclosed": true,
+      "source": {
+       "name": "Investor presentation (example)",
+       "url": "https://www.manappuram.com/",
+       "page": 7,
+       "tier": 1
+      }
+     },
+     {
+      "key": "branches",
+      "label": "Branches",
+      "unit": "",
+      "value": 3524,
+      "prev_value": 3510,
+      "prev_period": "Q1 FY27",
+      "qoq_pct": null,
+      "computed": false,
+      "disclosed": true,
+      "source": {
+       "name": "Investor presentation (example)",
+       "url": "https://www.manappuram.com/",
+       "page": 4,
+       "tier": 1
+      }
+     },
+     {
+      "key": "avg_ticket",
+      "label": "Average ticket",
+      "unit": "₹",
+      "value": 61200,
+      "prev_value": null,
+      "disclosed": true,
+      "computed": false,
+      "source": {
+       "name": "Investor presentation (example)",
+       "url": "https://www.manappuram.com/",
+       "page": 8,
+       "tier": 1
+      }
+     }
+    ],
+    "guidance": [
+     {
+      "text": "Example: gold AUM growth guidance of 18 to 20% for FY27 is unchanged.",
+      "source": {
+       "name": "Investor presentation (example)",
+       "url": "https://www.manappuram.com/",
+       "page": 14,
+       "tier": 1
+      }
+     }
+    ],
+    "quotes": [
+     {
+      "text": "Example quote: demand for small-ticket gold loans stayed steady through the quarter.",
+      "speaker": "Example Speaker",
+      "role": "MD & CEO",
+      "source": {
+       "name": "Investor presentation (example)",
+       "url": "https://www.manappuram.com/",
+       "page": 3,
+       "tier": 1
+      }
+     }
+    ],
+    "non_disclosures": [
+     {
+      "key": "gnpa_gold",
+      "text": "Example: gold-loan GNPA not disclosed this quarter; disclosed in Q1 FY27."
+     }
+    ],
+    "mfl_compare": [
+     {
+      "key": "gold_aum",
+      "label": "Gold AUM",
+      "unit": "₹ cr",
+      "peer_value": 12340,
+      "peer_period": "Q2 FY27",
+      "mfl_value": 9870,
+      "mfl_period": "Q1 FY27",
+      "same_basis": false,
+      "source": {
+       "name": "Example source",
+       "url": "https://www.muthootfincorp.com/",
+       "tier": 1
+      },
+      "note": "Example: different quarters"
+     },
+     {
+      "key": "yield",
+      "label": "Yield",
+      "unit": "%",
+      "peer_value": 19.8,
+      "peer_period": "Q2 FY27",
+      "mfl_value": null,
+      "mfl_period": "Q2 FY27",
+      "same_basis": true,
+      "source": null,
+      "note": ""
+     },
+     {
+      "key": "branches",
+      "label": "Branches",
+      "unit": "",
+      "peer_value": 3524,
+      "peer_period": "Q2 FY27",
+      "mfl_value": null,
+      "mfl_period": "Q2 FY27",
+      "same_basis": true,
+      "source": null
+     }
+    ],
+    "impact": "Example: the peer's stated gold AUM growth gives a published reference point for the sector this quarter.",
+    "impact_label": "Possible impact on Muthoot Fincorp"
+   },
+   {
+    "id": "pi-muthoot-finance-q2fy27",
+    "story_id": "muthoot-finance-q2fy27-results",
+    "company": "muthoot-finance",
+    "company_name": "Muthoot Finance",
+    "period": "Q2 FY27",
+    "basis": "standalone",
+    "events": [
+     {
+      "type": "results",
+      "date": "@D-2",
+      "source": {
+       "name": "BSE filing (example)",
+       "url": "https://www.bseindia.com/",
+       "tier": 1
+      }
+     },
+     {
+      "type": "call-transcript",
+      "date": "@D-1",
+      "source": {
+       "name": "Call transcript (example)",
+       "url": "https://www.muthootfinance.com/",
+       "tier": 1
+      }
+     }
+    ],
+    "metrics": [
+     {
+      "key": "aum",
+      "label": "AUM",
+      "unit": "₹ cr",
+      "value": 140200,
+      "prev_value": 133900,
+      "prev_period": "Q1 FY27",
+      "qoq_pct": 4.7,
+      "computed": true,
+      "disclosed": true,
+      "source": {
+       "name": "BSE filing (example)",
+       "url": "https://www.bseindia.com/",
+       "tier": 1
+      }
+     },
+     {
+      "key": "credit_cost",
+      "label": "Credit cost",
+      "unit": "%",
+      "value": 0.4,
+      "disclosed": true,
+      "computed": false,
+      "source": {
+       "name": "Call transcript (example)",
+       "url": "https://www.muthootfinance.com/",
+       "page": 5,
+       "tier": 1
+      }
+     }
+    ],
+    "guidance": [],
+    "quotes": [],
+    "non_disclosures": [],
+    "mfl_compare": [
+     {
+      "key": "aum",
+      "label": "AUM",
+      "unit": "₹ cr",
+      "peer_value": 140200,
+      "peer_period": "Q2 FY27",
+      "mfl_value": null,
+      "mfl_period": "Q2 FY27",
+      "same_basis": true,
+      "source": null
+     }
+    ],
+    "impact": "",
+    "impact_label": "Possible impact on Muthoot Fincorp"
+   }
+  ]
+ },
+ "today_cards": [
+  {
+   "pos": 0,
+   "set": {
+    "story_id": "mfl-ncd-2026-tranche-1",
+    "continues": [
+     "mfl-ncd-shelf-2026"
+    ],
+    "thread_seq": 17,
+    "is_update": true,
+    "dup_of": null,
+    "sources": [
+     {
+      "name": "BSE",
+      "url": "https://www.bseindia.com/downloads/UploadDocs/Notices/20261109-30/20261109-30.pdf",
+      "tier": 1,
+      "role": "primary"
+     },
+     {
+      "name": "BSE public issues",
+      "url": "https://www.bseindia.com/",
+      "tier": 1,
+      "role": "data"
+     },
+     {
+      "name": "Chittorgarh (example)",
+      "url": "https://www.chittorgarh.com/",
+      "tier": 2,
+      "role": "data"
+     }
+    ],
+    "impact_label": "Possible impact on Muthoot Fincorp"
+   }
+  },
+  {
+   "pos": 1,
+   "set": {
+    "story_id": "iifl-finance-blackstone-raise-2026",
+    "thread_seq": 2,
+    "is_update": true,
+    "sources": [
+     {
+      "name": "BSE filing (example)",
+      "url": "https://www.bseindia.com/",
+      "tier": 1,
+      "role": "primary"
+     },
+     {
+      "name": "Economic Times (example)",
+      "url": "https://economictimes.indiatimes.com/",
+      "tier": 2,
+      "role": "context"
+     },
+     {
+      "name": "Research note (example)",
+      "url": "https://example.com/",
+      "tier": 3,
+      "fallback": true,
+      "role": "analysis"
+     }
+    ],
+    "impact_label": "Possible impact on Muthoot Fincorp"
+   }
+  },
+  {
+   "pos": 2,
+   "set": {
+    "story_id": "gold-price-weekly",
+    "thread_seq": 1,
+    "sources": [
+     {
+      "name": "Mint",
+      "url": "https://www.livemint.com/",
+      "tier": 2,
+      "role": "context"
+     }
+    ]
+   }
+  },
+  {
+   "pos": 3,
+   "set": {
+    "story_id": "mfl-ncd-2026-tranche-1",
+    "dup_of": "@card:0"
+   }
+  }
+ ],
+ "latest_circulars_add": [
+  {
+   "id": "example-circ-1",
+   "date": "@D-1",
+   "report": "rules",
+   "kind": "circular",
+   "title": "Example: RBI final directions on gold-loan valuation",
+   "story_id": "reg-example-final-directions",
+   "lifecycle": "final",
+   "reg": {
+    "ref_no": "RBI/EXAMPLE/14",
+    "regulator": "RBI",
+    "status": "deadline",
+    "lifecycle": "final",
+    "effective": "@D+6",
+    "deadline": {
+     "date": "@D+6",
+     "date_text": null,
+     "kind": "effective"
+    },
+    "deadline_near": true,
+    "first_covered": {
+     "date": "@D-9",
+     "card_id": "example",
+     "report": "02-regulation",
+     "title": "Draft directions"
+    },
+    "url": "https://www.rbi.org.in/"
+   }
+  },
+  {
+   "id": "example-circ-2",
+   "date": "@D-6",
+   "report": "rules",
+   "kind": "circular",
+   "title": "Example: RBI draft directions, comments invited",
+   "story_id": "reg-example-draft-directions",
+   "lifecycle": "draft",
+   "reg": {
+    "ref_no": "RBI/EXAMPLE/09",
+    "regulator": "RBI",
+    "status": "draft",
+    "lifecycle": "draft",
+    "comments_due": "@D+9",
+    "deadline": {
+     "date": "@D+9",
+     "date_text": null,
+     "kind": "comments"
+    },
+    "deadline_near": true,
+    "url": "https://www.rbi.org.in/"
+   }
+  },
+  {
+   "id": "example-circ-3",
+   "date": "@D-3",
+   "report": "rules",
+   "kind": "circular",
+   "title": "Example: SEBI circular now in effect",
+   "story_id": "reg-example-effective",
+   "lifecycle": "effective",
+   "reg": {
+    "ref_no": "SEBI/EXAMPLE/2",
+    "regulator": "SEBI",
+    "status": "in-force",
+    "lifecycle": "effective",
+    "url": "https://www.sebi.gov.in/"
+   }
+  }
+ ],
+ "deadlines_add": [
+  {
+   "date": "@D+3",
+   "date_text": "@R+1:+3",
+   "title": "Example: comment window on a draft framework",
+   "regulator": "RBI",
+   "ref_no": null,
+   "url": "https://www.rbi.org.in/",
+   "status": "deadline",
+   "kind": "comments",
+   "story_id": "reg-example-draft-directions"
+  }
+ ]
+}

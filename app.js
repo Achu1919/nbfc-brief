@@ -178,7 +178,7 @@ function fromLegacy(B){
   if(!B||!B.days)throw new Error('data.js has no days');
   M.source='data.js';M.generated=B.generated;B.days.forEach(pubDay);index(B.days);M.series=buildSeries(B.days);}
 function fromJson(j){
-  M.source='data/latest.json';M.generated=j.generated;
+  M.source='data/latest.json';M.generated=j.generated;try{if(window.NBCU)NBCU.ingest(j);}catch(e){}
   M.ext={latest_circulars:Array.isArray(j.latest_circulars)?j.latest_circulars:null,deadlines:Array.isArray(j.deadlines)?j.deadlines:null,mfl_ncd:j.mfl_ncd&&typeof j.mfl_ncd==='object'?j.mfl_ncd:null};
   pubDay(j.today);
   var days=(j.days||[]).map(function(d){return d.id===j.today.id?j.today:pubDay(Object.assign({stub:true},d));});
@@ -200,7 +200,7 @@ function loadData(){
   var q=location.search;if(/[?&]src=legacy/.test(q))return legacy();
   var force=/[?&]src=json/.test(q);
   var js=fetch('/data/latest.json',{cache:'no-cache'}).then(function(r){if(!r.ok)throw 0;return r.json();})
-    .then(function(j){M.seedHint=!!(j&&j.series_seed);return j;});
+    .then(function(j){M.seedHint=!!(j&&j.series_seed);return window.NBCU?NBCU.prep(j):j;});
   var gen=force?Promise.resolve(null):headGenerated().then(function(g){return {g:g};},function(){return {none:true};});
   return Promise.all([js,gen]).then(function(v){var j=v[0],g=v[1];
     if(!j||j.schema!=='nbfc-brief'||j.schema_version!==1||!j.today)throw 0;
@@ -438,7 +438,7 @@ function regCalendar(day){var c=(day.reg_calendar||[]).filter(function(x){return
   return '<section aria-labelledby="h-cal">'+head+'<div class="g flush list rcal" data-st>'+c.map(function(x){var n=live(day)?daysTo(x.date):null;
     var when=dm(x.date)+' '+x.date.slice(0,4)+(n===0?' \u00b7 today':n===1?' \u00b7 tomorrow':n>1?' \u00b7 in '+n+' days':'');
     return '<div><div class="k num">'+esc(when)+'</div><div class="val">'+esc(x.item||'')+'</div><div class="meta">'+(x.issuer?esc(x.issuer):'issuer not stated')+(x.applies_to?' \u00b7 applies to '+esc(x.applies_to):'')+'<br>'+(typeof x.source==='string'?srcA({url:x.source}):srcA(x.source))+'</div></div>';}).join('')+'</div></section>';}
-function impact(t,cls){return t?'<p class="'+(cls||'why')+'"><b>Possible impact on Muthoot Fincorp:</b> '+esc(t)+'</p>':'';}
+function impact(t,cls,lab){return t?'<p class="'+(cls||'why')+'"><b>'+esc(lab||'Possible impact on Muthoot Fincorp')+':</b> '+esc(t)+'</p>':'';}
 
 function viewToday(day){
   var st=stories(day),top=st[0],nr=news(day),rr=rules(day),k=kn(day);
@@ -450,6 +450,7 @@ function viewToday(day){
   var main='',side='';
   h+=ticker(day)+glance(day,st);
   var sc=storyCards(day);
+  if(window.NBCU&&day.id===M.days[0].id){try{main+=NBCU.fxBanner()+NBCU.nudge(day);}catch(e){}}
   if(sc)main+=sc;
   else main+=live(day)&&nr&&nr.missing?'<div class="g card empty" data-st><h2>The news desk has not filed yet</h2><p>The 7:00 AM job has not filed for '+esc(day.label)+' yet. This page offers a refresh when it does.</p></div>':'<div class="g card empty" data-st><h2>The news desk did not arrive</h2><p>The 7:00 AM job left no file for '+esc(day.label)+'.</p></div>';
   main+=goldCard(day,false)+circBlock(day);
@@ -709,7 +710,7 @@ function goldRows(day,full){var g=day.gold,I=g.ibja||{},S=g.spot||{},A=g.agloc||
   var ses=I.session==='AM'||I.session==='PM'?I.session+' session':'session not stated';
   var groups=[
     {h:'IBJA benchmark \u00b7 \u20b9 per g',m:[ses,gISO(I.date)?gDay(I.date):'',srcL(I.source,'IBJA')],rows:[['ibja999','24K (999)',I.rate_999,I.prev_999,0,'\u20b9'],['ibja916','22K (916)',I.rate_916,I.prev_916,0,'\u20b9']]},
-    {h:'Spot gold',m:[S.as_of?esc(S.as_of):'as-of not stated',srcL(S.source,'spot'),S.inr_source?srcL(S.inr_source,'\u20b9 rate'):''],rows:[['goldspot','$ per oz',S.usd_oz,S.prev_usd_oz,2,'$'],[null,'\u20b9 per 10 g',S.inr_10g,null,0,'\u20b9']]},
+    {h:'Spot gold',m:[S.as_of_display?esc(S.as_of_display):S.as_of?esc(S.as_of):'as-of not stated',srcL(S.source,'spot'),S.inr_source?srcL(S.inr_source,'\u20b9 rate'):''],rows:[['goldspot','$ per oz',S.usd_oz,S.prev_usd_oz,2,'$'],[null,'\u20b9 per 10 g',S.inr_10g,null,0,'\u20b9']]},
     {h:'AGLOC max loan \u00b7 \u20b9 per g',m:[gPeriod(A.from,A.to)||'period not stated',srcL(A.source||'https://www.agloc.org/','AGLOC')],rows:[['agloc_ltv85','At 85% LTV',A.ltv_85,P.ltv_85,0,'\u20b9'],['agloc_ltv80','At 80% LTV',A.ltv_80,P.ltv_80,0,'\u20b9'],['agloc_ltv75','At 75% LTV',A.ltv_75,P.ltv_75,0,'\u20b9'],['agloc_ref','Reference price',A.ref_price,P.ref_price,0,'\u20b9']]}];
   return groups.map(function(G,gi){
     var rows=G.rows.map(function(r){var k=r[0],cur=r[2],sp=k?gChart(k,day.id,72,26,false):'',id='gx-'+k+'-'+day.id;
@@ -737,7 +738,7 @@ window.__NB={ns:'nbfc-brief',get M(){return M;},esc:esc,stripMd:stripMd,noCites:
   pub:pubText,pubHead:pubHead,dt:dt,shortDay:shortDay,SPRINGS:SPRINGS,STAGGER:ENTRANCE.StaggerMs,RM:RM,
   mflItems:function(day){return day.mfl_market||[];},mflLabel:'Muthoot Fincorp in the market',ownDays:function(){return M.days.map(function(d){return d.id;});},legacyOK:false,searchQs:'',lastBuild:null};
 var SITE_PRIV=false,SITE_NS='nbfc-brief';
-function impLine(t){return impact(t,'why sm');}
+function impLine(t,lab){return impact(t,'why sm',lab);}
 /* ---------------- topics: hubs, Today story cards, latest circulars ----------------
    Shared by both editions; hubs.js builds the Topics pages on top of these. A card's hub comes from the
    publisher's card.category when present, else from its tags (story_tags), else from its section heading. */
@@ -782,19 +783,29 @@ function readHref(id,report,title,sec){var rk=RKEY[report]||report||'01-daily-wa
   return '#/'+id+'/read/'+rk+'?hl='+encodeURIComponent(flatT(title).slice(0,40))+(sec?'&sec='+encodeURIComponent(slug(sec)):'');}
 /* the edition's story cards: day.cards[] from the publisher, else the URGENT stories parsed from the news desk */
 function dayCards(day){var C=Array.isArray(day.cards)?day.cards.filter(function(c){return c&&c.title&&(c.report==='news'||c.report==='01-daily-watch');}):[];
-  if(C.length){var st=C.filter(function(c){return c.kind==='story';}),rest=C.filter(function(c){return c.kind!=='story';});
+  if(C.length){var ids={},also={};C.forEach(function(c){if(typeof c.id==='string')ids[c.id]=1;});
+    /* dup_of: a second card on the same thread in this edition folds under its primary ("Also in: <section>") */
+    C=C.filter(function(c){var p=typeof c.dup_of==='string'&&c.dup_of!==c.id&&ids[c.dup_of]?c.dup_of:null;if(!p)return true;
+      var sec=String(c.section||'').split(' \u00b7 ').pop()||c.title;(also[p]=also[p]||[]).push(noCites(stripMd(sec)));return false;});
+    var st=C.filter(function(c){return c.kind==='story';}),rest=C.filter(function(c){return c.kind!=='story';});
     return st.concat(rest).slice(0,Math.max(4,Math.min(6,st.length||6))).map(function(c){var src=c.source&&c.source.url?{l:c.source.name||'source',u:c.source.url}:null;
-      return {t:noCites(stripMd(c.title)),sum:c.summary||'',imp:c.impact||'',src:src?[src]:[],cat:catOf(c.tags,c.kind==='story'?'Story':'News',c.section,c.category),tags:tg0(c.tags),href:readHref(day.id,'news',c.title,c.section)};});}
+      return {t:noCites(stripMd(c.title)),sum:c.summary||'',imp:c.impact||'',src:src?[src]:[],cat:catOf(c.tags,c.kind==='story'?'Story':'News',c.section,c.category),tags:tg0(c.tags),href:readHref(day.id,'news',c.title,c.section),raw:c,day:day.id,also:also[c.id]||[]};});}
   var T=(Array.isArray(day.story_tags)?day.story_tags:[]).filter(function(e){return e&&e.kind==='story';});
   return stories(day).slice(0,6).map(function(s,i){var f=flatT(s.h).slice(0,30),e=null;
     T.forEach(function(x){var g=flatT(x.title).slice(0,30);if(!e&&g.length>=5&&(f.indexOf(g)===0||g.indexOf(f)===0))e=x;});if(!e)e=T[i]||null;
     return {t:s.h,sum:s.rest,imp:s.why,src:s.src||[],cat:catOf(e&&e.tags,'Story',e?e.section:'',null),tags:tg0(e&&e.tags),href:readHref(day.id,'news',s.h)};});}
-function storyCard(c,i){var h=HUB[c.cat],src=(c.src||[]).filter(function(x){return x&&x.u;});
+/* content upgrade (cu.js): sources line "Source: BSE +2", lifecycle/deadline chips, "Update N · since" / "Status" badge,
+   impact_label, and (private) the collapsed MFL view. Each bit is empty when its field is absent, so the card is unchanged. */
+function cuBits(c){if(!c.raw||!window.NBCU)return null;try{return NBCU.cardBits(c.raw,c.day);}catch(e){return null;}}
+function storyCard(c,i){var h=HUB[c.cat],src=(c.src||[]).filter(function(x){return x&&x.u;}),X=cuBits(c);
+  var srcHtml=X&&X.srcLine?X.srcLine:(src.length?'Source: '+src.slice(0,2).map(function(x){return '<a href="'+esc(x.u)+'" target="_blank" rel="noopener noreferrer">'+esc(x.l)+'</a>';}).join(', '):'Source in the full report');
+  var more='<a class="more press" href="'+esc(c.href)+'">Read full report<span class="sr">: '+esc(clip(c.t,60))+'</span> <span aria-hidden="true">\u2192</span></a>';
   return '<article class="scard g" data-st'+(c.cat?' data-hub="'+c.cat+'"':'')+'>'+
-    '<div class="tagrow">'+(c.cat?hubChip(c.cat):'<span class="hchip none"><span>News</span></span>')+(i===0?'<span class="kick">Top story</span>':'')+'</div>'+
-    '<h3>'+esc(c.t)+'</h3>'+(c.sum?'<p class="sum">'+esc(noCites(stripMd(c.sum)))+'</p>':'')+(c.imp?impLine(clip(noCites(stripMd(c.imp)),220)):'')+
-    '<div class="sc-f"><span class="by">'+(src.length?'Source: '+src.slice(0,2).map(function(x){return '<a href="'+esc(x.u)+'" target="_blank" rel="noopener noreferrer">'+esc(x.l)+'</a>';}).join(', '):'Source in the full report')+'</span>'+
-    '<a class="more press" href="'+esc(c.href)+'">Read full report<span class="sr">: '+esc(clip(c.t,60))+'</span> <span aria-hidden="true">\u2192</span></a></div></article>';}
+    '<div class="tagrow">'+(c.cat?hubChip(c.cat):'<span class="hchip none"><span>News</span></span>')+(i===0?'<span class="kick">Top story</span>':X&&X.k.upd?'<span class="kick">Update</span>':'')+(X?X.chips:'')+'</div>'+
+    '<h3>'+esc(c.t)+'</h3>'+(c.sum?'<p class="sum">'+esc(noCites(stripMd(c.sum)))+'</p>':'')+(c.imp?impLine(clip(noCites(stripMd(c.imp)),220),X&&X.label):'')+(X?X.deep:'')+
+    (c.also&&c.also.length?'<p class="also">Also in: '+esc(c.also.join(', '))+'</p>':'')+
+    (X&&X.badge?'<p class="by srcl">'+srcHtml+'</p>'+X.srcList+'<div class="sc-f">'+X.badge+more+'</div>':
+      (X?X.srcList:'')+'<div class="sc-f"><span class="by'+(X&&X.srcLine?' srcl':'')+'">'+srcHtml+'</span>'+more+'</div>')+'</article>';}
 function storyCards(day){var cs=dayCards(day);if(!cs.length)return '';
   return '<section aria-labelledby="h-stories" class="stories"><div class="sec" data-st><h2 id="h-stories">'+(day.id===M.days[0].id&&live(day)?'Today\u2019s stories':'The day\u2019s stories')+'</h2><a class="aside" href="#/'+day.id+'/read/01-daily-watch">News desk \u2192</a></div>'+
     '<div class="scards">'+cs.map(storyCard).join('')+'</div></section>';}
@@ -802,10 +813,10 @@ function storyCards(day){var cs=dayCards(day);if(!cs.length)return '';
 var RSTAT={'new':'New',draft:'Draft','in-force':'In force',deadline:'Deadline'};
 /* drop a leading copy of the ref number ("IBBI/CIRP/109/2026 (30 Oct): ...") since the ref is shown below */
 function ciTitle(t,ref){if(!ref)return t;var i=t.indexOf(ref);if(i<0||i>14)return t;var u=t.slice(i+ref.length).replace(/^\s*(\([^)]{0,20}\))?\s*[:,\u2013\u2014-]\s*/,'');return u.length>12?u.charAt(0).toUpperCase()+u.slice(1):t;}
-function circItem(x){var r=x.reg||{},st=r.status&&RSTAT[r.status],u=r.url||(x.source&&x.source.url)||'',href=x.href||(x.date?readHref(x.date,x.report||'rules',x.title,x.section):u);
+function circItem(x){var r=x.reg||{},st=r.status&&RSTAT[r.status],cb=null;try{cb=window.NBCU?NBCU.circBits(x,null):null;}catch(e){}var u=r.url||(x.source&&x.source.url)||'',href=x.href||(x.date?readHref(x.date,x.report||'rules',x.title,x.section):u);
   return '<li><a class="circ g press" href="'+esc(href)+'"'+(/^https?:/.test(href)?' target="_blank" rel="noopener noreferrer"':'')+'>'+
-    '<span class="ci-t"><span class="rgb">'+esc(String(r.regulator||'Reg').toUpperCase())+'</span>'+(st?'<span class="st st-'+esc(r.status)+'">'+st+'</span>':'')+(x.date?'<span class="ci-d num">'+esc(dm(x.date))+'</span>':'')+'</span>'+
-    '<span class="ci-h">'+esc(ciTitle(noCites(stripMd(x.title)),r.ref_no))+'</span>'+(r.ref_no?'<span class="ci-r num">'+esc(r.ref_no)+'</span>':'')+'</a></li>';}
+    '<span class="ci-t"><span class="rgb">'+esc(String(r.regulator||'Reg').toUpperCase())+'</span>'+(cb&&cb.lc?'':st?'<span class="st st-'+esc(r.status)+'">'+st+'</span>':'')+(cb?cb.chips:'')+(x.date?'<span class="ci-d num">'+esc(dm(x.date))+'</span>':'')+'</span>'+
+    '<span class="ci-h">'+esc(ciTitle(noCites(stripMd(x.title)),r.ref_no))+'</span>'+(r.ref_no?'<span class="ci-r num">'+esc(r.ref_no)+'</span>':'')+(cb&&cb.badge?'<span class="ci-b">'+cb.badge+'</span>':'')+'</a></li>';}
 function circStrip(list,note){
   return '<div class="sec" data-st><h2 id="h-circ">Latest circulars</h2><a class="aside" href="#/topic/regulation">Regulation \u2192</a></div>'+
     (list&&list.length?'<ul class="circs" data-st role="list">'+list.slice(0,10).map(circItem).join('')+'</ul>':'<div class="g card" data-st><p class="note" style="margin:0">'+esc(note||'No RBI, SEBI or IBBI circulars logged in the last 10 days.')+'</p></div>');}
@@ -1001,7 +1012,7 @@ function route(){
       nv.classList.remove('stg');if(nv.parentNode!==APP)APP.appendChild(nv);}
     if(first||!changed||RM.matches||!APP.animate||flying){
       var wasFirst=first;APP.appendChild(nv);commit();if(S.view==='archive')initArchive(nv);post();
-      landBook();if(first)riseTabbar();first=false;prefetch(day.id);if(wasFirst){warm(day);prebuildArchive();}return;}
+      landBook();if(first)riseTabbar();first=false;if(window.NBCU)NBCU.warm();prefetch(day.id);if(wasFirst){warm(day);prebuildArchive();}return;}
     /* stage: build + lay out hidden, old view untouched and fully visible meanwhile */
     var keepSeg=pv==='read'&&S.view==='read';
     nv.classList.add('stg');APP.appendChild(nv);STG=nv;
