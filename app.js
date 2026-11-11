@@ -795,7 +795,7 @@ function dayCards(day){var C=Array.isArray(day.cards)?day.cards.filter(function(
     T.forEach(function(x){var g=flatT(x.title).slice(0,30);if(!e&&g.length>=5&&(f.indexOf(g)===0||g.indexOf(f)===0))e=x;});if(!e)e=T[i]||null;
     return {t:s.h,sum:s.rest,imp:s.why,src:s.src||[],cat:catOf(e&&e.tags,'Story',e?e.section:'',null),tags:tg0(e&&e.tags),href:readHref(day.id,'news',s.h)};});}
 /* content upgrade (cu.js): sources line "Source: BSE +2", lifecycle/deadline chips, "Update N · since" / "Status" badge,
-   impact_label, and (private) the collapsed MFL view. Each bit is empty when its field is absent, so the card is unchanged. */
+   impact_label. Each bit is empty when its field is absent, so the card is unchanged. */
 function cuBits(c){if(!c.raw||!window.NBCU)return null;try{return NBCU.cardBits(c.raw,c.day);}catch(e){return null;}}
 function storyCard(c,i){var h=HUB[c.cat],src=(c.src||[]).filter(function(x){return x&&x.u;}),X=cuBits(c);
   var srcHtml=X&&X.srcLine?X.srcLine:(src.length?'Source: '+src.slice(0,2).map(function(x){return '<a href="'+esc(x.u)+'" target="_blank" rel="noopener noreferrer">'+esc(x.l)+'</a>';}).join(', '):'Source in the full report');

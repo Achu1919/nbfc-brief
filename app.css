@@ -679,13 +679,6 @@ p.by.srcl{margin-top:12px}
 .tier.c{color:var(--text-2);background:transparent;box-shadow:inset 0 0 0 1px var(--border-strong)}
 .tier.n{visibility:hidden}
 .also{margin-top:8px;font-size:var(--t-12);color:var(--text-3)}
-/* private: the MFL view, two lines until tapped */
-.mflv{display:block;width:100%;min-height:48px;margin-top:8px;padding:6px 0 6px 10px;border:0;border-left:2px dashed var(--border-strong);border-radius:0;background:none;
-  color:var(--text-2);font:inherit;font-size:var(--t-13);line-height:1.5;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.mflv b{color:var(--text-1);font-weight:600}
-.mflv-t{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.mflv[aria-expanded=true] .mflv-t{display:block;-webkit-line-clamp:unset;overflow:visible}
-.mflv-m{display:inline-block;margin-top:2px;font-size:var(--t-12);font-weight:600;color:var(--accent)}
 /* Today: Peer Intelligence nudge, and the example-data flag on fixture previews */
 .pin{--hub:var(--h-peers);display:flex;align-items:center;gap:10px;min-height:52px;padding:10px 14px;margin-bottom:12px;text-decoration:none;color:var(--text-1);font-size:var(--t-13);line-height:1.4}
 .pin .hic{color:var(--h-peers);flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
@@ -734,13 +727,6 @@ p.by.srcl{margin-top:12px}
 .cmp small{display:block;margin-top:1px;font-size:11.5px;font-weight:450;color:var(--text-3);line-height:1.35}
 .cmp small a{color:var(--text-2)}
 .cmp td.na{color:var(--text-2)}
-/* private: blind spots */
-.bs{margin-top:12px;padding:12px 14px;border-radius:12px;border:1px dashed color-mix(in srgb,var(--warn) 45%,transparent);background:color-mix(in srgb,var(--warn) 6%,transparent)}
-.bs-h{display:flex;align-items:center;gap:8px;margin:0;font-size:var(--t-12);font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--warn)}
-.bs-h .bs-a{margin-left:auto;letter-spacing:0;text-transform:none;font-weight:600;color:var(--text-3)}
-.bs ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px;font-size:var(--t-13);line-height:1.45;color:var(--text-2)}
-.bs small{display:block;margin-top:2px;font-size:var(--t-12);color:var(--text-3)}
-.bs small a{color:var(--text-2)}
 /* peer page history */
 .pih{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
 .pih-b{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:10px 14px;color:var(--text-1);font:inherit;font-size:var(--t-13);text-align:left;cursor:pointer}
