@@ -61,8 +61,8 @@ Source: [RBI notifications](https://www.rbi.org.in/Scripts/NotificationUser.aspx
 
 ## Deadlines
 
-- **9 Nov 2026:** Muthoot Fincorp Tranche I NCD allotment ([link](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/))
-- **10 Nov 2026:** Muthoot Fincorp Tranche I NCD BSE listing ([link](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/))
+- **9 Nov 2026:** Muthoot Fincorp Tranche I NCD allotment (date of allotment in the prospectus timetable) ([link](https://www.muthootfincorp.com/investors))
+- **10 Nov 2026:** Muthoot Fincorp Tranche I NCD BSE listing (T+3 under the prospectus timetable) ([link](https://www.muthootfincorp.com/investors))
 - **14 Nov 2026:** Q2 FY27 results for listed-debt issuers (SEBI LODR Reg 52) ([link](https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=1&ssid=7&smid=0))
 - **21 Nov 2026:** Credit Risk-o-Meter disclosure goes live for debt securities (SEBI HO/17/11/22(1)2026-DDHS-POD1) ([link](https://www.sebi.gov.in/legal/circulars/oct-2026/introduction-of-credit-risk-o-meter-as-an-additional-disclosure-mechanism-for-debt-securities_105081.html))
 - **26 Nov 2026:** Comments due on RBI draft PSL Directions (Press Release 2026-2027/1447) ([link](https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=63925))

@@ -12,17 +12,17 @@ Source: [NSE circular 149/2026](https://nsearchives.nseindia.com/content/circula
 
 ### Update: Muthoot Fincorp Tranche I NCD: allotment checkpoint is Monday
 <!-- tags: companies=muthoot-fincorp; topics=ncd,funding; category=muthoot-fincorp -->
-Nothing new since the 5 Nov close. Chittorgarh's page this morning still shows final bids of 2.67x at 17:00 IST on 5 Nov and no basis-of-allotment data. The 7 Nov edition carried allotment on 9 Nov and BSE listing on 10 Nov from the same page.
+Nothing new since the 5 Nov close. BSE's bid page shows final bids of 266.83% of the base (2.67x) at 17:00 IST on 5 Nov. The Tranche I prospectus timetable puts allotment on 9 Nov and the start of BSE trading at T+3 (three working days after the close).
 Possible impact on Muthoot Fincorp: the allotted size against the ₹500 crore ceiling is due to be known on Monday; the listing print on Tuesday sets the secondary-market reference for the rest of the ₹4,000 crore shelf.
-Source: [Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/)
+Source: [BSE bid data](https://beta.bseindia.com/markets/publicIssues/DisplayIPO.aspx?IPONo=8058&id=4903&idtype=1&startdt=23%2FOct%2F2026&status=L&type=DPI) · [Tranche I prospectus](https://www.muthootfincorp.com/investors)
 
-<!-- ncd: issue=Tranche I; open=2026-10-23; close=2026-11-05; size_cr=500; rating=CRISIL AA/Stable, Brickwork AA+/Stable; coupon_range=8.56%–9.25%; bids=2026-11-05:2.67; source=https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/; status=closed -->
+<!-- ncd: issue=Tranche I; open=2026-10-23; close=2026-11-05; size_cr=500; rating=CRISIL AA/Stable, Brickwork AA+/Stable; coupon_range=8.56%–9.25%; bids=2026-11-05:2.67; source=https://beta.bseindia.com/markets/publicIssues/DisplayIPO.aspx?IPONo=8058&id=4903&idtype=1&startdt=23%2FOct%2F2026&status=L&type=DPI; status=closed -->
 
 ### Muthoot Fincorp NCD status
-Muthoot Fincorp's Tranche I NCD is closed; the allotment (9 Nov) and BSE listing (10 Nov) dates are carried from the 7 Nov edition, and the final allotment size is not yet published. The ₹500 crore issue (₹200 crore base plus ₹300 crore green shoe) closed on 5 Nov with bids at 2.67x, and carries CRISIL AA/Stable and Brickwork AA+/Stable ratings with coupons of 8.56%–9.25%.
+Muthoot Fincorp's Tranche I NCD is closed, with allotment on 9 Nov and BSE trading from T+3 under the prospectus timetable; the final allotment size is not yet published. The ₹500 crore issue (₹200 crore base plus ₹300 crore green shoe) closed on 5 Nov with bids at 2.67x, and carries CRISIL AA/Stable and Brickwork AA+/Stable ratings with coupons of 8.56%–9.25%.
 | Field | Value | As of |
 |---|---|---|
-| Status | Closed, 23 Oct – 5 Nov 2026; allotment and BSE listing dates carried from the 7 Nov edition (9 Nov / 10 Nov) ([Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/)) | 2026-11-08 |
+| Status | Closed, 23 Oct – 5 Nov 2026; prospectus timetable: allotment 9 Nov, BSE trading from T+3 ([Tranche I prospectus](https://www.muthootfincorp.com/investors)) | 2026-11-08 |
 | Size | ₹500 crore (₹200 crore base + ₹300 crore green shoe), under a ₹4,000 crore shelf; final allotment size not yet published | 2026-11-05 |
 | Rating | CRISIL AA/Stable; Brickwork AA+/Stable | 2026-11-08 |
 | Coupon | 8.56%–9.25% | 2026-11-08 |
@@ -152,11 +152,11 @@ Source: [NSE — Finkurve press release](https://nsearchives.nseindia.com/corpor
 
 | Item | Value | As of | Source |
 |---|---|---|---|
-| NCD Tranche I status | Closed 5 Nov 2026; allotment/listing 9–10 Nov per 7 Nov edition; no allotment data yet | 2026-11-08 | [Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/) |
-| NCD Tranche I size | ₹200 cr base + ₹300 cr green shoe = ₹500 cr (₹4,000 cr shelf) | 2026-11-05 | [Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/) |
-| NCD Tranche I coupons | 8.56%–9.25% | 2026-11-08 | [Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/) |
-| NCD Tranche I bids at close | Bids stood at 2.67x (retail 2.51x, HNI 3.79x, NII 1.34x, institutional 0.02x) at 17:00 IST | 2026-11-05 | [Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/) |
-| Ratings | CRISIL AA/Stable · Brickwork AA+/Stable | 2026-11-08 | [Chittorgarh](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/) |
+| NCD Tranche I status | Closed 5 Nov 2026; prospectus timetable: allotment 9 Nov, BSE trading from T+3 | 2026-11-08 | [Tranche I prospectus](https://www.muthootfincorp.com/investors) |
+| NCD Tranche I size | ₹200 cr base + ₹300 cr green shoe = ₹500 cr (₹4,000 cr shelf) | 2026-11-05 | [Tranche I prospectus](https://www.muthootfincorp.com/investors) |
+| NCD Tranche I coupons | 8.56%–9.25% | 2026-11-08 | [Tranche I prospectus](https://www.muthootfincorp.com/investors) |
+| NCD Tranche I bids at close | 2.67x (266.83% of base on BSE) at 17:00 IST | 2026-11-05 | [BSE](https://beta.bseindia.com/markets/publicIssues/DisplayIPO.aspx?IPONo=8058&id=4903&idtype=1&startdt=23%2FOct%2F2026&status=L&type=DPI) |
+| Ratings | CRISIL AA/Stable · Brickwork AA+/Stable | 2026-11-08 | [Tranche I prospectus](https://www.muthootfincorp.com/investors) |
 | Securitisation | Delta 3.0 PTC ratings final (6 Nov); Delta 5 provisional [ICRA]AA+(SO) A1 / AA-(SO) equity (4 Nov) | 2026-11-06 | [ICRA](https://www.icra.in/Credit_Perspective/Details/40882) |
 | AGLOC 85% LTV ceiling | ₹11,013/g (unchanged period) | 2026-11-07 to 2026-11-09 | [AGLOC](https://www.agloc.org/) |
 | Key date: Manappuram Q2 call | 12 Nov 2026, 5 PM IST | 2026-11-05 | [NSE](https://nsearchives.nseindia.com/corporate/MANAPPURAM_05112026222522_prior_intimation_concall_SD.pdf) |
@@ -182,7 +182,7 @@ IBJA publishes no rates on Saturday or Sunday, so the 6 Nov PM session is still 
 
 - [NSE circular 149/2026: Muhurat trading](https://nsearchives.nseindia.com/content/circulars/CMTR76941.pdf) · [NSE index closes 6 Nov](https://nsearchives.nseindia.com/content/indices/ind_close_all_06112026.csv) · [NSE index closes 30 Oct](https://nsearchives.nseindia.com/content/indices/ind_close_all_30102026.csv)
 - [NSE bhavcopy 6 Nov](https://nsearchives.nseindia.com/products/content/sec_bhavdata_full_06112026.csv) · [NSE bhavcopy 30 Oct](https://nsearchives.nseindia.com/products/content/sec_bhavdata_full_30102026.csv) · [NSE FII/DII](https://www.nseindia.com/reports/fii-dii)
-- [Chittorgarh: Muthoot Fincorp Tranche I NCD](https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/)
+- [BSE: Tranche I bid data](https://beta.bseindia.com/markets/publicIssues/DisplayIPO.aspx?IPONo=8058&id=4903&idtype=1&startdt=23%2FOct%2F2026&status=L&type=DPI) · [Muthoot Fincorp: Tranche I prospectus](https://www.muthootfincorp.com/investors)
 - [ICRA: Muthoot Fincorp rating page](https://www.icra.in/Credit_Perspective/Details/40882) · [ICRA: Delta 3.0 final](https://www.icra.in/Rationale/ShowRationaleReport?Id=146789) · [ICRA: Delta 5 provisional](https://www.icra.in/Rationale/ShowRationaleReport?Id=146755) · [ICRA: Fedbank Financial](https://www.icra.in/Rationale/ShowRationaleReport?Id=146801)
 - [Economic Times / Reuters: gold](https://m.economictimes.com/markets/commodities/news/gold-drops-as-strong-us-payrolls-boost-dollar-yields/amp_articleshow/135626183.cms) · [IBJA](https://ibjarates.com/) · [AGLOC](https://www.agloc.org/)
 - [NSE: MobiKwik CoR](https://nsearchives.nseindia.com/corporate/MOBIKWIK_06112026141941_Intimation_about_granting_of_NBFC_License.pdf) · [NSE: MobiKwik press release](https://nsearchives.nseindia.com/corporate/MOBIKWIK_06112026144634_Press_Release_06112026.pdf)

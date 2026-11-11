@@ -438,3 +438,28 @@ Written by `content_upgrade.py` from `export_json.export()`. `data/latest.json`,
 - `deadlines[].date_text` is filled whenever the row is a window ("23 Oct – 5 Nov 2026"; "90-day window from 7 Nov 2026" becomes "7 Nov 2026 – 5 Feb 2027").
 - Status-only updates: a card counts as status-only when its story comment or `story_map.json` entry has `kind=status`, or its title is a status block ("… status", "Status: …"). Its `stories.json` update has `kind: "status"`, and `continuing_stories[].latest` gets `kind: "status"` with its `card_id`. `lifecycle_change` is set only for regulation lifecycle moves.
 - Private edition only: `impact_deep` on cards (from `MFL view:` lines) and on peer entries, and peer `blind_spots[] {text, basis, source}`. Peer deep fields live in the private-only `data/peer_intel_private.json` (`{entries: {id: {blind_spots, impact_deep}}}`), merged at export; the shared `peer_intel_seed.json` stays public-safe and the public repo must never contain the private file. Neither key ever appears in public files, and the leak tests enforce this.
+
+## Review fixes (11 Nov 2026, CoS + Site Builder)
+
+- **No aggregator sources.** `content_upgrade.BANNED_HOSTS` / `BANNED_PAGES` / `BANNED_NAMES` (SOURCES.md excluded list plus
+  chittorgarh, ipocentral, ipowatch, investorgain, ipopremium, ipoplatform, ipoji, groww IPO/bond/quote pages and Moneycontrol
+  IPO/quote/market-stats pages; Moneycontrol news stays tier 2) are never cited in any source field of any file.
+  `scrub_aggregators` runs first at export: a banned-source key-number / watchlist / `mfl_market` row is kept only when
+  `data/source_replacements.json` carries a verified official replacement (NSE bhavcopy or NSE index close file values
+  checked to the paisa, or the Tranche I prospectus wording); otherwise the row is dropped. A card whose only sources are
+  aggregators is dropped unless the same file lists a verified replacement. Aggregator names are removed from card text.
+  `mfl_ncd.bids` keeps only exchange-verified figures (`bids_keep`); `mfl_ncd.source` is BSE bid data when bids are present,
+  else the prospectus. `source_replacements.json` is the audit record (built by a one-off script; never hand-edit a value).
+  Raw report markdown (`reports[].content`) is the published archive text and is not rewritten.
+- **Stable thread titles.** `story_map.json` `_threads[story_id] = {title, regulators, next?}`. `stories.json` and
+  `continuing_stories[]` use `title` (≤ 60 chars, neutral, never a dated headline). A thread with no entry is reported.
+- **Regulator tags.** `_threads[id].regulators` is the audited list (a regulator appears only when its action or
+  publication is the news). Without an entry, a non-regulation thread only takes regulator tags from circular / reg cards.
+- **`next`.** `{date, date_text, what, source: {name, url, tier}}`: `_threads[id].next` (with `known_from`, shown from that
+  edition up to its date) or the thread's earliest upcoming sourced deadline row. Never guessed; `null` otherwise.
+- **Milestones are not status-only.** A card whose milestone is open / closed / allotment / listing / listed / results /
+  effective / final / … is a news update (`kind` absent), whatever its title or map says.
+- **Table-row summaries.** A card that is one table row gets labelled values from the table header
+  (`Value: 13,752.4; Previous: …; Change: −253.0 (−1.81%); Effective: …`), source columns left to `sources[]`, empty / '—'
+  cells skipped (`summary: null` if nothing is left). Key-figure tables list every row as `Label: value.` and keep
+  `>`, `<`, `≤` and signs.

@@ -1,0 +1,1416 @@
+{
+ "_note": "Aggregator-source audit (11 Nov 2026). Rows: banned-source key numbers replaced only after the value was checked against the official file (NSE bhavcopy / NSE index close file) or the Tranche I prospectus wording; every other banned-source row and card is dropped at export (content_upgrade.scrub_aggregators). Built by build_replacements.py; never hand-edit a value here.",
+ "rows": [
+  {
+   "edition": "2026-10-23",
+   "part": "mfl_market",
+   "name": "Tranche I NCD status",
+   "value": "Opens 23 Oct, closes 5 Nov 2026",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-23",
+   "part": "mfl_market",
+   "name": "Tranche I NCD size",
+   "value": "₹200 cr base + ₹300 cr green shoe = ₹500 cr (₹4,000 cr shelf)",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-23",
+   "part": "mfl_market",
+   "name": "Tranche I NCD rating",
+   "value": "CRISIL AA/Stable; BWR AA+/Stable",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-24",
+   "part": "items",
+   "name": "Nifty Financial Services",
+   "value": "24,403.00",
+   "old_url": "https://trackliveprice.com/nifty-financial-services/",
+   "source": {
+    "label": "NSE index close file",
+    "url": "https://nsearchives.nseindia.com/content/indices/ind_close_all_23102026.csv"
+   }
+  },
+  {
+   "edition": "2026-10-24",
+   "part": "items",
+   "name": "Manappuram Finance",
+   "value": "₹286.10",
+   "old_url": "https://exa.ai/library/markets/stock/MANAPPURAM?exchange=XNSE&date=2026-10-23&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261023_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-24",
+   "part": "items",
+   "name": "Muthoot Finance",
+   "value": "₹2,373.00",
+   "old_url": "https://exa.ai/library/markets/stock/MUTHOOTFIN?exchange=XNSE&date=2026-10-23&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261023_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-24",
+   "part": "mfl_market",
+   "name": "Tranche I NCD status",
+   "value": "Open, 23 Oct – 5 Nov 2026",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-25",
+   "part": "items",
+   "name": "Nifty Financial Services",
+   "value": "24,403.00",
+   "old_url": "https://trackliveprice.com/nifty-financial-services/",
+   "source": {
+    "label": "NSE index close file",
+    "url": "https://nsearchives.nseindia.com/content/indices/ind_close_all_23102026.csv"
+   }
+  },
+  {
+   "edition": "2026-10-25",
+   "part": "items",
+   "name": "Manappuram Finance",
+   "value": "₹286.10",
+   "old_url": "https://exa.ai/library/markets/stock/MANAPPURAM?exchange=XNSE&date=2026-10-23&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261023_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-25",
+   "part": "items",
+   "name": "Muthoot Finance",
+   "value": "₹2,373.00",
+   "old_url": "https://exa.ai/library/markets/stock/MUTHOOTFIN?exchange=XNSE&date=2026-10-23&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261023_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-25",
+   "part": "items",
+   "name": "IIFL Finance",
+   "value": "₹531.65",
+   "old_url": "https://exa.ai/library/markets/stock/IIFL?exchange=XNSE&date=2026-10-23&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261023_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-25",
+   "part": "items",
+   "name": "Shriram Finance",
+   "value": "₹865.00",
+   "old_url": "https://exa.ai/library/markets/stock/SHRIRAMFIN?exchange=XNSE&date=2026-10-23&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261023_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-25",
+   "part": "items",
+   "name": "Bajaj Finance",
+   "value": "₹928.95",
+   "old_url": "https://exa.ai/library/markets/stock/BAJFINANCE?exchange=XNSE&date=2026-10-23&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261023_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-25",
+   "part": "mfl_market",
+   "name": "Tranche I NCD status",
+   "value": "Open, 23 Oct – 5 Nov 2026; bidding resumes Mon 26 Oct",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-26",
+   "part": "items",
+   "name": "Nifty Financial Services",
+   "value": "24,403.00",
+   "old_url": "https://trackliveprice.com/nifty-financial-services/",
+   "source": {
+    "label": "NSE index close file",
+    "url": "https://nsearchives.nseindia.com/content/indices/ind_close_all_23102026.csv"
+   }
+  },
+  {
+   "edition": "2026-10-26",
+   "part": "items",
+   "name": "Manappuram Finance",
+   "value": "₹286.10",
+   "old_url": "https://exa.ai/library/markets/stock/MANAPPURAM?exchange=XNSE&date=2026-10-23&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261023_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-26",
+   "part": "items",
+   "name": "Muthoot Finance",
+   "value": "₹2,373.00",
+   "old_url": "https://exa.ai/library/markets/stock/MUTHOOTFIN?exchange=XNSE&date=2026-10-23&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261023_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-26",
+   "part": "items",
+   "name": "IIFL Finance",
+   "value": "₹531.65",
+   "old_url": "https://exa.ai/library/markets/stock/IIFL?exchange=XNSE&date=2026-10-23&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261023_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-26",
+   "part": "items",
+   "name": "Shriram Finance",
+   "value": "₹865.00",
+   "old_url": "https://exa.ai/library/markets/stock/SHRIRAMFIN?exchange=XNSE&date=2026-10-23&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261023_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-26",
+   "part": "items",
+   "name": "Bajaj Finance",
+   "value": "₹928.95",
+   "old_url": "https://exa.ai/library/markets/stock/BAJFINANCE?exchange=XNSE&date=2026-10-23&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261023_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-26",
+   "part": "mfl_market",
+   "name": "Tranche I NCD status",
+   "value": "Open, 23 Oct – 5 Nov 2026; bidding resumes Mon 26 Oct",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-26",
+   "part": "mfl_market",
+   "name": "Tranche I NCD size",
+   "value": "₹200 cr base + ₹300 cr green shoe = ₹500 cr (₹4,000 cr shelf); first come, first served",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-26",
+   "part": "mfl_market",
+   "name": "Ratings",
+   "value": "CRISIL AA/Stable · BWR AA+/Stable",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-27",
+   "part": "items",
+   "name": "Manappuram Finance",
+   "value": "₹287.50",
+   "old_url": "https://exa.ai/library/markets/stock/MANAPPURAM?exchange=XNSE&date=2026-10-26&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261026_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-27",
+   "part": "items",
+   "name": "Muthoot Finance",
+   "value": "₹2,395.80",
+   "old_url": "https://exa.ai/library/markets/stock/MUTHOOTFIN?exchange=XNSE&date=2026-10-26&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261026_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-27",
+   "part": "items",
+   "name": "IIFL Finance",
+   "value": "₹529.20",
+   "old_url": "https://exa.ai/library/markets/stock/IIFL?exchange=XNSE&date=2026-10-26&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261026_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-27",
+   "part": "items",
+   "name": "Shriram Finance",
+   "value": "₹825.00",
+   "old_url": "https://exa.ai/library/markets/stock/SHRIRAMFIN?exchange=XNSE&date=2026-10-26&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261026_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-27",
+   "part": "items",
+   "name": "Bajaj Finance",
+   "value": "₹918.70",
+   "old_url": "https://exa.ai/library/markets/stock/BAJFINANCE?exchange=XNSE&date=2026-10-26&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261026_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-27",
+   "part": "mfl_market",
+   "name": "Tranche I NCD status",
+   "value": "Open, 23 Oct – 5 Nov 2026; first come, first served",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-27",
+   "part": "mfl_market",
+   "name": "Tranche I NCD size",
+   "value": "₹200 cr base + ₹300 cr green shoe = ₹500 cr (₹4,000 cr shelf)",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-27",
+   "part": "mfl_market",
+   "name": "Ratings",
+   "value": "CRISIL AA/Stable · BWR AA+/Stable",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-28",
+   "part": "items",
+   "name": "Manappuram Finance",
+   "value": "₹286.45",
+   "old_url": "https://exa.ai/library/markets/stock/MANAPPURAM?exchange=XNSE&date=2026-10-27&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261027_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-28",
+   "part": "items",
+   "name": "Muthoot Finance",
+   "value": "₹2,407.50",
+   "old_url": "https://exa.ai/library/markets/stock/MUTHOOTFIN?exchange=XNSE&date=2026-10-27&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261027_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-28",
+   "part": "items",
+   "name": "IIFL Finance",
+   "value": "₹527.55",
+   "old_url": "https://exa.ai/library/markets/stock/IIFL?exchange=XNSE&date=2026-10-27&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261027_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-28",
+   "part": "items",
+   "name": "Shriram Finance",
+   "value": "₹823.60",
+   "old_url": "https://exa.ai/library/markets/stock/SHRIRAMFIN?exchange=XNSE&date=2026-10-27&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261027_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-28",
+   "part": "items",
+   "name": "Bajaj Finance",
+   "value": "₹912.00",
+   "old_url": "https://exa.ai/library/markets/stock/BAJFINANCE?exchange=XNSE&date=2026-10-27&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261027_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-28",
+   "part": "mfl_market",
+   "name": "Tranche I NCD status",
+   "value": "Open, 23 Oct – 5 Nov 2026; first come, first served",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-28",
+   "part": "mfl_market",
+   "name": "Tranche I NCD size",
+   "value": "₹200 cr base + ₹300 cr green shoe = ₹500 cr",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-28",
+   "part": "mfl_market",
+   "name": "Ratings",
+   "value": "CRISIL AA/Stable · BWR AA+/Stable",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-29",
+   "part": "items",
+   "name": "Manappuram Finance",
+   "value": "₹288.75",
+   "old_url": "https://exa.ai/library/markets/stock/MANAPPURAM?exchange=XNSE&date=2026-10-28&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261028_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-29",
+   "part": "items",
+   "name": "Muthoot Finance",
+   "value": "₹2,392.70",
+   "old_url": "https://exa.ai/library/markets/stock/MUTHOOTFIN?exchange=XNSE&date=2026-10-28&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261028_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-29",
+   "part": "items",
+   "name": "IIFL Finance",
+   "value": "₹533.20",
+   "old_url": "https://exa.ai/library/markets/stock/IIFL?exchange=XNSE&date=2026-10-28&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261028_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-29",
+   "part": "items",
+   "name": "Shriram Finance",
+   "value": "₹832.55",
+   "old_url": "https://exa.ai/library/markets/stock/SHRIRAMFIN?exchange=XNSE&date=2026-10-28&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261028_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-29",
+   "part": "items",
+   "name": "Bajaj Finance",
+   "value": "₹917.25",
+   "old_url": "https://exa.ai/library/markets/stock/BAJFINANCE?exchange=XNSE&date=2026-10-28&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261028_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-29",
+   "part": "mfl_market",
+   "name": "Tranche I NCD status",
+   "value": "Open, 23 Oct – 5 Nov 2026; first come, first served",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-29",
+   "part": "mfl_market",
+   "name": "Tranche I NCD size",
+   "value": "₹200 cr base + ₹300 cr green shoe = ₹500 cr",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-29",
+   "part": "mfl_market",
+   "name": "Ratings",
+   "value": "CRISIL AA/Stable · BWR AA+/Stable",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-30",
+   "part": "items",
+   "name": "Manappuram Finance",
+   "value": "₹302.10",
+   "old_url": "https://exa.ai/library/markets/stock/MANAPPURAM?exchange=XNSE&date=2026-10-29&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261029_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-30",
+   "part": "items",
+   "name": "Muthoot Finance",
+   "value": "₹2,497.10",
+   "old_url": "https://exa.ai/library/markets/stock/MUTHOOTFIN?exchange=XNSE&date=2026-10-29&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261029_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-30",
+   "part": "items",
+   "name": "IIFL Finance",
+   "value": "₹562.20",
+   "old_url": "https://exa.ai/library/markets/stock/IIFL?exchange=XNSE&date=2026-10-29&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261029_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-30",
+   "part": "items",
+   "name": "Shriram Finance",
+   "value": "₹841.10",
+   "old_url": "https://exa.ai/library/markets/stock/SHRIRAMFIN?exchange=XNSE&date=2026-10-29&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261029_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-30",
+   "part": "items",
+   "name": "Bajaj Finance",
+   "value": "₹938.90",
+   "old_url": "https://exa.ai/library/markets/stock/BAJFINANCE?exchange=XNSE&date=2026-10-29&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261029_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-30",
+   "part": "mfl_market",
+   "name": "Tranche I NCD status",
+   "value": "Open, 23 Oct – 5 Nov 2026; first come, first served",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-30",
+   "part": "mfl_market",
+   "name": "Tranche I NCD size",
+   "value": "₹200 cr base + ₹300 cr green shoe = ₹500 cr",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-31",
+   "part": "items",
+   "name": "Manappuram Finance",
+   "value": "₹289.00",
+   "old_url": "https://exa.ai/library/markets/stock/MANAPPURAM?exchange=XNSE&date=2026-10-30&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261030_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-31",
+   "part": "items",
+   "name": "Muthoot Finance",
+   "value": "₹2,408.60",
+   "old_url": "https://exa.ai/library/markets/stock/MUTHOOTFIN?exchange=XNSE&date=2026-10-30&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261030_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-31",
+   "part": "items",
+   "name": "IIFL Finance",
+   "value": "₹527.65",
+   "old_url": "https://exa.ai/library/markets/stock/IIFL?exchange=XNSE&date=2026-10-30&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261030_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-31",
+   "part": "items",
+   "name": "Shriram Finance",
+   "value": "₹823.15",
+   "old_url": "https://exa.ai/library/markets/stock/SHRIRAMFIN?exchange=XNSE&date=2026-10-30&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261030_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-31",
+   "part": "items",
+   "name": "Bajaj Finance",
+   "value": "₹939.10",
+   "old_url": "https://exa.ai/library/markets/stock/BAJFINANCE?exchange=XNSE&date=2026-10-30&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261030_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-10-31",
+   "part": "mfl_market",
+   "name": "Tranche I NCD status",
+   "value": "Open, 23 Oct – 5 Nov 2026; first come, first served",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-31",
+   "part": "mfl_market",
+   "name": "Tranche I NCD size",
+   "value": "₹200 cr base + ₹300 cr green shoe = ₹500 cr",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-10-31",
+   "part": "mfl_market",
+   "name": "Tranche I NCD ratings",
+   "value": "Crisil AA/Stable; Brickwork AA+/Stable",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-01",
+   "part": "items",
+   "name": "Manappuram Finance",
+   "value": "₹289.00",
+   "old_url": "https://exa.ai/library/markets/stock/MANAPPURAM?exchange=XNSE&date=2026-10-30&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261030_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-11-01",
+   "part": "items",
+   "name": "IIFL Finance",
+   "value": "₹527.65",
+   "old_url": "https://exa.ai/library/markets/stock/IIFL?exchange=XNSE&date=2026-10-30&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261030_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-11-01",
+   "part": "items",
+   "name": "Shriram Finance",
+   "value": "₹823.15",
+   "old_url": "https://exa.ai/library/markets/stock/SHRIRAMFIN?exchange=XNSE&date=2026-10-30&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261030_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-11-01",
+   "part": "items",
+   "name": "Bajaj Finance",
+   "value": "₹939.10",
+   "old_url": "https://exa.ai/library/markets/stock/BAJFINANCE?exchange=XNSE&date=2026-10-30&view=daily",
+   "source": {
+    "label": "NSE bhavcopy",
+    "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20261030_F_0000.csv.zip"
+   }
+  },
+  {
+   "edition": "2026-11-01",
+   "part": "mfl_market",
+   "name": "Tranche I NCD status",
+   "value": "Open, 23 Oct – 5 Nov 2026; first come, first served",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-01",
+   "part": "mfl_market",
+   "name": "Tranche I NCD size",
+   "value": "₹200 cr base + ₹300 cr green shoe = ₹500 cr",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-01",
+   "part": "mfl_market",
+   "name": "Tranche I NCD ratings",
+   "value": "Crisil AA/Stable; Brickwork AA+/Stable",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-02",
+   "part": "mfl_market",
+   "name": "Tranche I NCD status",
+   "value": "Open, 23 Oct – 5 Nov 2026",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-02",
+   "part": "mfl_market",
+   "name": "Tranche I allotment / listing",
+   "value": "Allotment 9 Nov; BSE listing 10 Nov",
+   "old_url": "https://groww.in/bonds/ipo/muthoot-fincorp-tranche-i-ncd-october-2026",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-02",
+   "part": "mfl_market",
+   "name": "Tranche I NCD rating",
+   "value": "Crisil AA/Stable; Brickwork AA+/Stable",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-03",
+   "part": "mfl_market",
+   "name": "Tranche I NCD status",
+   "value": "Open, 23 Oct – 5 Nov 2026",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-03",
+   "part": "mfl_market",
+   "name": "Tranche I allotment / listing",
+   "value": "Allotment 9 Nov; BSE listing 10 Nov",
+   "old_url": "https://groww.in/bonds/ipo/muthoot-fincorp-tranche-i-ncd-october-2026",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-03",
+   "part": "mfl_market",
+   "name": "Tranche I NCD rating",
+   "value": "Crisil AA/Stable; Brickwork AA+/Stable",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-04",
+   "part": "mfl_market",
+   "name": "NCD Tranche I status",
+   "value": "Open, 23 Oct – 5 Nov 2026",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-04",
+   "part": "mfl_market",
+   "name": "NCD Tranche I allotment / listing",
+   "value": "Allotment 9 Nov; BSE listing 10 Nov",
+   "old_url": "https://groww.in/bonds/ipo/muthoot-fincorp-tranche-i-ncd-october-2026",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-05",
+   "part": "mfl_market",
+   "name": "NCD Tranche I status",
+   "value": "Open, closes today (5 Nov 2026)",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-05",
+   "part": "mfl_market",
+   "name": "NCD Tranche I allotment / listing",
+   "value": "Allotment 9 Nov; BSE listing 10 Nov",
+   "old_url": "https://groww.in/bonds/ipo/muthoot-fincorp-tranche-i-ncd-october-2026",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-06",
+   "part": "mfl_market",
+   "name": "NCD Tranche I status",
+   "value": "Closed 5 Nov 2026; allotment 9 Nov; BSE listing 10 Nov",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-06",
+   "part": "mfl_market",
+   "name": "NCD Tranche I size",
+   "value": "₹200 cr base + ₹300 cr green shoe = ₹500 cr (₹4,000 cr shelf)",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-06",
+   "part": "mfl_market",
+   "name": "NCD Tranche I coupons",
+   "value": "8.56%–9.25%",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-06",
+   "part": "mfl_market",
+   "name": "Ratings",
+   "value": "CRISIL AA/Stable · Brickwork AA+/Stable",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-08",
+   "part": "mfl_market",
+   "name": "NCD Tranche I size",
+   "value": "₹200 cr base + ₹300 cr green shoe = ₹500 cr (₹4,000 cr shelf)",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-08",
+   "part": "mfl_market",
+   "name": "NCD Tranche I coupons",
+   "value": "8.56%–9.25%",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-08",
+   "part": "mfl_market",
+   "name": "Ratings",
+   "value": "CRISIL AA/Stable · Brickwork AA+/Stable",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-09",
+   "part": "mfl_market",
+   "name": "NCD Tranche I size",
+   "value": "₹200 cr base + ₹300 cr green shoe = ₹500 cr (₹4,000 cr shelf)",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-09",
+   "part": "mfl_market",
+   "name": "NCD Tranche I coupons",
+   "value": "8.56%–9.25%",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-09",
+   "part": "mfl_market",
+   "name": "Ratings",
+   "value": "CRISIL AA/Stable · Brickwork AA+/Stable",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  },
+  {
+   "edition": "2026-11-10",
+   "part": "mfl_market",
+   "name": "Ratings",
+   "value": "CRISIL AA/Stable · Brickwork AA+/Stable",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/",
+   "source": {
+    "label": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  }
+ ],
+ "cards": {
+  "2026-10-25-news-4": [
+   {
+    "name": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  ],
+  "2026-10-31-news-19": [
+   {
+    "name": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  ],
+  "2026-11-02-news-6": [
+   {
+    "name": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  ],
+  "2026-11-03-news-6": [
+   {
+    "name": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  ],
+  "2026-11-04-rules-43": [
+   {
+    "name": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  ],
+  "2026-11-05-rules-39": [
+   {
+    "name": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  ]
+ },
+ "mfl_ncd": {
+  "Tranche I": {
+   "source": {
+    "name": "BSE bid data",
+    "url": "https://beta.bseindia.com/markets/publicIssues/DisplayIPO.aspx?IPONo=8058&id=4903&idtype=1&startdt=23%2FOct%2F2026&status=L&type=DPI"
+   },
+   "bids_keep": [
+    "2026-11-04",
+    "2026-11-05"
+   ],
+   "terms_source": {
+    "name": "Tranche I prospectus (Muthoot Fincorp)",
+    "url": "https://www.muthootfincorp.com/investors"
+   }
+  }
+ },
+ "dropped_rows": [
+  {
+   "edition": "2026-10-24",
+   "part": "items",
+   "name": "Gold spot ($/oz)",
+   "value": "~$3,996",
+   "old_url": "https://exa.ai/library/markets/commodity/gold?currency=USD"
+  },
+  {
+   "edition": "2026-10-24",
+   "part": "mfl_market",
+   "name": "Tranche I NCD bids vs base",
+   "value": "0.55× at end of day 1",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-10-24",
+   "part": "mfl_market",
+   "name": "Ratings",
+   "value": "CRISIL AA/Stable · BWR AA+/Stable · CARE AA/Stable",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-10-25",
+   "part": "items",
+   "name": "Gold (₹/10g)",
+   "value": "~₹1,42,000",
+   "old_url": "https://hdfcsky.com/news/gold-slumps-3-6percent-in-worst-week-since-june-silver-crashes-below-54-as-oil-fuelled-rate-fears-wipe-out-festive-gains-2"
+  },
+  {
+   "edition": "2026-10-25",
+   "part": "items",
+   "name": "Gold spot ($/oz)",
+   "value": "$4,021.04",
+   "old_url": "https://hdfcsky.com/news/gold-slumps-3-6percent-in-worst-week-since-june-silver-crashes-below-54-as-oil-fuelled-rate-fears-wipe-out-festive-gains-2"
+  },
+  {
+   "edition": "2026-10-25",
+   "part": "mfl_market",
+   "name": "Tranche I NCD bids vs base",
+   "value": "0.55× (retail 0.32×, HNI 0.69×, NII 0.71×, QIB 0.00×)",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-10-25",
+   "part": "mfl_market",
+   "name": "Tranche I NCD minimum size to proceed",
+   "value": "₹150 cr (75% of ₹200 cr base)",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-10-25",
+   "part": "mfl_market",
+   "name": "Ratings",
+   "value": "CRISIL AA/Stable · BWR AA+/Stable · CARE AA/Stable (5 Oct)",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-10-26",
+   "part": "mfl_market",
+   "name": "Tranche I NCD bids vs base",
+   "value": "0.55× (retail 0.32×, HNI 0.69×, NII 0.71×, QIB 0.00×)",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-10-26",
+   "part": "mfl_market",
+   "name": "Muthoot Microfin (subsidiary) Q2 board meeting",
+   "value": "5 Nov 2026",
+   "old_url": "https://www.stockfin.ai/news/MUTHOOTMF/2026-10-23/board-meeting"
+  },
+  {
+   "edition": "2026-10-27",
+   "part": "items",
+   "name": "Gold (₹/10g)",
+   "value": "₹1,43,150",
+   "old_url": "https://makro.live/mcx-gold-silver-price"
+  },
+  {
+   "edition": "2026-10-27",
+   "part": "mfl_market",
+   "name": "Tranche I NCD bids vs base",
+   "value": "0.99× (retail 0.75×, HNI 1.36×, NII 0.80×, QIB 0.00×) at 16:58 IST",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-10-27",
+   "part": "mfl_market",
+   "name": "Muthoot Microfin (subsidiary) Q2 board meeting",
+   "value": "5 Nov 2026",
+   "old_url": "https://www.stockfin.ai/news/MUTHOOTMF/2026-10-23/board-meeting"
+  },
+  {
+   "edition": "2026-10-28",
+   "part": "items",
+   "name": "Gold (₹/10g)",
+   "value": "₹1,44,100",
+   "old_url": "https://makro.live/mcx-gold-silver-price"
+  },
+  {
+   "edition": "2026-10-28",
+   "part": "mfl_market",
+   "name": "Tranche I NCD bids vs base",
+   "value": "1.25× (retail 1.02×, HNI 1.74×, NII 0.90×, QIB 0.00×) at 17:00 IST",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-10-28",
+   "part": "mfl_market",
+   "name": "Muthoot Microfin (subsidiary) Q2 board meeting",
+   "value": "5 Nov 2026",
+   "old_url": "https://www.stockfin.ai/news/MUTHOOTMF/2026-10-23/board-meeting"
+  },
+  {
+   "edition": "2026-10-29",
+   "part": "items",
+   "name": "Gold (₹/10g)",
+   "value": "₹1,43,600",
+   "old_url": "https://makro.live/mcx-gold-silver-price"
+  },
+  {
+   "edition": "2026-10-29",
+   "part": "mfl_market",
+   "name": "Tranche I NCD bids vs base",
+   "value": "1.45× (retail 1.22×, HNI 2.05×, NII 0.92×, QIB 0.00×) at 17:00 IST",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-10-29",
+   "part": "mfl_market",
+   "name": "Muthoot Microfin (subsidiary) Q2 board meeting",
+   "value": "5 Nov 2026",
+   "old_url": "https://www.stockfin.ai/news/MUTHOOTMF/2026-10-23/board-meeting"
+  },
+  {
+   "edition": "2026-10-30",
+   "part": "items",
+   "name": "Gold (₹/10g)",
+   "value": "₹1,42,351",
+   "old_url": "https://makro.live/mcx-gold-silver-price"
+  },
+  {
+   "edition": "2026-10-30",
+   "part": "items",
+   "name": "Gold spot ($/oz)",
+   "value": "$4,006.44",
+   "old_url": "https://exa.ai/library/markets/commodity/gold?currency=USD"
+  },
+  {
+   "edition": "2026-10-30",
+   "part": "mfl_market",
+   "name": "Tranche I NCD bids vs base",
+   "value": "1.67× (retail 1.42×, HNI 2.32×, NII 1.10×, QIB 0.00×) at 17:00 IST",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-10-30",
+   "part": "mfl_market",
+   "name": "Muthoot Microfin (subsidiary) Q2 board meeting",
+   "value": "5 Nov 2026",
+   "old_url": "https://www.stockfin.ai/news/MUTHOOTMF/2026-10-23/board-meeting"
+  },
+  {
+   "edition": "2026-10-31",
+   "part": "items",
+   "name": "Gold spot ($/oz)",
+   "value": "$3,875.36",
+   "old_url": "https://exa.ai/library/markets/commodity/gold?currency=USD"
+  },
+  {
+   "edition": "2026-10-31",
+   "part": "mfl_market",
+   "name": "Tranche I NCD bids vs base",
+   "value": "1.86× (retail 1.60×, HNI 2.56×, NII 1.29×, QIB 0.00×) at 17:00 IST",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-11-01",
+   "part": "items",
+   "name": "Gold spot ($/oz)",
+   "value": "$3,875.40",
+   "old_url": "https://exa.ai/library/markets/commodity/gold?currency=USD"
+  },
+  {
+   "edition": "2026-11-01",
+   "part": "mfl_market",
+   "name": "Tranche I NCD bids vs base",
+   "value": "1.86× (retail 1.60×, HNI 2.56×, NII 1.29×, QIB 0.00×) at 17:00 IST",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-11-02",
+   "part": "mfl_market",
+   "name": "Tranche I NCD bids vs base",
+   "value": "1.86× (retail 1.60×, HNI 2.56×, NII 1.29×, QIB 0.00×) at 17:00 IST",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-11-03",
+   "part": "mfl_market",
+   "name": "Tranche I NCD bids vs base",
+   "value": "2.18× (retail 1.96×, HNI 3.06×, NII 1.32×, institutional 0.00×) at 17:00 IST",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-11-04",
+   "part": "mfl_market",
+   "name": "NCD Tranche I bids",
+   "value": "2.36x (retail 2.14x, HNI 3.33x, NII 1.32x, institutional 0.01x) at 17:00 IST",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-11-05",
+   "part": "mfl_market",
+   "name": "NCD Tranche I subscription",
+   "value": "2.55x (retail 2.32x, HNI 3.62x, NII 1.35x, institutional 0.01x) at 17:00 IST",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-11-06",
+   "part": "mfl_market",
+   "name": "NCD Tranche I bids at close",
+   "value": "2.67x (retail 2.51x, HNI 3.79x, NII 1.34x, institutional 0.02x) at 17:00 IST",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-11-08",
+   "part": "mfl_market",
+   "name": "NCD Tranche I status",
+   "value": "Closed 5 Nov 2026; allotment/listing 9–10 Nov per 7 Nov edition; no allotment data yet",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-11-08",
+   "part": "mfl_market",
+   "name": "NCD Tranche I bids at close",
+   "value": "Bids stood at 2.67x (retail 2.51x, HNI 3.79x, NII 1.34x, institutional 0.02x) at 17:00 IST",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-11-09",
+   "part": "mfl_market",
+   "name": "NCD Tranche I status",
+   "value": "Closed 5 Nov 2026; allotment pending; 10 Nov listing date falls on a market holiday, no revised date yet",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-11-09",
+   "part": "mfl_market",
+   "name": "NCD Tranche I bids at close",
+   "value": "Bids stood at 2.67x (retail 2.51x, HNI 3.79x, NII 1.34x, institutional 0.02x) at 17:00 IST",
+   "old_url": "https://www.chittorgarh.com/bond/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  },
+  {
+   "edition": "2026-11-10",
+   "part": "mfl_market",
+   "name": "NCD Tranche I status",
+   "value": "Closed 5 Nov 2026; allotment status not yet available; 10 Nov is a market holiday",
+   "old_url": "https://www.chittorgarh.com/ncd_allotment_status/muthoot-fincorp-tranche-i-ncd-october-2026/399/"
+  }
+ ],
+ "dropped_cards": [
+  {
+   "card_id": "2026-10-23-news-5",
+   "title": "Previous issue. September's Tranche V (₹700 cr) closed with bids at 2.47 times. (IPO Watch)"
+  },
+  {
+   "card_id": "2026-10-23-news-15",
+   "title": "Coming up: Shriram Finance Q2 — today (Oct 23) , earnings call 7 PM IST; PNB Housing Finance — Oct 28 (board meeting; ca"
+  },
+  {
+   "card_id": "2026-10-24-news-5",
+   "title": "Day 1. Bids stood at 0.55 times the base issue at the end of day 1. (Chittorgarh)"
+  },
+  {
+   "card_id": "2026-10-24-news-6",
+   "title": "Ratings. The Tranche I NCDs are rated CRISIL AA/Stable and BWR AA+/Stable; CARE AA/Stable was assigned on 5 Oct. (Chitto"
+  },
+  {
+   "card_id": "2026-10-25-news-3",
+   "title": "Tranche I public NCD issue (open 23 Oct – 5 Nov 2026)."
+  },
+  {
+   "card_id": "2026-10-26-news-3",
+   "title": "Tranche I public NCD issue (open 23 Oct – 5 Nov 2026)."
+  },
+  {
+   "card_id": "2026-10-27-news-3",
+   "title": "Tranche I public NCD issue (open 23 Oct – 5 Nov 2026)."
+  },
+  {
+   "card_id": "2026-10-27-news-18",
+   "title": "Results calendar"
+  },
+  {
+   "card_id": "2026-10-28-news-4",
+   "title": "Tranche I public NCD issue (open 23 Oct – 5 Nov 2026)."
+  },
+  {
+   "card_id": "2026-10-28-news-21",
+   "title": "Results calendar"
+  },
+  {
+   "card_id": "2026-10-29-news-4",
+   "title": "Tranche I public NCD issue (open 23 Oct – 5 Nov 2026)."
+  },
+  {
+   "card_id": "2026-10-29-news-23",
+   "title": "Chola: RBI-norm GNPA fell to 4.4% from 4.5%."
+  },
+  {
+   "card_id": "2026-10-29-rules-32",
+   "title": "Chola repricing its floating book by about 25 bp"
+  },
+  {
+   "card_id": "2026-10-30-news-4",
+   "title": "Tranche I public NCD issue (open 23 Oct – 5 Nov 2026)."
+  },
+  {
+   "card_id": "2026-10-31-news-4",
+   "title": "Tranche I public NCD issue (open 23 Oct – 5 Nov 2026)."
+  },
+  {
+   "card_id": "2026-11-01-news-4",
+   "title": "Tranche I public NCD issue (open 23 Oct – 5 Nov 2026)."
+  },
+  {
+   "card_id": "2026-11-02-news-4",
+   "title": "Tranche I public NCD issue (open 23 Oct – 5 Nov 2026)."
+  },
+  {
+   "card_id": "2026-11-02-news-5",
+   "title": "Scheduled dates. Allotment on 9 November and BSE listing on 10 November, per the issue schedule. (Groww)"
+  },
+  {
+   "card_id": "2026-11-03-news-4",
+   "title": "Tranche I public NCD issue (open 23 Oct – 5 Nov 2026)."
+  },
+  {
+   "card_id": "2026-11-03-news-5",
+   "title": "Scheduled dates. Allotment on 9 November and BSE listing on 10 November, per the issue schedule. (Groww)"
+  },
+  {
+   "card_id": "2026-11-04-news-2",
+   "title": "Update: Muthoot Fincorp Tranche I NCD bids stood at 2.36x with one day left"
+  },
+  {
+   "card_id": "2026-11-09-news-2",
+   "title": "Muthoot Fincorp NCD status"
+  },
+  {
+   "card_id": "2026-11-09-rules-39",
+   "title": "9 Nov 2026: Muthoot Fincorp Tranche I NCD allotment, per Chittorgarh; not yet published at run time (link)"
+  },
+  {
+   "card_id": "2026-11-10-news-4",
+   "title": "Update: no allotment notice yet for Muthoot Fincorp's Tranche I NCDs, and today's exchange holiday rules out a 10 Nov li"
+  },
+  {
+   "card_id": "2026-11-10-rules-44",
+   "title": "10 Nov 2026 onward: Muthoot Fincorp Tranche I NCD allotment and listing; allotment status not yet available and 10 Nov i"
+  },
+  {
+   "card_id": "2026-11-10-rules-57",
+   "title": "10 Nov 2026: Market holiday (Diwali-Balipratipada); Muthoot Fincorp Tranche I NCD allotment status and revised listing d"
+  }
+ ]
+}
