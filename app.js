@@ -25,7 +25,8 @@ function inlineMd(s){
     .replace(/(^|[^\w*])\*([^*\n]+)\*/g,'$1<em>$2</em>');
   return s.replace(/\u0000(\d+)\u0000/g,function(_,i){return keep[+i];});
 }
-function stripMd(s){return String(s).replace(/\[([^\]]+)\]\([^)]*\)/g,'$1').replace(/[*_`#>]/g,'').replace(/\s+/g,' ').trim();}
+/* '>' is only markdown at the start of a line (a quote): inside text it is a sign ("LTV, > ₹5 lakh: 75%") and stays */
+function stripMd(s){return String(s).replace(/\[([^\]]+)\]\([^)]*\)/g,'$1').replace(/(^|\n)[ \t]*>+[ \t]?/g,'$1').replace(/[*_`#]/g,'').replace(/\s+/g,' ').trim();}
 function noCites(s){return String(s).replace(/\s*\((?:\s*\[[^\]]+\]\([^)]+\)\s*,?)+\)/g,'');}
 function clip(s,n){s=String(s).trim();if(s.length<=n)return s;var c=s.slice(0,n),st=Math.max(c.lastIndexOf('. '),c.lastIndexOf('? '),c.lastIndexOf('! '));
   if(st>=n*.55)return c.slice(0,st+1);var sp=c.lastIndexOf(' ');return (sp>0?c.slice(0,sp):c).replace(/[\s,;:—-]+$/,'')+'…';}

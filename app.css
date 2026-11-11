@@ -875,3 +875,5 @@ a.tl-t{min-height:24px;padding:2px 0}a.tl-t:hover{text-decoration:underline}
 .tl.mini{margin:10px 0 0}.tl.mini .tl-n{padding-bottom:12px}
 .tl.mini .tl-t{font-size:var(--t-13);font-weight:600}
 @media (forced-colors:active){.wkc,.wk,.wks,.mflp{border:1px solid CanvasText}.cu-hit-in{outline:2px solid Highlight}}
+/* Next node: its source */
+.tl-sa{display:inline-flex;align-items:center;min-height:24px;text-decoration:none;color:inherit}.tl-sa:hover{text-decoration:underline}

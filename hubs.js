@@ -178,13 +178,13 @@ var CUR=null;
 function mount(root,view,key,pq){CUR={root:root,view:view,key:key};
   if(view==='peer'&&window.NBCU&&NBCU.piFocus)NBCU.piFocus(root,pq);
   /* earlier quarters arrive with data/peer_intel.json (idle prefetch, or now on first use): redraw that section */
-  if(view==='peer'&&window.NBCU)NBCU.onPeer(function(){if(!CUR||CUR.root!==root||!root.isConnected)return;var y=window.scrollY;root.innerHTML=peerHtml(key);window.scrollTo(0,y);});
+  if(view==='peer'&&window.NBCU)NBCU.onPeer(function(){if(!CUR||CUR.root!==root||!root.isConnected)return;var y=window.scrollY;root.innerHTML=peerHtml(key);window.scrollTo(0,y);if(NBCU.piFocus)NBCU.piFocus(root,pq);});
   if(view==='topics')springIn(root);
   if(!root.dataset.hb){root.dataset.hb=1;root.addEventListener('click',onClick);}
   if(ix()&&!ix().stale)return;
   SR.ensure().then(function(){if(!CUR||CUR.root!==root||!root.isConnected)return;var y=window.scrollY;
     if(view==='topics'){var g=root.querySelector('#hubGrid');if(g){g.innerHTML=HUBS.map(tile).join('');}return;}
-    if(view==='peer'){root.innerHTML=peerHtml(key);window.scrollTo(0,y);return;}
+    if(view==='peer'){root.innerHTML=peerHtml(key);window.scrollTo(0,y);if(window.NBCU&&NBCU.piFocus)NBCU.piFocus(root,pq);return;}
     var hb=root.querySelector('#hbody'),hs=root.querySelector('#hsub');if(hb)hb.innerHTML=hubBody(key);if(hs&&HUB[key])hs.innerHTML=subOf(key);window.scrollTo(0,y);}).catch(function(){
     var hb=root.querySelector('#hbody .hload,.hload');if(hb)hb.outerHTML='<div class="g card" data-st><p class="note" style="margin:0">The topic index could not be built (offline?). Try again when you are online.</p></div>';});}
 function onClick(e){var t=e.target.closest('button');if(!t||!CUR)return;var root=CUR.root;
