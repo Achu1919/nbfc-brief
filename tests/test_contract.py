@@ -178,6 +178,77 @@ mpc = [x for x in (dl or []) if x.get("date_text")]
 for x in mpc:
     if not re.search(r"\d", x["date_text"]): err(f"date_text {x['date_text']!r}")
 
+
+# ---- content upgrade (docs/DATA_FORMAT.md "Peer intelligence"; content_upgrade.py) ----
+LEAK_KEYS = {"impact_deep", "blind_spots", "lessons"}
+LEAK_TEXT = re.compile(r"MFL view|Blind spots|Deeper impact", re.I)
+VOICE = re.compile(r"\b(we|our|us|you|your|sai|achu|subscribe|attractive|invest now|apply|buy|should)\b", re.I)
+PEER_SLUGS = {"muthoot-finance", "manappuram", "iifl-finance", "shriram-finance", "bajaj-finance"}
+METRIC_KEYS = {"aum", "gold_aum", "disbursements", "yield", "cof", "nim", "spread", "opex_ratio", "credit_cost", "gnpa",
+               "nnpa", "pcr", "crar", "roa", "roe", "pat", "branches", "gold_tonnes", "avg_ticket"}
+EVENT_TYPES = {"results", "investor-deck", "call-transcript", "call-recording", "rating-rationale", "annual-report"}
+CMP_KEYS = {"key", "label", "unit", "peer_value", "peer_period", "mfl_value", "mfl_period", "same_basis", "source"}
+
+def no_leak(o, where):
+    if isinstance(o, dict):
+        for k, v in o.items():
+            if k in LEAK_KEYS: err(f"{where}: private key {k} in public data")
+            no_leak(v, where)
+    elif isinstance(o, list):
+        for v in o: no_leak(v, where)
+    elif isinstance(o, str) and LEAK_TEXT.search(o): err(f"{where}: private text {o[:60]!r}")
+
+def check_peer(e, where):
+    w = f"{where} {e.get('id')}"
+    if e.get("company") not in PEER_SLUGS: err(f"{w}: company {e.get('company')} is not a peer")
+    if e.get("basis") not in ("consolidated", "standalone"): err(f"{w}: basis")
+    evs = e.get("events") or []
+    if not evs or not any((x.get("source") or {}).get("tier") == 1 for x in evs): err(f"{w}: needs a Tier-1 filing event")
+    for x in evs:
+        if x.get("type") not in EVENT_TYPES or not ISO.match(str(x.get("date"))): err(f"{w}: event {x}")
+    for m in e.get("metrics") or []:
+        if m.get("key") not in METRIC_KEYS: err(f"{w}: metric {m.get('key')}")
+        if m.get("value") is not None and not (m.get("source") or {}).get("url"): err(f"{w}: {m.get('key')} value without source")
+        if m.get("disclosed") is False and m.get("value") is not None: err(f"{w}: undisclosed metric with value")
+    for q in e.get("quotes") or []:
+        if len((q.get("text") or "").split()) > 25 or not q.get("speaker") or not (q.get("source") or {}).get("url"): err(f"{w}: quote {q}")
+    for r in e.get("mfl_compare") or []:
+        if not CMP_KEYS <= set(r): err(f"{w}: mfl_compare keys {sorted(r)}")
+        if r.get("mfl_value") is not None and not r.get("source"): err(f"{w}: mfl_value without source")
+        if VOICE.search(r.get("note") or ""): err(f"{w}: mfl_compare note wording")
+    for t in [e.get("impact") or ""] + [g.get("text", "") for g in e.get("guidance") or []] + [n.get("text", "") for n in e.get("non_disclosures") or []]:
+        if VOICE.search(t) or SOLICIT.search(t): err(f"{w}: wording {t[:60]!r}")
+    if e.get("impact") and e.get("impact_label") != "Possible impact on Muthoot Fincorp": err(f"{w}: impact_label")
+    for k, v in e.items():
+        if v == "": err(f"{w}: empty string for {k} (omit absent keys)")
+
+for p in sorted(D.glob("*.json")):
+    try:
+        no_leak(json.loads(p.read_text(encoding="utf-8")), p.name)
+    except ValueError:
+        err(f"{p.name}: not JSON")
+for sub in sorted((D / "stories").glob("*.json")) if (D / "stories").exists() else []:
+    no_leak(json.loads(sub.read_text(encoding="utf-8")), f"stories/{sub.name}")
+pi = D / "peer_intel.json"
+if pi.exists():
+    pj = json.loads(pi.read_text(encoding="utf-8"))
+    if pj.get("generated") != j.get("generated"): err("peer_intel.json: generated differs from latest.json")
+    for e in (pj.get("entries") or {}).values(): check_peer(e, "peer_intel.json")
+    for e in j.get("peer_intel") or []:
+        check_peer(e, "latest.json peer_intel")
+        if e.get("id") not in (pj.get("entries") or {}): err(f"latest peer_intel {e.get('id')} missing from peer_intel.json")
+try:
+    import content_upgrade as CU
+    _e = {"id": "pi-t", "company": "iifl-finance", "period": "Q2 FY27",
+          "events": [{"type": "results", "date": "2026-10-15", "source": {"url": "https://nsearchives.nseindia.com/x.pdf"}}],
+          "blind_spots": [{"text": "x", "basis": "y"}], "impact_deep": "x"}
+    _pub = CU.norm_peer(_e, False, [])
+    if not _pub or "blind_spots" in _pub or "impact_deep" in _pub: err("content_upgrade: public peer entry keeps private keys")
+    if CU.norm_peer(dict(_e, company="muthoot-fincorp"), False, []) is not None: err("content_upgrade: MFL accepted as a peer")
+    if CU.norm_peer(dict(_e, company="muthoot-microfin"), False, []) is not None: err("content_upgrade: Muthoot Microfin accepted as a peer")
+except ImportError as e:
+    err(f"content_upgrade import failed: {e}")
+
 print(f"{len(ids)} day(s) checked, {len(errs)} problem(s)")
 for e in errs[:50]: print(" -", e)
 sys.exit(1 if errs else 0)

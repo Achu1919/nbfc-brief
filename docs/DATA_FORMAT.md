@@ -365,3 +365,34 @@ These notes describe how the app reads data that already exists. They add no fie
 - Muthoot Fincorp hub: `latest.json` → `mfl_ncd` when present, labelled "Status only; not an offer or a recommendation"; otherwise the latest `mfl_market[]` NCD items.
 - Archive: the topic picker dims days without that topic (from the day's `tags`, refined by the search index once it is built).
 - The search index version is 6 (it rebuilds once after this update).
+
+## Peer intelligence (`peer_intel`, additive; content upgrade step 1, 11 Nov 2026)
+Built by `content_upgrade.py` (called from `export_json.export()`), identical in both repos.
+- **Inputs:** `data/peer_intel_seed.json` (entries re-read from filings; public-safe, no private fields) plus any
+  `### <Peer> Q2 FY27 results` unit in `01-daily-watch.md` carrying `<!-- peer: id=pi-<company>-q2fy27; company=<slug>;
+  period=Q2 FY27; basis=consolidated|standalone; results=YYYY-MM-DD:<url> -->` (block format: plan §8).
+- **Outputs:** `data/peer_intel.json` = `{schema_version, generated, entries: {<id>: PeerIntel}}` (all entries; same
+  `generated` as `latest.json`); `latest.json → peer_intel[]` = entries whose newest event is within 21 days of the
+  newest edition; a day file gets `peer_intel[]` only for entries its own markdown created; a card announcing the
+  results gets `peer_intel_id`.
+- **Companies:** only `muthoot-finance`, `manappuram`, `iifl-finance`, `shriram-finance`, `bajaj-finance`.
+  Muthoot Fincorp is never a peer entry; Muthoot Microfin (group company) gets none.
+- **PeerIntel:** `{id, story_id, company, company_name, period, basis, events[], metrics[], guidance[]?, quotes[]?,
+  non_disclosures[]?, mfl_compare[]?, impact?, impact_label?, updated}`; private adds `blind_spots[]?`, `impact_deep?`.
+  Absent optional keys are omitted.
+  - `events[]`: `{type: results|investor-deck|call-transcript|call-recording|rating-rationale|annual-report, date, source}`.
+    At least one Tier-1 filing is required; press alone never creates an entry.
+  - `metrics[]`: `{key, label, unit, value, prev_value, prev_period?, qoq_pct, yoy_pct, computed, disclosed, note?,
+    last_disclosed_period?, source{name,url,page?}}`. Keys: `aum, gold_aum, disbursements, yield, cof, nim, spread,
+    opex_ratio, credit_cost, gnpa, nnpa, pcr, crar, roa, roe, pat, branches, gold_tonnes, avg_ticket` (`gold_book`
+    is dropped). `prev_period` says what `prev_value` is (Q1 FY27 for QoQ, Q2 FY26 for YoY). `qoq_pct` is the
+    company's own figure; when absent it is computed only for amounts (never `%` ratios) with both values on the
+    same basis, and then `computed: true`. Yield, CoF and NIM are as the company defines them (see `note`).
+    `page` is the PDF page number.
+  - `quotes[]`: ≤25 words, ≤3 per entry, with `speaker`, `role` and a source link.
+  - `mfl_compare[]` (both editions, facts only): `{key, label, unit, peer_value, peer_period, mfl_value, mfl_period,
+    same_basis, source, note?}`. `source` is required whenever `mfl_value` is set (else the value is removed). A null
+    `mfl_value` carries `note: "Not yet published for <mfl_period>"`. `note` passes the public voice check.
+- **Sources:** `tier` 1 (regulators, exchanges, rating agencies, company IR), 2 (trusted press, SOURCES.md §2),
+  3 (any other host). Banned hosts (exa.ai, stockfin.ai, trackliveprice.com, makro.live, stockwatch.live, hdfcsky.com,
+  alphastreet) are dropped.

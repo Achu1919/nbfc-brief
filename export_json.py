@@ -291,6 +291,13 @@ def parse_override(line: str):
         return {"_reg": _kv(m.group(1))}
     if NCD_COMMENT.match(line or ""):
         return {}  # day-level; read by parse_ncd
+    m = EXT_COMMENT.match(line or "")
+    if m:  # <!-- story: id=...; ... -->, <!-- stories: ids=a,b -->, <!-- peer: id=...; ... --> (content_upgrade.py)
+        body = m.group(2).strip()
+        kv = _kv(body)
+        for flag in (x.strip().lower() for x in body.split(";") if x.strip() and "=" not in x):
+            kv[flag] = True
+        return {"_" + m.group(1).lower(): kv}
     m = TAG_COMMENT.match(line or "")
     if not m:
         return None
@@ -448,7 +455,8 @@ def _units(report_key: str, text: str) -> list:
                 elif k == "_category":
                     card["category"] = v
         out.append({"report": report_key, "section": u["section"], "kind": u["kind"], "title": u["title"], "tags": tags,
-                    "_lines": u["lines"], "_reg": [ov["_reg"] for ov in u["ov"] if "_reg" in ov], "_card": card})
+                    "_lines": u["lines"], "_reg": [ov["_reg"] for ov in u["ov"] if "_reg" in ov], "_card": card,
+                    "_ext": [ov for ov in u["ov"] if any(k in ov for k in ("_story", "_stories", "_peer"))]})
     return out
 
 
@@ -517,7 +525,9 @@ def tag_day(day: dict, raw_dir=None) -> dict:
 # ---- cards, reg, latest_circulars, deadlines, mfl_ncd, lessons (docs/DATA_FORMAT.md "Cards"); additive, never fatal ----
 REG_COMMENT = re.compile(r"^\s*<!--\s*reg:(.*?)-->\s*$", re.I)
 NCD_COMMENT = re.compile(r"^\s*<!--\s*ncd:(.*?)-->\s*$", re.I)
-ANY_COMMENT = re.compile(r"^\s*<!--\s*(?:tags|reg|ncd)\s*:.*-->\s*$", re.I)
+ANY_COMMENT = re.compile(r"^\s*<!--\s*(?:tags|reg|ncd|story|stories|peer)\s*:.*-->\s*$", re.I)
+EXT_COMMENT = re.compile(r"^\s*<!--\s*(story|stories|peer)\s*:(.*?)-->\s*$", re.I)  # content upgrade (content_upgrade.py)
+_DEEP_LINE = re.compile(r"^\W*(?:mfl view|deeper impact|blind spots?\s*\(private\)|mfl comparison)\b", re.I)
 CIRCULAR_SEED = "circulars_seed.json"
 CIRCULAR_WINDOW = 10  # days, newest edition inclusive
 DEADLINE_PAST = 30  # drop deadlines more than this many days before the newest edition
@@ -708,7 +718,7 @@ def _clean_title(t: str) -> str:
 
 def _card_summary(u: dict):
     body = [l for l in u["_lines"] if l.strip() and not _IMPACT.search(l) and not l.lstrip().startswith(">")
-            and not ANY_COMMENT.match(l)]
+            and not ANY_COMMENT.match(l) and not _DEEP_LINE.match(l)]
     if not body:
         return None
     first, rest = body[0], body[1:]
@@ -924,6 +934,7 @@ def build_cards(units: list, edition: str, private: bool) -> list:
             for ov in u.get("_reg") or []:
                 if (ov.get("title") or "").strip():
                     c["title"] = ov["title"].strip()
+        c["_u"] = u  # read by content_upgrade.apply(), popped before any file is written
         cards.append(c)
     return cards
 
@@ -1618,6 +1629,35 @@ def cards_export(days: list, raw_root, data_dir, private: bool) -> dict:
 # ---- end cards block ----
 
 
+# ---- content upgrade hook (content_upgrade.py: peer_intel, story threads, sources[], lifecycle, week_review) ----
+def _content_upgrade(days, extras, data_dir, private, generated):
+    """Runs content_upgrade.apply(); never fatal. Always strips the internal `_u` unit copies from cards."""
+    try:
+        here = str(Path(__file__).resolve().parent)
+        if here not in sys.path:
+            sys.path.insert(0, here)
+        import content_upgrade
+        files = content_upgrade.apply(sys.modules[__name__], days, extras, data_dir, private, generated)
+    except Exception as exc:  # never fatal
+        print(f"export_json: content upgrade skipped: {exc!r}", file=sys.stderr)
+        files = {}
+    for d in days:
+        for c in d.get("cards") or []:
+            c.pop("_u", None)
+    extras.pop("_problems", None)
+    return files
+
+
+def _write_content_upgrade(data_dir, files, latest):
+    """stories.json / peer_intel.json share latest.json's `generated` and are written in the same run."""
+    for name, obj in (files or {}).items():
+        path = Path(data_dir) / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        obj["generated"] = latest["generated"]
+        path.write_text(json.dumps(obj, ensure_ascii=False), encoding="utf-8")
+# ---- end content upgrade hook ----
+
+
 # ---- daily gold and AGLOC LTV block (docs/DATA_FORMAT.md "Gold and LTV"); additive, never fatal ----
 GOLD_HEADING = re.compile(r"^##\s+(?:\W+\s*)?gold\s+and\s+ltv\b", re.I)
 GOLD_SERIES = ("ibja999", "ibja916", "agloc_ltv85", "agloc_ltv80", "agloc_ltv75", "agloc_ref")
@@ -1899,6 +1939,7 @@ def export(site: Path) -> Path:
     data = site / "data"
     data.mkdir(exist_ok=True)
     extras = cards_export(days, site / "days", data, private=False)  # cards, mfl_ncd; never fatal (no lessons here)
+    cu_files = _content_upgrade(days, extras, data, False, payload["generated"])
     for d in days:
         (data / f"{d['id']}.json").write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
     seed = load_seed(site)
@@ -1914,6 +1955,7 @@ def export(site: Path) -> Path:
     seeded = sorted({dt for ser in series.values() for dt in ser} - {d["id"] for d in days})
     if seeded:  # tells the app a seed exists, so the data.js path fetches it and the JSON path need not
         latest["series_seed"] = {"file": f"data/{SEED_FILE}", "dates": len(seeded), "first": seeded[0], "last": seeded[-1]}
+    _write_content_upgrade(data, cu_files, latest)
     (data / "latest.json").write_text(json.dumps(latest, ensure_ascii=False), encoding="utf-8")
     print(f"export_json: {len(days)} day file(s) + data/latest.json ({SCHEMA} v{SCHEMA_VERSION})"
           + (f", series seeded with {len(seeded)} earlier date(s) from data/{SEED_FILE}" if seeded else ""))
