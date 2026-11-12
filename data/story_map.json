@@ -495,7 +495,17 @@
   },
   "iifl-finance-blackstone-raise-2026": {
    "title": "IIFL Finance capital raise",
-   "regulators": []
+   "regulators": [],
+   "next": {
+    "date": "2026-12-04",
+    "date_text": "4 Dec 2026, 11 AM IST",
+    "known_from": "2026-11-12",
+    "what": "IIFL Finance EGM on the preferential issue",
+    "source": {
+     "name": "NSE (IIFL EGM notice, 12 Nov)",
+     "url": "https://nsearchives.nseindia.com/corporate/IIFL_12112026004505_SE_Intimation.pdf"
+    }
+   }
   },
   "markets-daily-close": {
    "title": "NBFC stocks: daily market close",
@@ -828,6 +838,40 @@
   "shriram-finance-q2fy27-results": {
    "title": "Shriram Finance Q2 FY27 results",
    "regulators": []
+  },
+  "manappuram-q2fy27-results": {
+   "title": "Manappuram Finance Q2 FY27 results",
+   "regulators": [],
+   "next": {
+    "date": "2026-11-12",
+    "date_text": "12 Nov 2026, 5 PM IST",
+    "known_from": "2026-11-12",
+    "what": "Manappuram Finance Q2 FY27 earnings call",
+    "source": {
+     "name": "NSE (Manappuram intimation, 5 Nov)",
+     "url": "https://nsearchives.nseindia.com/corporate/MANAPPURAM_05112026222522_prior_intimation_concall_SD.pdf"
+    }
+   }
+  },
+  "nbfc-foreign-investment-2026": {
+   "title": "Foreign investment in Indian NBFCs",
+   "regulators": []
+  },
+  "aye-finance-icra-upgrade-2026": {
+   "title": "Aye Finance rating upgrade",
+   "regulators": []
+  },
+  "reg-rbi-rbi-dpss-2026-27-476": {
+   "title": "RBI Domestic Money Transfer Directions, 2026",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "reg-sebi-ho-38-14-18-2026-mirsd-pod2-i-25560-2026": {
+   "title": "SEBI FATCA/CRS reporting under new IT Rules",
+   "regulators": [
+    "sebi"
+   ]
   }
  },
  "2026-10-23-rules-35": {
