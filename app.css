@@ -928,3 +928,15 @@ a.tl-t{min-height:24px;padding:2px 0}a.tl-t:hover{text-decoration:underline}
 @media (min-width:600px){.erow{grid-template-columns:minmax(0,1fr) auto}.er-s{width:96px}}
 @media (prefers-reduced-motion:reduce){.erow,.em{transition:none}}
 @media (forced-colors:active){.erow,.em{border:1px solid CanvasText}.erow{border-left:3px solid CanvasText}}
+
+/* ---------- whole-card tap: [data-tap] cards open their title link (a.tap-a) on a tap anywhere ---------- */
+[data-tap]{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:scale .42s var(--ease-glide,cubic-bezier(.2,.9,.3,1.04)),background-color .16s ease,box-shadow .16s ease,border-color .16s ease}
+[data-tap].pressing{scale:.985;transition-duration:.12s,.12s,.12s,.12s;box-shadow:var(--elev-1),inset 0 0 0 999px color-mix(in srgb,var(--hub,var(--accent)) 7%,transparent),inset 0 1px 0 var(--glass-rim2)}
+.tap-a{color:inherit;text-decoration:none;border-radius:4px}
+.tap-a:focus-visible{outline:none}
+[data-tap]:has(.tap-a:focus-visible){outline:2px solid var(--focus);outline-offset:3px}
+.tap-ch{margin-left:auto;font-size:22px;line-height:1;color:var(--text-3);padding:0 2px 2px;transition:transform .3s var(--ease-glide,ease),color .16s}
+.wk .tap-ch{display:block;text-align:right;margin-top:6px}
+@media (hover:hover){[data-tap]:hover{border-color:var(--border-strong)}[data-tap]:hover .tap-ch{color:var(--text-2);transform:translateX(2px)}}
+@media (prefers-reduced-motion:reduce){[data-tap],.tap-ch{transition:background-color .16s ease,box-shadow .16s ease,color .16s}[data-tap].pressing{scale:none}[data-tap]:hover .tap-ch{transform:none}}
+@media (forced-colors:active){[data-tap]:has(.tap-a:focus-visible){outline:2px solid Highlight}[data-tap].pressing{outline:2px solid Highlight}}

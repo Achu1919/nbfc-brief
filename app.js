@@ -848,10 +848,10 @@ function cleanSum(t){try{return window.NBCU&&NBCU.cleanSum?NBCU.cleanSum(t):t;}c
 function cuBits(c){if(!c.raw||!window.NBCU)return null;try{return NBCU.cardBits(c.raw,c.day);}catch(e){return null;}}
 function storyCard(c,i){var h=HUB[c.cat],src=(c.src||[]).filter(function(x){return x&&x.u;}),X=cuBits(c);
   var srcHtml=X&&X.srcLine?X.srcLine:(src.length?'Source: '+src.slice(0,2).map(function(x){return '<a href="'+esc(x.u)+'" target="_blank" rel="noopener noreferrer">'+esc(x.l)+'</a>';}).join(', '):'Source in the full report');
-  var more='<a class="more press" href="'+esc(c.href)+'">Read full report<span class="sr">: '+esc(clip(c.t,60))+'</span> <span aria-hidden="true">\u2192</span></a>';
-  return '<article class="scard g" data-st'+(c.cat?' data-hub="'+c.cat+'"':'')+'>'+
+  var more=c.href?'<span class="tap-ch" aria-hidden="true">\u203a</span>':'';
+  return '<article class="scard g"'+(c.href?' data-tap':'')+' data-st'+(c.cat?' data-hub="'+c.cat+'"':'')+'>'+
     '<div class="tagrow">'+(c.cat?hubChip(c.cat):'<span class="hchip none"><span>News</span></span>')+(i===0?'<span class="kick">Top story</span>':X&&X.k.upd?'<span class="kick">Update</span>':'')+(X?X.chips:'')+'</div>'+
-    '<h3>'+esc(c.t)+'</h3>'+(c.sum&&cleanSum(noCites(stripMd(c.sum)))?'<p class="sum">'+esc(cleanSum(noCites(stripMd(c.sum))))+'</p>':'')+(c.imp?impLine(clip(noCites(stripMd(c.imp)),220),X&&X.label):'')+(X?X.deep:'')+
+    '<h3>'+(c.href?'<a class="tap-a" href="'+esc(c.href)+'">'+esc(c.t)+'</a>':esc(c.t))+'</h3>'+(c.sum&&cleanSum(noCites(stripMd(c.sum)))?'<p class="sum">'+esc(cleanSum(noCites(stripMd(c.sum))))+'</p>':'')+(c.imp?impLine(clip(noCites(stripMd(c.imp)),220),X&&X.label):'')+(X?X.deep:'')+
     (c.also&&c.also.length?'<p class="also">Also in: '+esc(c.also.join(', '))+'</p>':'')+
     (X&&X.badge?'<p class="by srcl">'+srcHtml+'</p>'+X.srcList+'<div class="sc-f">'+X.badge+more+'</div>':
       (X?X.srcList:'')+'<div class="sc-f"><span class="by'+(X&&X.srcLine?' srcl':'')+'">'+srcHtml+'</span>'+more+'</div>')+'</article>';}
@@ -918,6 +918,31 @@ function hit(root,qs){var q={};qs.split('&').forEach(function(x){var i=x.indexOf
   if(!el)return !!(hl.length<4&&!q.sec);
   var y=el.getBoundingClientRect().top+scrollY-innerHeight*.3;window.scrollTo({top:Math.max(0,y),behavior:RM.matches?'auto':'smooth'});
   el.classList.remove('hit');void el.offsetWidth;el.classList.add('hit');setTimeout(function(){el.classList.remove('hit');},2600);return true;}
+
+/* ---------------- whole-card tap (feat/hub-pages, card tap) ----------------
+   A card marked [data-tap] has one real link on its title (a.tap-a): that is its keyboard stop, its accessible name and
+   what middle-/ctrl-click open. A tap anywhere else on the card follows that link, unless the tap began on a control
+   inside the card (links, buttons, chips, toggles, details), the pointer moved more than 10 px or the page or a
+   sideways scroller moved (a scroll or swipe), or text is selected (long-press selection on Android stays free). */
+(function(){var CTRL='a,button,input,select,textarea,summary,details,label,[role=button],[role=link],[role=tab],[contenteditable]',P=null,PT=0;
+  function card(t){var c=t&&t.closest?t.closest('[data-tap]'):null;return c&&c.querySelector('a.tap-a')?c:null;}
+  function onCtl(t,c){var x=t.closest(CTRL);return !!(x&&x!==c&&c.contains(x));}
+  function scrollers(t){var L=[];for(var e=t;e&&e!==document.body;e=e.parentElement){if(e.scrollWidth>e.clientWidth+2){var o=getComputedStyle(e).overflowX;if(o==='auto'||o==='scroll')L.push([e,e.scrollLeft]);}}return L;}
+  function unpress(){clearTimeout(PT);if(P&&P.c)P.c.classList.remove('pressing');}
+  document.addEventListener('pointerdown',function(e){unpress();P=null;if(e.button!==0)return;var c=card(e.target);if(!c)return;
+    P={c:c,x:e.clientX,y:e.clientY,sy:window.scrollY,sc:scrollers(e.target),ctl:onCtl(e.target,c),moved:false};
+    /* the pressed look waits a beat, so the start of a scroll does not flash it */
+    if(!P.ctl)PT=setTimeout(function(){if(P&&!P.moved)P.c.classList.add('pressing');},e.pointerType==='mouse'?0:70);},true);
+  document.addEventListener('pointermove',function(e){if(!P||P.moved)return;if(Math.abs(e.clientX-P.x)>10||Math.abs(e.clientY-P.y)>10){P.moved=true;unpress();}},true);
+  ['pointerup','pointercancel','dragstart'].forEach(function(t){document.addEventListener(t,function(e){if(t!=='pointerup'&&P)P.moved=true;var c=P&&P.c;clearTimeout(PT);if(c)setTimeout(function(){c.classList.remove('pressing');},t==='pointerup'?120:0);},true);});
+  window.addEventListener('scroll',function(){if(P&&Math.abs(window.scrollY-P.sy)>10){P.moved=true;unpress();}},{passive:true});
+  function swiped(p){if(p.moved||Math.abs(window.scrollY-p.sy)>10)return true;return p.sc.some(function(s){return Math.abs(s[0].scrollLeft-s[1])>10;});}
+  function go(e,c,newTab){var a=c.querySelector('a.tap-a');if(!a)return;if(newTab){window.open(a.href,'_blank','noopener');return;}a.click();}
+  document.addEventListener('click',function(e){if(e.defaultPrevented||e.button!==0)return;var c=card(e.target);if(!c||onCtl(e.target,c))return;
+    var p=P;P=null;if(p&&(p.c!==c||p.ctl||swiped(p)))return;
+    var s=window.getSelection&&getSelection();if(s&&!s.isCollapsed&&String(s).trim()&&c.contains(s.anchorNode))return;
+    go(e,c,e.ctrlKey||e.metaKey||e.shiftKey);});
+  document.addEventListener('auxclick',function(e){if(e.button!==1)return;var c=card(e.target);if(!c||onCtl(e.target,c))return;e.preventDefault();go(e,c,true);});})();
 
 /* ---------------- router ---------------- */
 var PQ='';/* the ?query part of the hash: search terms, or hl/sec for a deep link into an edition */

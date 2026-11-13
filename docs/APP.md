@@ -118,3 +118,24 @@ Again all in `cu.js`, with small hooks in `app.js`, `hubs.js` and `search.js`. E
 - **Motion and focus:** rows and page blocks use the cascade (32 ms stagger, max 8 rows). List → page enters from the right and Back from the left. Reduced motion gives a short fade. On a new page focus moves to the `h1`. Back restores the list's scroll position and focuses the row you opened.
 - **A11y:** each group is a `section` with an `h2` and a `ul role=list` of links. Each row is one link whose name starts with the entity. The "more" list is a disclosure button with `aria-expanded`. Forced-colours borders are set, and rows are at least 72 px tall, with 44 px compact rows.
 - Service worker: public `v13-2026-11-13-hubpages`, private `v20-2026-11-13-hubpages`.
+
+## Whole-card tap (feat/hub-pages, 13 Nov 2026)
+Tapping anywhere on a story or news card opens the same item its title opens. Read more used to be the link for this.
+- **Markup.** Each tappable card is `<article … data-tap>`. Its title is the one real link, `<h3><a class="tap-a" href="…">`. Keyboard users Tab to it and press Enter, and screen readers hear a single link per card. Nothing is stretched over the card, so text in it can still be selected.
+- **Read more is gone.** Its text links (Read more / Read full report / Read this section / Open the weekly review / Full timeline) are replaced by a quiet `›` chevron, `<span class="tap-ch" aria-hidden="true">`. The title link is the accessible target.
+- **Where cards are tappable:**
+  - Today and older editions: `.scard` story cards and the weekly-review card `.wk`.
+  - Hub feeds and company or regulator pages: `.fi` feed cards, `.rc` regulation cards and the NCD fallback card.
+  - The MFL hub's own-company card `.mflp`.
+  - The weekly review's sections `.wks`.
+  - These were already whole-card links and are unchanged: Continuing `.cc`, circulars `.circ`, Threads `.trow`, search results `.sx-a`, Archive covers, hub list rows `.erow` and deadlines `.dl`.
+  - These stay deliberately untappable as cards: the Peer Intelligence panels `.pi` and the Teaching lesson cards, because they are interactive panels, not news cards.
+- **One delegated handler (app.js, "whole-card tap").** It listens on the document for pointerdown, pointermove, pointerup and pointercancel, plus scroll, dragstart, click and auxclick. A tap is ignored when any of these is true:
+  - it started on or ended on a control inside the card: `a`, `button`, `input`, `select`, `textarea`, `summary`, `details`, `label`, `[role=button|link|tab]` or `[contenteditable]`;
+  - the pointer moved more than 10 px;
+  - the page or a horizontal scroller scrolled;
+  - text is selected;
+  - a native drag started (dragstart). An Android long press selects text and never fires a click, so selection stays free.
+  - Ctrl, ⌘ or Shift with a click, or a middle-click, opens the item in a new tab. A plain tap calls `a.click()` on the title link, so the router, history and Back behave exactly as they do for a title tap.
+- **Press state.** `.pressing` sets `scale: .985` with the spring ease and adds a faint hub-tinted glass wash (an inset shadow). On touch it waits 70 ms so a scroll doesn't flash it. Hover deepens the border and nudges the chevron. Keyboard focus on the title draws the ring on the whole card (`[data-tap]:has(.tap-a:focus-visible)`). The card uses the `scale` property, not `transform`, so it doesn't fight the cascade animation. With reduced motion only the colour changes. Forced colours get a Highlight outline. Desktop shows `cursor: pointer`.
+- Service worker: public `v14-2026-11-13-cardtap`, private `v21-2026-11-13-cardtap`.

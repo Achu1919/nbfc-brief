@@ -46,9 +46,9 @@ function summ(d){var s=d.sm||d.b||'';if(d.imp){var k=s.indexOf(d.imp);if(k>0)s=s
 function srcA(src){return src&&src.u&&/^https?:/.test(src.u)?'<a href="'+esc(src.u)+'" target="_blank" rel="noopener noreferrer">'+esc(clip(src.l||'source',40))+'</a>':'';}
 function kindL(d){var tg=(String(d.t).match(TAGRX)||[])[1];if(tg)return tg.charAt(0)+tg.slice(1).toLowerCase();return {Story:'Top story',Circular:'Circular',Calendar:'Calendar',MFL:NB.mflLabel||'Muthoot Fincorp',Weekly:'Weekly',Gold:'Gold rates'}[d.k]||String(d.s||'').split(' \u00b7 ').pop()||d.k;}
 function fcard(d,page){var c=d.c&&d.c!==page?NB.hubChip(d.c):'',s=summ(d),a=srcA(d.src);
-  return '<article class="fi g"'+(d.c?' data-hub="'+d.c+'"':'')+'><div class="tagrow">'+c+'<span class="fk">'+esc(clip(kindL(d),40))+'</span></div>'+
-    '<h3>'+esc(clip(ttl(d.t),160))+'</h3>'+(s&&s!==ttl(d.t)?'<p class="sum">'+esc(s)+'</p>':'')+(d.imp?NB.impLine(clip(clean(d.imp),220),window.NBCU&&NBCU.impactLabel):'')+
-    '<div class="sc-f"><span class="by">'+(a?'Source: '+a:'')+'</span><a class="more press" href="'+esc(d.h)+'">Read full report<span class="sr">: '+esc(clip(d.t,60))+'</span> <span aria-hidden="true">\u2192</span></a></div></article>';}
+  return '<article class="fi g" data-tap'+(d.c?' data-hub="'+d.c+'"':'')+'><div class="tagrow">'+c+'<span class="fk">'+esc(clip(kindL(d),40))+'</span></div>'+
+    '<h3><a class="tap-a" href="'+esc(d.h)+'">'+esc(clip(ttl(d.t),160))+'</a></h3>'+(s&&s!==ttl(d.t)?'<p class="sum">'+esc(s)+'</p>':'')+(d.imp?NB.impLine(clip(clean(d.imp),220),window.NBCU&&NBCU.impactLabel):'')+
+    '<div class="sc-f"><span class="by">'+(a?'Source: '+a:'')+'</span>'+'<span class="tap-ch" aria-hidden="true">\u203a</span>'+'</div></article>';}
 function feed(L,page,lim){lim=lim||24;if(!L.length)return '<div class="g card" data-st><p class="note" style="margin:0">Nothing filed under this topic yet.</p></div>';
   var h='',cur='';L.slice(0,lim).forEach(function(d){if(d.d!==cur){if(cur)h+='</div>';cur=d.d;h+='<h3 class="fday" data-st>'+esc(NB.shortDay(d.d))+'</h3><div class="fgrp">';}h+=fcard(d,page);});
   h+='</div>';if(L.length>lim)h+='<div class="fmore" data-st><button type="button" class="pill press" data-hmore="'+lim+'">Show more ('+(L.length-lim)+')</button></div>';return h;}
@@ -80,10 +80,10 @@ function regOf(d){var r=d.reg||{},g=d.rg||{},txt=d.t+' '+d.b,o={};
   o.status=st;return o;}
 function regCard(d){var r=regOf(d),st=NB.RSTAT[r.status],s=summ(d);
   var dl=[['Ref no.',r.ref_no],['Applies to',r.applies],['Issued',r.issued],['Effective',r.effective]].filter(function(x){return x[1];});
-  return '<article class="fi rc g" data-hub="regulation"><div class="tagrow">'+(r.regulator?'<span class="rgb">'+esc(r.regulator.toUpperCase())+'</span>':'')+(st?'<span class="st st-'+r.status+'">'+st+'</span>':'')+'<span class="fk">'+esc(kindL(d))+'</span></div>'+
-    '<h3>'+esc(clip(ttl(d.t),160))+'</h3>'+(dl.length?'<dl class="rf">'+dl.map(function(x){return '<div><dt>'+x[0]+'</dt><dd class="'+(x[0]==='Ref no.'?'num':'')+'">'+esc(clip(clean(x[1]),120))+'</dd></div>';}).join('')+'</dl>':'')+
+  return '<article class="fi rc g" data-tap data-hub="regulation"><div class="tagrow">'+(r.regulator?'<span class="rgb">'+esc(r.regulator.toUpperCase())+'</span>':'')+(st?'<span class="st st-'+r.status+'">'+st+'</span>':'')+'<span class="fk">'+esc(kindL(d))+'</span></div>'+
+    '<h3><a class="tap-a" href="'+esc(d.h)+'">'+esc(clip(ttl(d.t),160))+'</a></h3>'+(dl.length?'<dl class="rf">'+dl.map(function(x){return '<div><dt>'+x[0]+'</dt><dd class="'+(x[0]==='Ref no.'?'num':'')+'">'+esc(clip(clean(x[1]),120))+'</dd></div>';}).join('')+'</dl>':'')+
     (s&&s!==ttl(d.t)?'<p class="sum">'+esc(s)+'</p>':'')+(d.imp?NB.impLine(clip(clean(d.imp),220),window.NBCU&&NBCU.impactLabel):'')+
-    '<div class="sc-f"><span class="by">'+(r.url&&/^https?:/.test(r.url)?'<a href="'+esc(r.url)+'" target="_blank" rel="noopener noreferrer">Circular <span aria-hidden="true">\u2197</span><span class="sr"> (opens the source)</span></a>':'')+'</span><a class="more press" href="'+esc(d.h)+'">Read full report<span class="sr">: '+esc(clip(d.t,60))+'</span> <span aria-hidden="true">\u2192</span></a></div></article>';}
+    '<div class="sc-f"><span class="by">'+(r.url&&/^https?:/.test(r.url)?'<a href="'+esc(r.url)+'" target="_blank" rel="noopener noreferrer">Circular <span aria-hidden="true">\u2197</span><span class="sr"> (opens the source)</span></a>':'')+'</span>'+'<span class="tap-ch" aria-hidden="true">\u203a</span>'+'</div></article>';}
 var MON={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
 function dateIn(s){s=String(s||'');var m=s.match(/(20\d\d)-(\d\d)-(\d\d)/);if(m)return m[0];
   m=s.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?,?\s+(20\d\d)\b/i);
@@ -123,9 +123,9 @@ function ncdCard(){var N=M().ext&&M().ext.mfl_ncd;
     return '<section aria-labelledby="h-ncd"><div class="sec" data-st><h2 id="h-ncd">NCD issue</h2><span class="aside">'+NCDL+'</span></div><div class="g card ncd" data-st>'+
       '<p class="ncdl">'+NCDL+'</p>'+(facts.length?'<dl class="rf">'+facts.map(function(x){return '<div><dt>'+x[0]+'</dt><dd>'+esc(String(x[1]))+'</dd></div>';}).join('')+'</dl>':'')+ch+(src?'<p class="by">Source: '+srcA(src)+'</p>':'')+'</div></section>';}
   var d=hubDocs('muthoot-fincorp').filter(function(x){return (x.tg.topics||[]).indexOf('ncd')>=0||/\bNCD/.test(x.t);})[0];if(!d)return '';
-  return '<section aria-labelledby="h-ncd"><div class="sec" data-st><h2 id="h-ncd">NCD status</h2><span class="aside">latest mention \u00b7 '+esc(NB.shortDay(d.d))+'</span></div><div class="g card ncd" data-st>'+
-    '<p class="ncdl">'+NCDL+'</p><h3>'+esc(clip(ttl(d.t),160))+'</h3>'+(summ(d)?'<p class="sum">'+esc(summ(d))+'</p>':'')+
-    '<div class="sc-f"><span class="by">'+(srcA(d.src)?'Source: '+srcA(d.src):'')+'</span><a class="more press" href="'+esc(d.h)+'">Read full report <span aria-hidden="true">\u2192</span></a></div></div></section>';}
+  return '<section aria-labelledby="h-ncd"><div class="sec" data-st><h2 id="h-ncd">NCD status</h2><span class="aside">latest mention \u00b7 '+esc(NB.shortDay(d.d))+'</span></div><div class="g card ncd" data-tap data-st>'+
+    '<p class="ncdl">'+NCDL+'</p><h3><a class="tap-a" href="'+esc(d.h)+'">'+esc(clip(ttl(d.t),160))+'</a></h3>'+(summ(d)?'<p class="sum">'+esc(summ(d))+'</p>':'')+
+    '<div class="sc-f"><span class="by">'+(srcA(d.src)?'Source: '+srcA(d.src):'')+'</span>'+'<span class="tap-ch" aria-hidden="true">\u203a</span>'+'</div></div></section>';}
 /* ---------- peers ---------- */
 /* Peer Intelligence (cu.js): empty string when there are no entries or cu.js is missing */
 function cu(f,a){var C=window.NBCU;if(!C||!C[f])return '';try{return C[f](a)||'';}catch(e){return '';}}

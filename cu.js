@@ -574,10 +574,10 @@ function wkMatch(w,key){return w&&(w.start===key||w.id===key||pubOf(w)===key);}
 function weekCard(day){var w=wkOf(day);if(!w||!day)return '';var p=pubOf(w),n=diff(day.id,p);if(n<0||n>6)return '';
   var wt=wkThreads(w),ids=w.storyIds.length?w.storyIds:w.threads.filter(function(x){return x.mentioned_in_review===true;}).map(function(x){return x.story_id;});
   var pd=dayOf(p),ch=wkChips(ids,wt,3),ns=pd&&!pd.stub?wkList(w,pd).length:0;ids=wkIds(ids);
-  return '<section aria-labelledby="h-wk" class="wkcard"><div class="wk g" data-st><p class="kick">Weekly review \u00b7 '+esc(sday(p))+'</p>'+
-    '<h2 id="h-wk">'+(n===0?'This week\u2019s review':'This week\u2019s review')+'</h2><p class="wk-m num">'+esc(['Week of '+wkRange(w),ns?cnt(ns,'section'):'',ids.length?cnt(ids.length,'thread'):''].filter(Boolean).join(' \u00b7 '))+'</p>'+
+  return '<section aria-labelledby="h-wk" class="wkcard"><div class="wk g" data-tap data-st><p class="kick">Weekly review \u00b7 '+esc(sday(p))+'</p>'+
+    '<h2 id="h-wk"><a class="tap-a" href="#/week/'+esc(w.start)+'">This week\u2019s review</a></h2><p class="wk-m num">'+esc(['Week of '+wkRange(w),ns?cnt(ns,'section'):'',ids.length?cnt(ids.length,'thread'):''].filter(Boolean).join(' \u00b7 '))+'</p>'+
     (ch?'<p class="wk-h">Threads in the review</p>'+ch:'')+
-    '<a class="cta ghost press wk-a" href="#/week/'+esc(w.start)+'">Open the weekly review <span aria-hidden="true">\u2192</span></a></div></section>';}
+    '<span class="tap-ch" aria-hidden="true">\u203a</span></div></section>';}
 var WK={key:'',day:null};
 function wkIds(ids){var seen={};return A(ids).map(Id).filter(function(id){if(!id||seen[id]||!thread(id))return false;seen[id]=1;return true;});}
 function wkSub(w,ns){return 'Published '+sday(pubOf(w))+' \u00b7 '+cnt(ns,'section')+' \u00b7 '+cnt(wkIds(w.storyIds).length,'thread')+' in the review';}
@@ -589,8 +589,8 @@ function weekBody(w,pday){var wt=wkThreads(w),p=pubOf(w),cards=pday&&!pday.stub?
   var list=wkList(w,pday);
   var x='<section aria-labelledby="h-wks"><div class="sec" data-st><h2 id="h-wks">Sections</h2><span class="aside num">'+list.length+'</span></div>';
   x+=list.map(function(s){var sm=s.sum?NB().clip?NB().clip(cleanSum(s.sum),240):cleanSum(s.sum):'',ch=wkChips(s.ids,wt),href=cardHref(p,s.c);
-    return '<article class="wks g" data-st><h3>'+esc(plainT(s.title))+'</h3>'+(sm?'<p class="sum">'+esc(sm)+'</p>':'')+
-      (ch?'<p class="wk-h">Stories in this section</p>'+ch:'')+'<div class="sc-f"><span class="by num">'+(ch?esc(cnt((ch.match(/<li\b/g)||[]).length,'thread')):'No linked thread')+'</span><a class="more press" href="'+esc(href)+'">Read this section<span class="sr">: '+esc(s.title)+'</span> <span aria-hidden="true">\u2192</span></a></div></article>';}).join('')+'</section>';
+    return '<article class="wks g"'+(href?' data-tap':'')+' data-st><h3>'+(href?'<a class="tap-a" href="'+esc(href)+'">'+esc(plainT(s.title))+'</a>':esc(plainT(s.title)))+'</h3>'+(sm?'<p class="sum">'+esc(sm)+'</p>':'')+
+      (ch?'<p class="wk-h">Stories in this section</p>'+ch:'')+'<div class="sc-f"><span class="by num">'+(ch?esc(cnt((ch.match(/<li\b/g)||[]).length,'thread')):'No linked thread')+'</span>'+(href?'<span class="tap-ch" aria-hidden="true">\u203a</span>':'')+'</div></article>';}).join('')+'</section>';
   var un=w.threads.filter(function(t){return t.mentioned_in_review!==true;}).map(function(t){return Id(t.story_id);}).filter(function(id){return id&&thread(id);});
   if(un.length){var id=nid('wku');x+='<section aria-labelledby="h-wku" class="wk-un"><div class="sec" data-st><h2 id="h-wku">Not in the review</h2><span class="aside num">'+un.length+'</span></div><div data-st>'+
     '<button type="button" class="pill press" data-cux="'+id+'" aria-expanded="false" aria-controls="'+id+'">Threads this week that the review didn\u2019t cover</button><div id="'+id+'" hidden>'+wkChips(un,wt)+'</div></div></section>';}
@@ -642,11 +642,11 @@ function tList0(L2){return '<ul class="tlist" role="list">'+L2.map(regRow).join(
 
 /* ---------------- Muthoot Fincorp hub: the thread timeline preview ---------------- */
 function mflPreview(t){var f=thread(t.id);if(!f||!f.ups.length)return '';var ups=f.ups.slice().reverse().slice(0,3);
-  return '<div class="mflp g" data-st data-hub="muthoot-fincorp"><p class="kick">Latest thread</p><a class="mflp-t press" href="#/story/'+esc(t.id)+'">'+esc(shortT(t.title,110))+'<span class="sr">. Open the story timeline</span></a>'+
+  return '<div class="mflp g" data-tap data-st data-hub="muthoot-fincorp"><p class="kick">Latest thread</p><a class="mflp-t tap-a press" href="#/story/'+esc(t.id)+'">'+esc(shortT(t.title,110))+'<span class="sr">. Open the story timeline</span></a>'+
     '<ol class="tl mini" role="list">'+ups.map(function(u){var href=readLink(u),now=u.date===X.latestId;
       return '<li class="tl-n'+(now?' now':'')+'"><p class="tl-d num">'+esc(sday(u.date)+(now?' \u00b7 Today':''))+(u.kind==='status'?' <span class="tl-m">Status</span>':'')+'</p>'+
         (href?'<a class="tl-t press" href="'+esc(href)+'">'+esc(plainT(u.title))+'</a>':'<p class="tl-t">'+esc(plainT(u.title))+'</p>')+'</li>';}).join('')+'</ol>'+
-    '<div class="sc-f"><span class="by num">'+esc(cnt(f.full?f.ups.length:(f.count||f.ups.length),'update')+(f.opened?' \u00b7 since '+dm(f.opened):''))+'</span><a class="more press" href="#/story/'+esc(t.id)+'">Full timeline <span aria-hidden="true">\u2192</span></a></div></div>';}
+    '<div class="sc-f"><span class="by num">'+esc(cnt(f.full?f.ups.length:(f.count||f.ups.length),'update')+(f.opened?' \u00b7 since '+dm(f.opened):''))+'</span>'+'<span class="tap-ch" aria-hidden="true">\u203a</span>'+'</div></div>';}
 
 /* ---------------- search documents: threads and Peer Intelligence ---------------- */
 function threadTitles(){var o={};allThreads().forEach(function(t){o[t.id]=plainT(t.title);});return o;}
