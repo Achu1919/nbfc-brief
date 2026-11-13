@@ -286,9 +286,32 @@ a.aside{color:var(--accent);text-decoration:none}
 .art{padding:var(--sp-5) 20px}
 .art h1{font-size:clamp(25px,6.6vw,32px)}
 .art .by{margin-top:var(--sp-2)}
-.toc{display:flex;flex-wrap:wrap;gap:6px;margin:var(--sp-4) 0 0}
-.toc::-webkit-scrollbar{display:none}
-.toc a{flex:none;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:var(--t-13);padding:6px 10px;border-radius:var(--r-s);border:1px solid var(--border);color:var(--text-2);text-decoration:none;white-space:nowrap}
+.toc a,.toc-s a{flex:none}
+/* "Jump to section": one chip row that scrolls sideways (never wraps), sticky under the top pill. In the card it is a
+   plain row; once stuck (.stuck, set by app.js) a glass bar fades in behind it. The scroller is clipped in its own box
+   (no page overflow) and reuses the .fx-sc fade on the edge that has more. Headings in a page with the row stop below it. */
+.art{--toc-top:calc(var(--pill-top) + var(--pill-h) + 8px);--toc-h:46px}
+.toc{position:sticky;top:var(--toc-top);z-index:5;margin:var(--sp-4) -12px 0;border-radius:var(--r-pill);isolation:isolate;transition:box-shadow .3s var(--ease-out)}
+.toc::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;background:var(--glass-tint);
+  -webkit-backdrop-filter:blur(16px) saturate(1.6);backdrop-filter:blur(16px) saturate(1.6);
+  box-shadow:inset 0 1px 0 var(--glass-rim),inset 0 -1px 0 var(--glass-rim2),inset 0 0 0 .5px var(--glass-line);opacity:0;transition:opacity .25s var(--ease-out)}
+.toc.stuck{box-shadow:var(--glass-shadow)}
+.toc.stuck::before{opacity:1}
+.toc-s{position:relative;display:flex;gap:6px;height:var(--toc-h);align-items:center;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;padding:0 12px;
+  scroll-snap-type:x proximity;scroll-padding:0 12px;border-radius:inherit;overscroll-behavior-x:contain}
+.toc-s::-webkit-scrollbar{display:none}
+.toc-s a{scroll-snap-align:start;display:block;height:34px;line-height:32px;max-width:min(72vw,300px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  padding:0 12px;border-radius:var(--r-pill);border:1px solid var(--border);background:var(--surface-1);color:var(--text-2);font-size:var(--t-13);font-weight:550;text-decoration:none;
+  transition:transform .5s var(--spring),background-color .2s,color .2s,border-color .2s}
+.toc-s a:active{transform:scale(.94);transition-duration:.1s;transition-timing-function:var(--ease-out)}
+.toc-s a[aria-current=true]{background:var(--inv);color:var(--on-inv);border-color:transparent}
+.toc-s a:focus-visible{outline-offset:-3px;outline-width:2px}
+@media (hover:hover){.toc-s a:not([aria-current]):hover{background:var(--surface-2);color:var(--text-1)}}
+@media (prefers-reduced-motion:reduce){.toc,.toc::before,.toc-s a{transition:none}}
+@media (forced-colors:active){.toc.stuck{border:1px solid CanvasText;background:Canvas}.toc-s a[aria-current=true]{outline:2px solid Highlight}}
+.art.has-toc .md h2,.art.has-toc .md h3{scroll-margin-top:calc(var(--toc-top) + var(--toc-h) + 12px)}
+.art.cv-all .mds{content-visibility:visible}
+#kn-card,#src-card{scroll-margin-top:calc(var(--pill-top) + var(--pill-h) + 16px)}
 .md{font-size:var(--t-17);line-height:1.65;color:var(--text-1);margin-top:var(--sp-5);overflow-wrap:break-word;max-width:68ch}
 .mds{content-visibility:auto;contain-intrinsic-size:auto 640px}
 .md h2{font-size:var(--t-20);line-height:1.3;letter-spacing:-.015em;font-weight:650;margin:32px 0 8px;padding-top:var(--sp-4);border-top:1px solid var(--hairline);scroll-margin-top:calc(var(--pill-top) + var(--pill-h) + 16px)}
