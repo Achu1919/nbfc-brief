@@ -112,7 +112,7 @@ function contItem(x){x=O(x);if(!x)return null;var sid=Id(x.story_id);if(!sid||!S
     count:N(x.update_count)!=null?x.update_count:N(x.updates),
     latest:{date:D(la.date),card:S(la.card_id),report:S(la.report),kind:la.kind==='status'?'status':'update',title:S(la.title),summary:S(la.summary),source:src(la.source)},
     recent:A(x.recent).map(upd).filter(Boolean).slice(0,3),next:nextOf(nx),np:nextOf(x.next_passed),
-    reg:O(x.reg)?reg(x.reg,null):null};}
+    reg:O(x.reg)?reg(x.reg,null):null,co:A(x.companies).map(Id).filter(Boolean)};}
 function refItem(x){x=O(x);if(!x||!S(x.title))return null;return {title:S(x.title),cat:S(x.category),status:S(x.status),opened:D(x.opened),last:D(x.last_update),
   count:N(x.update_count),next:nextOf(x.next),np:nextOf(x.next_passed),continues:A(x.continues).map(Id).filter(Boolean),continuedBy:A(x.continued_by).map(Id).filter(Boolean)};}
 var DATAP=/^data\/[A-Za-z0-9_\/-]+\.json$/;
@@ -486,6 +486,18 @@ function hubThreads(slug){var CO=slug==='muthoot-fincorp',s=L.stories;
   if(!list.length)return '<section id="cu-ht" data-slug="'+esc(slug)+'" hidden></section>';
   return '<section id="cu-ht" data-slug="'+esc(slug)+'" aria-labelledby="h-ht" class="cu-ht"><div class="sec" data-st><h2 id="h-ht">Continuing in this topic</h2><a class="aside" href="#/threads?f='+esc(slug)+'">All threads \u2192</a></div>'+(CO?mflPreview(list[0])+(list.length>1?'<div data-st>'+tList(list.slice(1),false)+'</div>':''):'<div data-st>'+tList(list,false)+'</div>')+'</section>';}
 
+/* a hub entity page (#/topic/<hub>/<entity>): the threads that name that company or regulator, open and dormant first */
+function entThreads(o){o=O(o)||{};var co=Id(o.co),rg=S(o.rg).toLowerCase(),key=co||rg,s=L.stories;if(!key)return '';
+  var list=allThreads().filter(function(t){var f=s&&s.stories[t.id],c=X.contBy[t.id];
+    if(co){var cs=f?f.co:(c&&c.co)||[];if(cs.indexOf(co)<0)return false;}
+    if(rg){var rs=f?f.rgs.concat(f.rg?[f.rg.toLowerCase()]:[]):(c&&c.reg&&c.reg.regulator?[S(c.reg.regulator).toLowerCase()]:[]);if(rs.indexOf(rg)<0)return false;}
+    return true;});
+  if(!L.stories&&X.storyFile&&!L.sfail)loadStories().then(function(){var el=document.getElementById('cu-et');if(el&&el.getAttribute('data-k')===key&&L.stories)el.outerHTML=entThreads(o);});
+  if(!list.length)return '<section id="cu-et" data-k="'+esc(key)+'" hidden></section>';
+  var live=list.filter(function(t){return t.status!=='closed';}),rest=list.filter(function(t){return t.status==='closed';}),show=live.slice(0,5);rest=live.slice(5).concat(rest);var id=nid('et');
+  return '<section id="cu-et" data-k="'+esc(key)+'" aria-labelledby="h-et" class="cu-ht"><div class="sec" data-st><h2 id="h-et">'+esc(S(o.title)||'Story threads')+'</h2><span class="aside num">'+esc(cnt(list.length,'thread'))+'</span></div>'+
+    '<div data-st>'+(show.length?tList(show,true):'')+(rest.length?'<button type="button" class="pill press tc-b" data-cux="'+id+'" aria-expanded="false" aria-controls="'+id+'">'+(show.length?'Show '+rest.length+' more':'Show '+cnt(rest.length,'closed thread'))+'</button><div id="'+id+'" hidden>'+tList(rest,true)+'</div>':'')+'</div></section>';}
+
 /* ================= step 3 ================= */
 /* ---------------- card links: #/<date>/read/<desk>?card=<id>&hl=<title letters> ----------------
    card= finds the unit by the card's own title (any "Update:" prefix ignored on both sides); hl= stays as the
@@ -680,7 +692,7 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
 window.NBCU={prep:prep,ingest:ingest,warm:warm,loadStories:loadStories,loadPeer:loadPeer,onPeer:onPeer,story:story,
   card:card,cardBits:cardBits,circBits:circBits,regChips:regChips,srcList:srcList,impactP:impactP,
   piSlot:piSlot,piHistory:piHistory,tileNote:tileNote,nudge:nudge,fxBanner:fxBanner,
-  cleanSum:cleanSum,contStrip:contStrip,onHash:onHash,deep:deepLink,openStory:function(id){location.hash='#/story/'+id;},closeStory:requestClose,threadsView:threadsView,mountThreads:mountThreads,hubThreads:hubThreads,thread:thread,
+  cleanSum:cleanSum,contStrip:contStrip,onHash:onHash,deep:deepLink,openStory:function(id){location.hash='#/story/'+id;},closeStory:requestClose,threadsView:threadsView,mountThreads:mountThreads,hubThreads:hubThreads,entThreads:entThreads,thread:thread,
   cardHref:cardHref,readMarks:readMarks,cardHit:cardHit,weekCard:weekCard,weekView:weekView,mountWeek:mountWeek,regTracked:regTracked,
   searchDocs:searchDocs,threadTitles:threadTitles,piFocus:piFocus,scAll:scAll,
   get impactLabel(){return X.lab||'';},get continuing(){return X.cont;},get week(){return X.week;},get peerIntel(){return X.pi;},get fixture(){return X.fixture;},

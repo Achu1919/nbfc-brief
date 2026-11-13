@@ -878,7 +878,7 @@ function fillCircLater(){loadAgp();var el=document.getElementById('lcirc');if(!e
 /* hubs.js (Topics, hub and peer pages) loads on demand, after search.js (it reads the search index) */
 var HBP=null;
 function loadHubs(){if(window.NBHubs)return Promise.resolve();if(!HBP)HBP=loadSearch().then(function(){return loadScript('/hubs.js');}).catch(function(e){HBP=null;throw e;});return HBP;}
-var HUBV={topics:1,topic:1,peer:1};
+var HUBV={topics:1,topic:1,peer:1},HUBY={};/* HUBY: scroll position of each topic page, restored when Back returns to it */
 function tabOf(v){return HUBV[v]||v==='threads'?'topics':v==='search'?'':v==='week'?'read':v;}
 function hubsView(day){if(window.NBHubs)return NBHubs.html(S.view,S.key,PQ,day);
   return '<div class="hd" data-st="h"><p class="greet">Topics</p><h1>Topics</h1></div><div class="g card empty" data-st><h2>Topics are not available offline yet</h2><p>Open Topics once while online and they will work offline after that.</p></div>';}
@@ -928,7 +928,8 @@ function parse(){
   if(p[0]==='week')return {view:'week',day:id,key:p[1]||''};
   if(p[0]==='archive')return {view:'archive',day:id};
   if(p[0]==='topics')return {view:'topics',day:id};
-  if((p[0]==='topic'||p[0]==='peer')&&p[1])return {view:p[0],day:id,key:p[1]};
+  /* #/topic/<hub>/<entity>: one company, regulator or theme inside a hub (hubs.js); key is "hub/entity" */
+  if((p[0]==='topic'||p[0]==='peer')&&p[1])return {view:p[0],day:id,key:p[0]==='topic'&&p[2]?p[1]+'/'+p[2]:p[1]};
   if(p[0]==='latest')p[0]=id;
   if(p[0]&&/^\d{4}-\d{2}-\d{2}$/.test(p[0])){var d=M.byId[p[0]]?p[0]:id;
     if(p[1]==='markets')return {view:'markets',day:d};
@@ -940,7 +941,10 @@ function parse(){
   return {view:'today',day:S.day||id};}
 var first=true,TABS=['today','read','topics','markets','archive'],KEYS=['01-daily-watch','02-regulation','03-weekly-analysis'];
 /* direction: +1 = forward (new view enters from the right). Tabs by bar order, editions newer->older, Read desks by order. */
+/* topic pages by depth: Topics 0, a hub's list 1, an entity page 2 (#/peer/<slug> counts as 2) */
+function hubDepth(v,k){return v==='topics'?0:v==='peer'||String(k||'').indexOf('/')>0?2:1;}
 function dirFor(pv,pd,pk,v,d,k){
+  if(HUBV[pv]&&HUBV[v]&&pd===d&&(pv!==v||pk!==k)){var a0=hubDepth(pv,pk),b0=hubDepth(v,k);if(a0!==b0)return b0>a0?1:-1;}
   if(pv!==v){var a=TABS.indexOf(tabOf(v)),b=TABS.indexOf(tabOf(pv));if(a===b)return HUBV[v]&&v!=='topics'?1:-1;return a>b?1:-1;}
   if(pd!==d)return d<pd?1:-1;
   if(v==='read'&&pk!==k)return KEYS.indexOf(k)>KEYS.indexOf(pk)?1:-1;
@@ -1029,6 +1033,7 @@ function navNow(view){if(!view)return;var tv=tabOf(view);document.querySelectorA
   if(view!=='today'&&cbT)cbT.textContent=TTL[view]||'NBFC Brief';if(view==='archive'){if(tpE)tpE.textContent='Archive';var cbS=document.getElementById('cbS');if(cbS)cbS.textContent=M.days.length+' editions \u00b7 latest '+shortDay(M.days[0].id);}}
 function route(){
   var r=parse(),pv=S.view,pd=S.day,pk=S.key,my=++seq;
+  if(!first&&HUBV[pv])HUBY[pv+'|'+pk]=scrollY;
   if(pv==='archive'&&r.view!=='archive'&&!flying){if(CF)ARCH.i=CF.i;ARCH.y=scrollY;}
   if(!first&&r.view!==pv)navNow(r.view);
   /* old content stays on screen until the new view is built */
@@ -1048,7 +1053,8 @@ function route(){
       document.querySelectorAll('#tabbar a').forEach(function(a){var t=a.dataset.tab;
         a.href=t==='archive'?'#/archive':t==='topics'?'#/topics':t==='today'?'#/'+day.id:'#/'+day.id+'/'+t;
         if(t===tabOf(S.view))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
-      if(changed&&(pv!==S.view||pd!==S.day)){window.scrollTo(0,S.view==='archive'?ARCH.y||0:0);var hd=$('h1');if(hd){hd.setAttribute('tabindex','-1');hd.focus({preventScroll:true});}}
+      var hubK=HUBV[S.view]&&pv===S.view&&pk!==S.key,hubY=HUBV[S.view]&&dir<0?HUBY[S.view+'|'+S.key]:null;
+      if(changed&&(pv!==S.view||pd!==S.day||hubK)){window.scrollTo(0,S.view==='archive'?ARCH.y||0:hubY||0);var hd=$('h1');if(hd){hd.setAttribute('tabindex','-1');hd.focus({preventScroll:true});}}
       chromeBar(day);
       syncTabInd(!first);syncSegInd(segFrom);fit(true);
       var pc=$('.pill[aria-current=true]'),pl=pc&&pc.parentNode;
