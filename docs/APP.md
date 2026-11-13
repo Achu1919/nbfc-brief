@@ -96,3 +96,11 @@ Again all in `cu.js`, with small hooks in `app.js`, `hubs.js` and `search.js`. E
   - Filters: Stage (Draft, Final, Effective, from the card's `reg.lifecycle`) and Thread ("In a story thread", cards with a `story_id`). Rows only show when something matches.
   - Thread and Peer Intelligence documents are built at load time from `data/stories.json` and `data/peer_intel.json` (cached offline), never stored, so they follow those files. The topic pages still read only the day documents.
 - **Routes on reload and offline:** `#/week/<date>`, `?card=` and `?pi=` are plain hash routes, so a reload lands on them, and they render offline from the service worker's cached data (`latest.json`, the day files already opened, `stories.json`, `peer_intel.json`).
+
+## Read: "Jump to section" row (fix/reader-chips, 13 Nov 2026)
+
+- The section chips at the top of each Read desk (News, Rules, Weekly) are one row that scrolls sideways: `nav.toc[aria-label="Jump to section"] > .toc-s.fx-sc`. They never wrap, so the article starts on the first screen at 360 and 412 px.
+- The row is sticky under the top pill (`--toc-top`, `--toc-h` on `.art`). Once it sticks, app.js adds `.stuck` and a glass bar fades in behind it. Headings in an article that has the row (`.art.has-toc`) get a `scroll-margin-top` that clears the row.
+- Active chip: an IntersectionObserver band just under the row, plus a rAF-throttled scroll check, picks the last heading above that line. Its chip gets `aria-current="true"` and is scrolled to the middle of the row (smooth unless reduced motion). Tapping a chip marks it straight away.
+- Jumps: the article's `content-visibility:auto` chunks only have a 640px height guess until painted, so jumps used to land hundreds of px off. `tocGo()` paints every chunk once (`.art.cv-all`), scrolls, then corrects after `scrollend`.
+- The scroller sits inside its own box with the `.fx-sc` edge fade, so it never makes the page wider than the screen. Chips press with the todo-app spring; reduced motion turns the transitions off.

@@ -503,10 +503,48 @@ function viewRead(day,key){
       (items.length?marketsTable(day,items.map(function(i){return i.key;}),'Only figures in this day\u2019s report.'):'<p class="missing">No Key numbers table in this report.</p>')+missingLine(day,CORE)+'</div></section>';}
   if(list.length)side+='<section id="src-card" aria-labelledby="h-src"><div class="sec"><h2 id="h-src">Sources</h2><span class="aside">'+list.length+'</span></div><div class="g srcs">'+
     list.map(function(s){return '<a href="'+esc(s.u)+'" target="_blank" rel="noopener noreferrer">'+esc(s.l)+'<small>'+esc(domain(s.u))+'</small></a>';}).join('')+'</div></section>';
-  return header(day,j.tab||'Read')+pills(day,'/read/'+key)+seg+'<div class="cols"><article class="g art" data-st aria-labelledby="h-art"><div class="kick">'+esc(j.name)+' · '+esc(shortDay(day.id))+'</div><h1 id="h-art" style="margin-top:6px">'+esc(r.title)+'</h1>'+
+  return header(day,j.tab||'Read')+pills(day,'/read/'+key)+seg+'<div class="cols"><article class="g art'+(toc.length?' has-toc':'')+'" data-st aria-labelledby="h-art"><div class="kick">'+esc(j.name)+' · '+esc(shortDay(day.id))+'</div><h1 id="h-art" style="margin-top:6px">'+esc(r.title)+'</h1>'+
     '<p class="by">NBFC Brief · '+esc(j.when)+' IST · '+mins(wordsOf(r))+' min read · '+(r.sources||0)+' sources</p>'+
-    (toc.length?'<nav class="toc" aria-label="On this page">'+toc.map(function(t){return '<a href="#'+t.id+'" data-jump="'+t.id+'">'+esc(t.t)+'</a>';}).join('')+'</nav>':'')+
+    (toc.length?'<nav class="toc" aria-label="Jump to section"><div class="toc-s fx-sc">'+toc.map(function(t){return '<a href="#'+t.id+'" data-jump="'+t.id+'">'+esc(t.t)+'</a>';}).join('')+'</div></nav>':'')+
     '<div class="md">'+body+'</div></article><div class="side">'+side+'</div></div>'+foot();}
+
+/* Read: the "Jump to section" row. One horizontally scrolling chip row, sticky under the top pill (CSS). The section
+   being read gets aria-current on its chip: an IntersectionObserver band just under the row (plus a rAF-throttled
+   scroll check, so a fast fling can't skip a heading) picks the last heading above that line, and the row scrolls
+   that chip to its middle, smooth unless reduced motion. The row turns into a small glass bar once it sticks.
+   Tapping a chip marks it at once and holds that until the jump's scroll settles. */
+var TOC={el:null,tg:[],io:null,raf:0,lock:0,cur:''};
+function tocTop(){var tp=document.getElementById('tp');return tp?tp.getBoundingClientRect().bottom+8:68;}
+function tocSet(id,smooth){var t=TOC.el;if(!t||id===TOC.cur)return;TOC.cur=id;var s=t.querySelector('.toc-s'),cur=null;
+  [].forEach.call(s.children,function(a){if(a.dataset.jump===id){a.setAttribute('aria-current','true');cur=a;}else a.removeAttribute('aria-current');});
+  if(cur&&s.scrollWidth>s.clientWidth+1){var x=Math.max(0,Math.min(s.scrollWidth-s.clientWidth,cur.offsetLeft-(s.clientWidth-cur.offsetWidth)/2));
+    if(Math.abs(s.scrollLeft-x)>2)s.scrollTo({left:x,behavior:smooth&&!RM.matches?'smooth':'auto'});}}
+function tocCalc(){TOC.raf=0;var t=TOC.el;if(!t||!t.isConnected)return;var top=tocTop(),r=t.getBoundingClientRect();
+  t.classList.toggle('stuck',scrollY>0&&r.top<=top+.5);
+  if(TOC.lock>Date.now())return;
+  var line=top+t.offsetHeight+24,act='';
+  for(var i=0;i<TOC.tg.length;i++){if(TOC.tg[i].getBoundingClientRect().top<=line)act=TOC.tg[i].id;else break;}
+  tocSet(act,true);}
+function tocQ(){if(TOC.el&&!TOC.raf)TOC.raf=requestAnimationFrame(tocCalc);}
+function tocMount(root){if(TOC.io){TOC.io.disconnect();TOC.io=null;}TOC.el=root.querySelector('.toc');TOC.tg=[];TOC.cur=null;TOC.lock=0;if(!TOC.el)return;
+  var art=TOC.el.closest('article')||root;
+  [].forEach.call(TOC.el.querySelectorAll('a[data-jump]'),function(a){var el=art.querySelector('[id="'+a.dataset.jump+'"]');if(el)TOC.tg.push(el);});
+  if(window.IntersectionObserver&&TOC.tg.length){var line=Math.round(tocTop()+(TOC.el.offsetHeight||46)+24);
+    TOC.io=new IntersectionObserver(tocQ,{rootMargin:'-'+line+'px 0px -'+Math.max(0,innerHeight-line-2)+'px 0px'});TOC.tg.forEach(function(el){TOC.io.observe(el);});}
+  tocCalc();}
+function tocJump(id){TOC.lock=Date.now()+1500;tocSet(id,true);}
+/* The article is split into content-visibility:auto chunks whose height is only a 640px guess until first painted, so a
+   jump measured against guesses landed hundreds of px off. Paint every chunk once (cheap; contain-intrinsic-size:auto
+   then remembers the real heights), scroll, and if anything still moved, settle on the heading after the scroll ends. */
+function tocGo(el){var art=el.closest('.art');if(art){art.classList.add('cv-all');void art.offsetHeight;}
+  el.scrollIntoView({behavior:RM.matches?'auto':'smooth',block:'start'});
+  if(art)requestAnimationFrame(function(){requestAnimationFrame(function(){art.classList.remove('cv-all');});});
+  var n=0,fix=function(){if(!el.isConnected||n++>2)return;var want=parseFloat(getComputedStyle(el).scrollMarginTop)||0,d=el.getBoundingClientRect().top-want;
+    if(Math.abs(d)>4){scrollBy({top:d,behavior:'auto'});setTimeout(fix,120);}};
+  if('onscrollend' in window)addEventListener('scrollend',function f(){removeEventListener('scrollend',f);setTimeout(fix,30);});else setTimeout(fix,RM.matches?60:900);}
+addEventListener('scroll',tocQ,{passive:true});
+addEventListener('scrollend',function(){if(TOC.lock){TOC.lock=0;}});
+addEventListener('resize',function(){if(TOC.el&&TOC.el.isConnected)tocMount(TOC.el.closest('.vw')||document);});
 
 /* ---------------- archive: month calendar + magazine cover-flow ---------------- */
 var ARCH={mo:null,i:null,y:0},MONL=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -1020,6 +1058,7 @@ function route(){
       if(S.view==='threads'&&window.NBCU)NBCU.mountThreads(nv);
       if(S.view==='week'&&window.NBCU)NBCU.mountWeek(nv,S.key);
       if(S.view==='read'&&window.NBCU&&NBCU.readMarks){try{NBCU.readMarks(nv,day.id,S.key);}catch(e){}}
+      if(S.view==='read')tocMount(nv);else if(TOC.el){if(TOC.io)TOC.io.disconnect();TOC.io=null;TOC.el=null;TOC.tg=[];}
       if(S.view==='today')fillCircLater();
       cascade(nv,first);
       if(S.view!=='search'&&/(?:^|&)(?:hl|sec|card)=/.test(PQ))hitLater(nv,PQ);}
@@ -1060,7 +1099,7 @@ APP.addEventListener('click',function(e){
   if(t.id==='installBtn'&&installEvt){installEvt.prompt();installEvt.userChoice.finally(function(){installEvt=null;t.hidden=true;});}
   else if(t.dataset.gx)goldToggle(t);
   else if(t.dataset.grange!=null)goldRange(t);
-  else if(t.dataset.jump){e.preventDefault();var el=document.getElementById(t.dataset.jump);if(el)el.scrollIntoView({behavior:RM.matches?'auto':'smooth',block:'start'});}
+  else if(t.dataset.jump){e.preventDefault();var el=document.getElementById(t.dataset.jump);if(el){tocJump(t.dataset.jump);tocGo(el);}}
 });
 APP.addEventListener('keydown',calKey);
 /* ticker: hold still while a finger is on it */
