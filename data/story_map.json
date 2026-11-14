@@ -517,7 +517,17 @@
   },
   "mfl-ipo-2026": {
    "title": "Muthoot Fincorp IPO",
-   "regulators": []
+   "regulators": [],
+   "next": {
+    "date": "2026-11-19",
+    "date_text": "19 Nov 2026",
+    "known_from": "2026-11-13",
+    "what": "Muthoot Microfin board meeting on audited half-year accounts for MFL's restated financials",
+    "source": {
+     "name": "NSE (Muthoot Microfin board intimation, 13 Nov)",
+     "url": "https://nsearchives.nseindia.com/corporate/muthootmicrofin_13112026182612_PriorintimationBoardMeeting19112026SD.pdf"
+    }
+   }
   },
   "mfl-ncd-2026-tranche-1": {
    "title": "Muthoot Fincorp Tranche I NCD issue",
@@ -885,6 +895,16 @@
   },
   "rbi-nbfc-faq-update-2026-11": {
    "title": "RBI NBFC FAQs update",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "india-cpi-inflation-2026": {
+   "title": "India retail inflation (CPI)",
+   "regulators": []
+  },
+  "rbi-mobikwik-penalty-2026-11": {
+   "title": "RBI penalty on One Mobikwik Systems",
    "regulators": [
     "rbi"
    ]
