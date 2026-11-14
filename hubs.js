@@ -68,7 +68,7 @@ function tile(h,i){var X=ix(),s=X?stats(h.s):null;
     '<span class="ht-d">'+(s&&s.top?'Latest \u00b7 '+esc(NB.shortDay(s.top.d)):'\u00a0')+'</span></a>';}
 function topicsHtml(){var n=M().days.length;
   return '<div class="hd hubhd big g" data-st="h"><p class="greet">Browse by topic</p><h1>Topics</h1><p class="hsub">'+plural(HUBS.length,'topic')+' across <span class="num">'+plural(n,'edition')+'</span>. Each one gathers every item tagged to it, newest first.</p></div>'+
-    '<nav class="hub-grid" aria-label="Topics" id="hubGrid">'+HUBS.map(tile).join('')+'</nav>'+NB.foot();}
+    (window.NBEV?(function(){try{return NBEV.topicsLink();}catch(x){return '';}})():'')+'<nav class="hub-grid" aria-label="Topics" id="hubGrid">'+HUBS.map(tile).join('')+'</nav>'+NB.foot();}
 /* ---------- Regulation ---------- */
 var REF=/\b(RBI\/20\d\d-\d\d\/\d+|(?:DoR|DOR|DNBR|DNBS|FIDD|DPSS|DCM|FMRD|CO\.)[\w.\/-]*?\/20\d\d-\d\d|SEBI\/[A-Z0-9\/_-]+\/20\d\d\/\d+|IBBI\/[\w\/.-]+\/20\d\d(?:-\d\d)?(?:\/\d+)?)/;
 function regOf(d){var r=d.reg||{},g=d.rg||{},txt=d.t+' '+d.b,o={};
@@ -253,6 +253,8 @@ function entHtml(hub,k){var E=ENT[hub],I=entIx(hub),t=thOf(hub,k),isRg=E.g==='rg
   else{rows.push(['Items',cnt]);if(last)rows.push(['Latest item',NB.shortDay(last)]);if(first&&first!==last)rows.push(['First in these editions',NB.shortDay(first)]);
     if(isRg){var dl=deadlines().filter(function(x){return nk(x.reg)===k;})[0];if(dl)rows.push(['Next deadline',NB.dm(dl.date)]);}
     h+=factsCard(rows,'');}
+  /* the entity's own upcoming events (events.js), under At a glance; omitted when it has none */
+  if(!t&&window.NBEV){try{h+=NBEV.entBlock(k);}catch(x){}}
   if(isRg)h+=dlStrip(k);
   if(!t)h+=cu('entThreads',isRg?{rg:k,title:'Continuing threads'}:{co:k,title:'Continuing threads'});
   if(!isRg&&!t&&(hub==='peers'||hub==='results'))h+=cu('piHistory',k);
@@ -267,7 +269,7 @@ function hubBody(slug){var X=ix();if(!X)return loading();var L=hubDocs(slug),day
   if(slug==='regulation'){var cnt=function(f){return regFilter(L,f).length;};
     return dlStrip()+cu('regTracked')+'<section aria-labelledby="h-rf"><div class="sec" data-st><h2 id="h-rf">Circulars &amp; updates</h2></div>'+chips(RF.map(function(x){return [x[0],x[1],cnt(x[0])];}),ST.f,'data-hf','Filter regulation items')+'<div id="hfeed">'+regFeed(regFilter(L,ST.f),ST.lim)+'</div></section>';}
   var pre='';
-  if(slug==='muthoot-fincorp'){pre=ncdCard();var mb=full&&!full.stub&&NB.mflBlock?NB.mflBlock(full):'';if(mb)pre+=mb;}
+  if(slug==='muthoot-fincorp'){pre=(window.NBEV?(function(){try{return NBEV.entBlock('muthoot-fincorp');}catch(x){return '';}})():'')+ncdCard();var mb=full&&!full.stub&&NB.mflBlock?NB.mflBlock(full):'';if(mb)pre+=mb;}
   if(slug==='peers')pre=peersBlock();
   if(slug==='gold'){var gd=M().days.filter(function(d){var f=NB.M.byId[d.id];return f&&!f.stub&&f.gold;})[0];pre=gd?NB.goldCard(NB.M.byId[gd.id],true):'';L=L.filter(function(d){return d.k!=='Gold';});}
   if(slug==='markets'){pre='<section aria-labelledby="h-mc"><div class="sec" data-st><h2 id="h-mc">Nifty 50</h2><a class="aside" href="#/'+day.id+'/markets">All numbers \u2192</a></div><div class="g card pchart" data-st><div class="gx-in" data-gk="nifty" data-gd="'+day.id+'">'+NB.gChartBlock('nifty',day.id)+'</div></div></section>';}

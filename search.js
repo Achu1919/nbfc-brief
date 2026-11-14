@@ -6,7 +6,7 @@
    that is used instead. Tags: story/circular/calendar "tags" {companies,regulators,topics} win; otherwise
    simple keyword heuristics fill them in. Labels: latest.json "tag_labels", else Title Case with acronyms. */
 (function(){'use strict';
-var NB=window.__NB,esc=NB.esc,IDXV=7,DBN=NB.ns+'-search',RKEY=NB.ns+'-recent';
+var NB=window.__NB,esc=NB.esc,IDXV=8,DBN=NB.ns+'-search',RKEY=NB.ns+'-recent';
 /* ---------- text ---------- */
 var STOP={};'the a an and or of to in on for by with at is are was were be as it its from that this into than has have had not no'.split(' ').forEach(function(w){STOP[w]=1;});
 function norm(s){return String(s==null?'':s).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'');}
@@ -184,8 +184,9 @@ var IX=null; /* {gen, docs, vocab:[sorted], post:{tok:[docIdx]}, latest} */
 /* threads and Peer Intelligence (cu.js, from data/stories.json and data/peer_intel.json) are added at load time,
    never stored, so they follow those files; IX.docs stays the day documents that the topic pages read */
 var EXT=[],TT={};
-function extLoad(){if(!window.NBCU||!NBCU.searchDocs)return Promise.resolve(false);
-  return NBCU.searchDocs().then(function(L){var out=[];(L||[]).forEach(function(o){var tg=o.tg;delete o.tg;push(out,o,{companies:(tg&&tg.companies)||[],regulators:(tg&&tg.regulators)||[],topics:(tg&&tg.topics)||[]});});
+/* events (events.js, data/events.json) join the same way; an event opens #/event/<id> */
+function extLoad(){var a=window.NBCU&&NBCU.searchDocs?NBCU.searchDocs():null,b=window.NBEV&&NBEV.searchDocs?NBEV.searchDocs().catch(function(){return [];}):null;if(!a&&!b)return Promise.resolve(false);
+  return Promise.all([a||[],b||[]]).then(function(v){return (v[0]||[]).concat(v[1]||[]);}).then(function(L){var out=[];(L||[]).forEach(function(o){var tg=o.tg;delete o.tg;push(out,o,{companies:(tg&&tg.companies)||[],regulators:(tg&&tg.regulators)||[],topics:(tg&&tg.topics)||[]});});
     EXT=out;try{TT=NBCU.threadTitles()||{};}catch(e){TT={};}if(IX&&IX.pack)compile(IX.pack);return !!out.length;}).catch(function(){return false;});}
 function compile(pack){var day=pack.docs,docs=day.concat(EXT),post={};
   docs.forEach(function(d,i){var tt={},all={};toks(d.t).forEach(function(t){tt[t]=1;all[t]=1;});
@@ -196,7 +197,7 @@ function compile(pack){var day=pack.docs,docs=day.concat(EXT),post={};
     ['companies','regulators','topics'].forEach(function(g){(d.tg[g]||[]).forEach(function(s){toks(label(g,s)+' '+s).forEach(function(t){all[t]=1;});});});
     d._tt=tt;d._t=flat(d.t);d._b=flat(d.b);
     for(var t in all){(post[t]||(post[t]=[])).push(i);}});
-  var latest=docs.reduce(function(a,d){return d.d>a?d.d:a;},'');
+  var latest=docs.reduce(function(a,d){return d.k!=='Event'&&d.d>a?d.d:a;},''); /* events can be dated ahead; the newest edition stays the anchor */
   IX={pack:pack,all:docs,gen:pack.gen,docs:day,post:post,vocab:Object.keys(post).sort(),latest:latest,n:pack.n,ms:pack.ms,bytes:pack.bytes};return IX;}
 function prefix(tok){var V=IX.vocab,lo=0,hi=V.length;while(lo<hi){var m=(lo+hi)>>1;if(V[m]<tok)lo=m+1;else hi=m;}
   var r=[];for(var i=lo;i<V.length&&V[i].lastIndexOf(tok,0)===0&&r.length<400;i++)r.push(V[i]);return r;}

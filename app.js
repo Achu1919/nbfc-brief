@@ -180,7 +180,9 @@ function fromLegacy(B){
   M.source='data.js';M.generated=B.generated;B.days.forEach(pubDay);index(B.days);M.series=buildSeries(B.days);}
 function fromJson(j){
   M.source='data/latest.json';M.generated=j.generated;try{if(window.NBCU)NBCU.ingest(j);}catch(e){}
-  M.ext={latest_circulars:Array.isArray(j.latest_circulars)?j.latest_circulars:null,deadlines:Array.isArray(j.deadlines)?j.deadlines:null,mfl_ncd:j.mfl_ncd&&typeof j.mfl_ncd==='object'?j.mfl_ncd:null};
+  M.ext={latest_circulars:Array.isArray(j.latest_circulars)?j.latest_circulars:null,deadlines:Array.isArray(j.deadlines)?j.deadlines:null,mfl_ncd:j.mfl_ncd&&typeof j.mfl_ncd==='object'?j.mfl_ncd:null,
+    /* events calendar (events.js): the index tells it data/events.json exists; upcoming_events[] draws Today's strip before the file is in */
+    events_index:j.events_index&&typeof j.events_index==='object'&&!Array.isArray(j.events_index)?j.events_index:null,upcoming_events:Array.isArray(j.upcoming_events)?j.upcoming_events:null};
   pubDay(j.today);
   var days=(j.days||[]).map(function(d){return d.id===j.today.id?j.today:pubDay(Object.assign({stub:true},d));});
   if(!days.some(function(d){return d.id===j.today.id;}))days.push(j.today);
@@ -453,6 +455,8 @@ function viewToday(day){
   var sc=storyCards(day);
   if(window.NBCU&&day.id===M.days[0].id){try{main+=NBCU.fxBanner()+NBCU.nudge(day);}catch(e){}}
   if(window.NBCU&&NBCU.contStrip){try{main+=NBCU.contStrip(day);}catch(e){}}
+  /* Coming up: events in the next 7 days (events.js); latest edition only, hidden when there is nothing */
+  if(window.NBEV){try{main+=NBEV.todayStrip(day);}catch(e){}}
   if(window.NBCU&&NBCU.weekCard){try{main+=NBCU.weekCard(day);}catch(e){}}
   if(sc)main+=sc;
   else main+=live(day)&&nr&&nr.missing?'<div class="g card empty" data-st><h2>The news desk has not filed yet</h2><p>The 7:00 AM job has not filed for '+esc(day.label)+' yet. This page offers a refresh when it does.</p></div>':'<div class="g card empty" data-st><h2>The news desk did not arrive</h2><p>The 7:00 AM job left no file for '+esc(day.label)+'.</p></div>';
@@ -780,6 +784,8 @@ function weekView(day){if(window.NBCU&&NBCU.weekView){try{return NBCU.weekView(d
 function cardLink(id,c){try{if(window.NBCU&&NBCU.cardHref&&c&&c.id){var h=NBCU.cardHref(id,c);if(h)return h;}}catch(e){}return readHref(id,'news',c.title,c.section);}
 function threadsView(){if(window.NBCU&&NBCU.threadsView)return NBCU.threadsView();
   return '<div class="hd" data-st="h"><p class="greet">Topics</p><h1>Threads</h1></div><div class="g card empty" data-st><p>Threads are not available in this version yet. Reload once while online.</p></div>';}
+function evView(){if(window.NBEV)return NBEV.html(S.view,S.key,PQ);
+  return '<div class="hd" data-st="h"><p class="greet">Calendar</p><h1>Calendar</h1></div><div class="g card empty" data-st><h2>The calendar is not available offline yet</h2><p>Open it once while online and it will work offline after that.</p></div>';}
 function searchView(){if(window.NBSearch)return NBSearch.html(PQ);
   return '<div class="hd" data-st="h"><p class="greet">Search</p><h1>Search editions</h1></div><div class="g card empty" data-st><h2>Search is not available offline yet</h2><p>Open Search once while online and it will work offline after that.</p></div>';}
 window.__NB={ns:'nbfc-brief',get M(){return M;},esc:esc,stripMd:stripMd,noCites:noCites,clip:clip,firstSentence:firstSentence,cleanHead:cleanHead,deEmoji:deEmoji,slug:slug,
@@ -879,7 +885,7 @@ function fillCircLater(){loadAgp();var el=document.getElementById('lcirc');if(!e
 var HBP=null;
 function loadHubs(){if(window.NBHubs)return Promise.resolve();if(!HBP)HBP=loadSearch().then(function(){return loadScript('/hubs.js');}).catch(function(e){HBP=null;throw e;});return HBP;}
 var HUBV={topics:1,topic:1,peer:1},HUBY={};/* HUBY: scroll position of each topic page, restored when Back returns to it */
-function tabOf(v){return HUBV[v]||v==='threads'?'topics':v==='search'?'':v==='week'?'read':v;}
+function tabOf(v){return HUBV[v]||v==='threads'?'topics':v==='search'||v==='calendar'||v==='event'?'':v==='week'?'read':v;}
 function hubsView(day){if(window.NBHubs)return NBHubs.html(S.view,S.key,PQ,day);
   return '<div class="hd" data-st="h"><p class="greet">Topics</p><h1>Topics</h1></div><div class="g card empty" data-st><h2>Topics are not available offline yet</h2><p>Open Topics once while online and they will work offline after that.</p></div>';}
 /* Archive: topic dots on the calendar, from the day-level tags in latest.json days[] */
@@ -953,6 +959,9 @@ function parse(){
   if(p[0]==='week')return {view:'week',day:id,key:p[1]||''};
   if(p[0]==='archive')return {view:'archive',day:id};
   if(p[0]==='topics')return {view:'topics',day:id};
+  /* events calendar (events.js): #/calendar, #/calendar/month (or ?view=month), #/event/<id> */
+  if(p[0]==='calendar')return {view:'calendar',day:id,key:p[1]==='month'?'month':''};
+  if(p[0]==='event')return {view:'event',day:id,key:p.slice(1).join('/')};
   /* #/topic/<hub>/<entity>: one company, regulator or theme inside a hub (hubs.js); key is "hub/entity" */
   if((p[0]==='topic'||p[0]==='peer')&&p[1])return {view:p[0],day:id,key:p[0]==='topic'&&p[2]?p[1]+'/'+p[2]:p[1]};
   if(p[0]==='latest')p[0]=id;
@@ -969,6 +978,8 @@ var first=true,TABS=['today','read','topics','markets','archive'],KEYS=['01-dail
 /* topic pages by depth: Topics 0, a hub's list 1, an entity page 2 (#/peer/<slug> counts as 2) */
 function hubDepth(v,k){return v==='topics'?0:v==='peer'||String(k||'').indexOf('/')>0?2:1;}
 function dirFor(pv,pd,pk,v,d,k){
+  /* calendar 1, an event 2: deeper enters from the right */
+  var EVD={calendar:1,event:2};if(EVD[pv]||EVD[v]){if(EVD[pv]&&EVD[v])return pv===v?(pk!==k?1:0):EVD[v]>EVD[pv]?1:-1;return EVD[v]?1:-1;}
   if(HUBV[pv]&&HUBV[v]&&pd===d&&(pv!==v||pk!==k)){var a0=hubDepth(pv,pk),b0=hubDepth(v,k);if(a0!==b0)return b0>a0?1:-1;}
   if(pv!==v){var a=TABS.indexOf(tabOf(v)),b=TABS.indexOf(tabOf(pv));if(a===b)return HUBV[v]&&v!=='topics'?1:-1;return a>b?1:-1;}
   if(pd!==d)return d<pd?1:-1;
@@ -1058,7 +1069,7 @@ function navNow(view){if(!view)return;var tv=tabOf(view);document.querySelectorA
   if(view!=='today'&&cbT)cbT.textContent=TTL[view]||'NBFC Brief';if(view==='archive'){if(tpE)tpE.textContent='Archive';var cbS=document.getElementById('cbS');if(cbS)cbS.textContent=M.days.length+' editions \u00b7 latest '+shortDay(M.days[0].id);}}
 function route(){
   var r=parse(),pv=S.view,pd=S.day,pk=S.key,my=++seq;
-  if(!first&&HUBV[pv])HUBY[pv+'|'+pk]=scrollY;
+  if(!first&&(HUBV[pv]||pv==='calendar'))HUBY[pv+'|'+pk]=scrollY;
   if(pv==='archive'&&r.view!=='archive'&&!flying){if(CF)ARCH.i=CF.i;ARCH.y=scrollY;}
   if(!first&&r.view!==pv)navNow(r.view);
   /* old content stays on screen until the new view is built */
@@ -1070,15 +1081,15 @@ function route(){
     var segFrom=pv==='read'&&S.view==='read'?segInd:null;
     dropStage();
     var oh=APP.offsetHeight;
-    var nv=S.view==='archive'?archView():mkView(HUBV[S.view]?hubsView(day):S.view==='search'?searchView():S.view==='threads'?threadsView():S.view==='week'?weekView(day):S.view==='markets'?viewMarkets(day):S.view==='read'?viewRead(day,S.key):viewToday(day));
+    var nv=S.view==='archive'?archView():mkView(HUBV[S.view]?hubsView(day):S.view==='calendar'||S.view==='event'?evView():S.view==='search'?searchView():S.view==='threads'?threadsView():S.view==='week'?weekView(day):S.view==='markets'?viewMarkets(day):S.view==='read'?viewRead(day,S.key):viewToday(day));
     if(nv===CUR)nv=mkView(viewArchive()),nv._arch=1;
     function post(){
       APP.setAttribute('aria-busy','false');
-      document.title=(S.view==='today'?'Today\u2019s Brief':S.view==='threads'?'Threads':S.view==='week'?'Weekly review':HUBV[S.view]&&window.NBHubs?NBHubs.title(S.view,S.key):S.view[0].toUpperCase()+S.view.slice(1))+' · '+shortDay(day.id)+' · NBFC Brief';
+      document.title=(S.view==='today'?'Today\u2019s Brief':S.view==='threads'?'Threads':S.view==='week'?'Weekly review':(S.view==='calendar'||S.view==='event')&&window.NBEV?NBEV.title(S.view,S.key):HUBV[S.view]&&window.NBHubs?NBHubs.title(S.view,S.key):S.view[0].toUpperCase()+S.view.slice(1))+' · '+shortDay(day.id)+' · NBFC Brief';
       document.querySelectorAll('#tabbar a').forEach(function(a){var t=a.dataset.tab;
         a.href=t==='archive'?'#/archive':t==='topics'?'#/topics':t==='today'?'#/'+day.id:'#/'+day.id+'/'+t;
         if(t===tabOf(S.view))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
-      var hubK=HUBV[S.view]&&pv===S.view&&pk!==S.key,hubY=HUBV[S.view]&&dir<0?HUBY[S.view+'|'+S.key]:null;
+      var hubK=HUBV[S.view]&&pv===S.view&&pk!==S.key,hubY=(HUBV[S.view]||S.view==='calendar')&&dir<0?HUBY[S.view+'|'+S.key]:null;
       if(changed&&(pv!==S.view||pd!==S.day||hubK)){window.scrollTo(0,S.view==='archive'?ARCH.y||0:hubY||0);var hd=$('h1');if(hd){hd.setAttribute('tabindex','-1');hd.focus({preventScroll:true});}}
       chromeBar(day);
       syncTabInd(!first);syncSegInd(segFrom);fit(true);
@@ -1086,6 +1097,8 @@ function route(){
       if(pl&&pl.scrollTo)pl.scrollTo({left:Math.max(0,pc.offsetLeft-(pl.clientWidth-pc.offsetWidth)/2),behavior:first||RM.matches?'auto':'smooth'});
       if(S.view==='search'&&window.NBSearch)NBSearch.mount(nv,PQ,true);
       if(HUBV[S.view]&&window.NBHubs)NBHubs.mount(nv,S.view,S.key,PQ);
+      /* events: Calendar and event pages, the Today strip, company-page Upcoming blocks (each hides itself without data) */
+      if(window.NBEV){try{NBEV.mount(nv,S.view,S.key,PQ);}catch(e){}}
       if(S.view==='threads'&&window.NBCU)NBCU.mountThreads(nv);
       if(S.view==='week'&&window.NBCU)NBCU.mountWeek(nv,S.key);
       if(S.view==='read'&&window.NBCU&&NBCU.readMarks){try{NBCU.readMarks(nv,day.id,S.key);}catch(e){}}
@@ -1217,14 +1230,14 @@ if(LGX){document.documentElement.classList.add('lgx');lgAll();
    The page title (.hd) scrolls up under the floating pill and fades out; only after it is gone does the pill
    swap its brand line (.tp-a) for the compact title + key stat (.tp-b). Never two titles on screen at once. */
 var TPA=document.getElementById('tpA'),TPB=document.getElementById('tpB'),hdEl=null,hdRange=120,tpRaf=0,tpLast=-1;
-var TTL={today:'Today\u2019s Brief',read:'Read',topics:'Topics',topic:'Topics',peer:'Peers',markets:'Markets',archive:'Archive',search:'Search'};
+var TTL={today:'Today\u2019s Brief',read:'Read',topics:'Topics',topic:'Topics',peer:'Peers',markets:'Markets',archive:'Archive',search:'Search',calendar:'Calendar',event:'Event'};
 function chromeBar(day){
   var it=item(day,'nifty'),mk='';
   if(it&&it.value){var d=dirOf(it);mk=' \u00b7 Nifty <span class="num">'+esc(it.value)+'</span>'+(hasChg(it)?' <span class="num '+(d||'')+'">'+esc(pct(it.change))+'</span>':'');}
   var h1=$('.hd h1'),cbT=document.getElementById('cbT'),cbS=document.getElementById('cbS'),tpE=document.getElementById('tpE');
   if(cbT)cbT.textContent=h1?h1.textContent:TTL[S.view]||'NBFC Brief';
   if(cbS)cbS.innerHTML=S.view==='archive'?esc(M.days.length+' editions \u00b7 latest '+shortDay(M.days[0].id)):esc(shortDay(day.id))+mk;
-  if(tpE)tpE.textContent=S.view==='archive'?'Archive':S.view==='search'?'Search':HUBV[S.view]?'Topics':shortDay(day.id)+' edition';
+  if(tpE)tpE.textContent=S.view==='archive'?'Archive':S.view==='search'?'Search':S.view==='calendar'||S.view==='event'?'Calendar':HUBV[S.view]?'Topics':shortDay(day.id)+' edition';
   if(TPA)TPA.href='#/'+M.days[0].id;
   measureHd();
   var tk=$('.tick .tk-list');if(tk){var w=tk.offsetWidth;tk.parentNode.style.setProperty('--tkd',Math.max(20,Math.round(w/38))+'s');obs(tk.closest('.tick'));}}
