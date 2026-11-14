@@ -147,7 +147,7 @@ function filters(F){var cnt={},gc={},all=upcoming();all.forEach(function(e){cnt[
   return '<div class="evf" data-st><div class="evf-r" role="group" aria-label="Company or regulator"><span class="evf-l" aria-hidden="true">Who</span><div class="hsc"><div class="pills fx-sc evf-s">'+
     pill('data-ef','','All',all.length,!F.e)+ents.map(function(k){return pill('data-ef',k,eName(k),cnt[k],F.e===k);}).join('')+'</div></div></div>'+
     '<div class="evf-r" role="group" aria-label="Kind of date"><span class="evf-l" aria-hidden="true">Kind</span><div class="hsc"><div class="pills fx-sc evf-s">'+
-    GRP.map(function(g){return pill('data-eg',g[0],g[1],g[0]?gc[g[0]]:0,F.g===g[0]);}).join('')+'</div></div></div></div>';}
+    GRP.map(function(g){return pill('data-eg',g[0],g[1],g[0]?gc[g[0]]:all.length,F.g===g[0]);}).join('')+'</div></div></div></div>';}
 function fDesc(F){return [F.e?eName(F.e):'',F.g?GRP.filter(function(g){return g[0]===F.g;})[0][1].toLowerCase()+' dates':''].filter(Boolean).join(', ');}
 function listBody(F){var U=upcoming().filter(function(e){return match(e,F);}),P=pastL(60).filter(function(e){return match(e,F);});
   var h='<section aria-labelledby="h-evu"><div class="sec" data-st><h2 id="h-evu">Upcoming</h2><span class="aside num">'+U.length+' '+(U.length===1?'event':'events')+'</span></div>';
@@ -191,7 +191,7 @@ function srcLinks(L){return '<ul class="evsrc" role="list">'+L.map(function(s){r
 function thread(id){try{return id&&window.NBCU&&NBCU.thread?NBCU.thread(id):null;}catch(e){return null;}}
 var RK={news:'01-daily-watch',rules:'02-regulation',weekly:'03-weekly-analysis'};
 function cardHref(id){var m=String(id||'').match(/^(\d{4}-\d{2}-\d{2})-(news|rules|weekly)\b/);try{if(!m||!NB().M.byId[m[1]])return '';}catch(e){return '';}return '#/'+m[1]+'/read/'+RK[m[2]]+'?card='+encodeURIComponent(id);}
-function evHd(e,greet,sub){return '<div class="hd hubhd g evhd" data-st="h" data-hub="'+(e?gHub(e):'cal')+'"><a class="hback press" href="#/calendar" data-evup><span aria-hidden="true">\u2039</span> Calendar</a>'+
+function evHd(e,greet,sub){return '<div class="hd hubhd g evhd evx" data-st="h" data-hub="'+(e?gHub(e):'cal')+'"><a class="hback press" href="#/calendar" data-evup><span aria-hidden="true">\u2039</span> Calendar</a>'+
   '<div class="hh"><span class="hh-i">'+ico(24)+'</span><div><p class="greet">'+esc(greet)+'</p><h1>'+esc(e?e.title:'Event not found')+'</h1></div></div>'+(sub?'<p class="hsub">'+sub+'</p>':'')+'</div>';}
 function evHtml(id){var foot=NB().foot();
   if(!ready())return evHd(null,'Event','').replace('Event not found','Event')+'<div class="g card hload" data-st role="status" data-evload><span class="sk-l"></span><span class="sk-l s"></span><span class="sr">Loading the event\u2026</span></div>'+foot;

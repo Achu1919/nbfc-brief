@@ -959,6 +959,9 @@ a.tl-t{min-height:24px;padding:2px 0}a.tl-t:hover{text-decoration:underline}
 .evlink .tap-ch{margin:0}
 /* Calendar header, view switch, filters */
 .evhd .hsub{font-size:var(--t-13)}
+.evhd.evx h1{font-size:clamp(24px,6.6vw,30px);line-height:1.12;letter-spacing:-.022em}
+.evhd.evx .hh{align-items:flex-start}.evhd.evx .hh-i{margin-top:4px}
+.evhd.evx .hsub{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px}
 .evseg{margin:var(--sp-4) 0 var(--sp-3)}
 .evseg a{min-height:44px}
 .evf{display:grid;gap:6px;margin:0 0 var(--sp-2)}
