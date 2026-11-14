@@ -482,3 +482,55 @@ Written by `content_upgrade.py` from `export_json.export()`. `data/latest.json`,
   the audited BSE / prospectus sourcing; dropped history is not restored.
 - **Thread titles.** A thread without a `_threads` entry falls back to its first card's title, clipped to 60 chars;
   `tests/review_checks.py` warns about it instead of failing.
+
+## Events calendar (`data/events.json`, additive; 14 Nov 2026)
+
+Dated events for the Calendar page, the Today "Coming up" strip, event detail pages and company pages. Written by `content_upgrade.py` in the same run as `latest.json`, with the same `generated` stamp. `events.json` is the system of record for dates; the markdown Deadlines section stays the human checklist and `deadlines[]` is unchanged.
+
+```json
+{"schema": "nbfc-events", "schema_version": 1, "generated": "2026-11-14T07:08:35", "events": {"<id>": { /* Event */ }}}
+```
+
+Event fields (always present unless marked optional):
+
+| Field | Notes |
+|---|---|
+| `id` | Stable, `evt-` + lowercase-hyphenated, ≤80 chars (`evt-iifl-egm-2026-12-04`, `evt-rbi-mpc-2026-12`, `evt-mfl-ncd-t1-close-2026-11-05`). Never reused. |
+| `title` | Neutral; no "today", "your", advice or solicitation. |
+| `type` | `board-meeting` `results` `agm` `egm` `record-date` `dividend` `fundraising` `ncd-open` `ncd-close` `ncd-allotment` `ncd-listing` `coupon` `redemption` `rating-review` `mpc` `comments-due` `circular-effective` `compliance-deadline` `results-window` `other` (an earnings call is `other`). |
+| `group` | `company` `debt` `regulation` `market` (the Calendar type filter). |
+| `date` | `YYYY-MM-DD`, IST. For a range, the start. |
+| `date_end` | Optional. End of a range (MPC 2–4 Dec: `date` 2026-12-02, `date_end` 2026-12-04; the MPC decision is on `date_end`). Never equal to `date`. |
+| `time`, `time_text` | Optional. `HH:MM` 24-hour IST and a display string (`11:00`, `11 AM IST`). |
+| `status` | `upcoming` `done` `cancelled` `rescheduled`. |
+| `status_note` | Optional. Why cancelled, where a rescheduled event moved, or the rule that fixes a date ("45 days from the end of the quarter…"). |
+| `supersedes` | Optional. On the new row of a rescheduled event: the old id. The old row becomes `rescheduled`, gets the new id in `related_ids` and a `status_note` "Moved to YYYY-MM-DD". Find the new row as the event whose `supersedes` equals the old id. |
+| `entity`, `entity_name` | Hub slug and display name. Slugs: `muthoot-fincorp`, `muthoot-finance`, `manappuram`, `iifl-finance`, `shriram-finance`, `bajaj-finance`, `muthoot-microfin`, `rbi`, `sebi`, `ibbi`. No other slug is used. |
+| `agenda` | Optional. Only as announced in the filing. |
+| `source`, `sources[]` | `{name, url, tier}`; `source` is `sources[0]`. Every public event has at least one Tier-1 source (sorted first). Chittorgarh, Moneycontrol and Trendlyne are never date sources. |
+| `story_id`, `card_id`, `reg_ref` | Optional links: a thread in this edition's `stories.json`, a card in this edition's day files, a circular reference number. Links that do not resolve in the edition are dropped. |
+| `outcome` | `null`, or `{date, summary, story_id, card_id, source}` (any of them may be null) once the result is published. Only on `done` events. |
+| `related_ids` | Other events of the same issue or series (NCD open / close / listing; the year's MPC meetings). Always resolve within the file. |
+| `conditional` | `true` only when the source itself is conditional ("if finalised"). Show a quiet "if finalised" note. |
+| `public` | `true` on both editions. `false` rows are private-only and never appear in the public file. |
+| `first_seen`, `updated` | Edition dates; stable across runs (`updated` changes only when the row changes). |
+
+Inputs, later wins on the same id: the previous `data/events.json` (persistence) → `data/events_seed.json` (audited backfill and standing schedules such as the RBI MPC year) → rows derived from `deadlines[]`, `mfl_ncd` open/close, circular `effective` / `comments_due` and sourced story `next` (a derived row that matches an existing event on date + entity and a shared source, story, reference or title is not added again) → `<!-- event: … -->` comments in the day's markdown.
+
+Status: a regulatory or market event whose date (or `date_end`) is before the newest edition becomes `done`; a company or debt event stays `upcoming` until an outcome or an explicit status is recorded. Events dated on the newest edition's day stay `upcoming`.
+
+Markdown override (own line; `publish.py` strips it like `story:` / `reg:`):
+
+```
+<!-- event: id=evt-iifl-egm-2026-12-04; date=2026-12-04; time=11:00; time_text=11 AM IST; type=egm; entity=iifl-finance; title=IIFL Finance EGM on the preferential issue; source=https://nsearchives.nseindia.com/corporate/IIFL_12112026004505_SE_Intimation.pdf; status=upcoming -->
+```
+
+Keys: `id` (required), `title`, `type`, `group`, `date`, `date_end`/`end`, `time`, `time_text`, `status`, `status_note`/`note`, `supersedes`, `entity`, `entity_name`, `agenda`, `source` (+ `source_name`), `story`/`story_id`, `card`/`card_id`, `ref`/`reg_ref`, `related` (comma list), `conditional`, `public`, `outcome_card`, `outcome_story`, `outcome_summary`, `outcome_source`, `outcome_date`. A new id needs `title`, `date`, `type`, `entity` and a Tier-1 `source`, or it is dropped (and logged).
+
+### `latest.json` additions
+
+- `events_index`: `{file: "data/events.json", generated, upcoming, refs: {id: {title, date, status, entity, type}}}`. `upcoming` counts `upcoming` events whose `date_end`/`date` is on or after the newest edition. `refs` covers every event in the file.
+- `upcoming_events[]`: full event objects (same as in `events.json`) with `status` `upcoming` whose `date` or `date_end` falls between the newest edition and 7 days after it, inclusive, sorted by date and time. Public edition: `public: true` only. Empty list when nothing is due: hide the strip.
+- `deadlines[]` is unchanged.
+
+Checks: `tests/review_checks.py` `event_errors()` (shared; part of `all_errors()`, so the public `test_contract.py` runs it) and `tests/test_events.py` (same file in both repos).
