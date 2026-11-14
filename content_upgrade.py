@@ -1,5 +1,5 @@
 """Content upgrade (docs/DATA_FORMAT.md "Peer intelligence", "Story threads", "sources[]", "Regulation lifecycle",
-"Week review"). Additive to export_json.py; the same file ships in nbfc-guru (private) and nbfc-brief (public).
+"Week review", "Events"). Additive to export_json.py; the same file ships in nbfc-guru (private) and nbfc-brief (public).
 
 export_json.export() calls apply(X, days, extras, data_dir, private, generated) after cards_export(), where X is the
 export_json module itself (its link/date/plain-text helpers are reused, so both editions parse the same way).
@@ -1648,6 +1648,14 @@ def apply(X, days, extras, data_dir, private, generated):
             extras["week_review"] = wr[mondays[-1]]
     except Exception as exc:  # never fatal
         _log(f"week_review skipped: {exc!r}")
+    try:
+        evs, _seed_ids = events_export(X, days, extras, data_dir, private, problems, threads, newest)
+        files[EVENTS_FILE] = {"schema": EVENTS_SCHEMA, "schema_version": EVENTS_SCHEMA_VERSION, "generated": generated,
+                              "events": evs}
+    except Exception as exc:  # never fatal
+        import traceback
+        traceback.print_exc()
+        _log(f"events skipped: {exc!r}")
     fixed = set()
     for d in days:
         rtext = {}
@@ -1695,6 +1703,16 @@ def apply(X, days, extras, data_dir, private, generated):
 def finalize(latest, files):
     """Called by export_json just before writing: story_index (+ split) with latest.json's own `generated`."""
     newest = files.pop("_newest", None)
+    ef = files.get(EVENTS_FILE)
+    if ef:
+        ef["generated"] = latest["generated"]
+        nw = newest or latest.get("latest")
+        evs = ef.get("events") or {}
+        latest["events_index"] = {
+            "file": "data/" + EVENTS_FILE, "generated": latest["generated"],
+            "upcoming": sum(1 for e in evs.values() if e.get("status") == "upcoming" and _ev_end(e) >= (nw or "")),
+            "refs": {k: event_ref(e) for k, e in evs.items()}}
+        latest["upcoming_events"] = upcoming_events(evs, nw)
     pf = files.get(PEER_FILE)
     if pf:
         pf["generated"] = latest["generated"]
@@ -1771,3 +1789,480 @@ def week_review_export(X, days, threads, problems, data_dir):
         out[ed] = {"id": ws, "published": ed, "week_start": ws, "week_end": we,
                    "report_card_prefix": f"{ed}-weekly", "story_ids": all_ids, "sections": sections, "week_threads": wt}
     return out
+
+
+# ---- events calendar (plan: /workspace/plans/nbfc-events-calendar-plan.md §2; docs/DATA_FORMAT.md "Events") ----
+# data/events.json is the system of record for dated events. Inputs, later wins on the same id:
+#   previous data/events.json (persistence) -> data/events_seed.json -> rows derived from deadlines[], mfl_ncd,
+#   circular effective / comments_due and sourced story `next` -> `<!-- event: ... -->` comments in the markdown.
+# Never guessed: a row without a Tier-1 source url is dropped (and logged).
+EVENTS_FILE = "events.json"
+EVENTS_SEED = "events_seed.json"
+EVENTS_SCHEMA = "nbfc-events"
+EVENTS_SCHEMA_VERSION = 1
+EVENTS_UPCOMING_DAYS = 7
+EVENT_TYPES_ALL = ("board-meeting", "results", "agm", "egm", "record-date", "dividend", "fundraising", "ncd-open",
+                   "ncd-close", "ncd-allotment", "ncd-listing", "coupon", "redemption", "rating-review", "mpc",
+                   "comments-due", "circular-effective", "compliance-deadline", "results-window", "other")
+EVENT_GROUPS = ("company", "debt", "regulation", "market")
+EVENT_STATUS = ("upcoming", "done", "cancelled", "rescheduled")
+EVENT_TYPE_GROUP = {"board-meeting": "company", "results": "company", "agm": "company", "egm": "company",
+                    "record-date": "company", "dividend": "company", "fundraising": "company", "ncd-open": "debt",
+                    "ncd-close": "debt", "ncd-allotment": "debt", "ncd-listing": "debt", "coupon": "debt",
+                    "redemption": "debt", "rating-review": "debt", "mpc": "regulation", "comments-due": "regulation",
+                    "circular-effective": "regulation", "compliance-deadline": "regulation",
+                    "results-window": "market", "other": "company"}
+# entity slugs match the app's hub slugs (Site Builder, 14 Nov 2026)
+EVENT_ENTITIES = {"muthoot-fincorp": "Muthoot Fincorp", "muthoot-finance": "Muthoot Finance",
+                  "manappuram": "Manappuram Finance", "iifl-finance": "IIFL Finance",
+                  "shriram-finance": "Shriram Finance", "bajaj-finance": "Bajaj Finance",
+                  "muthoot-microfin": "Muthoot Microfin", "rbi": "RBI", "sebi": "SEBI", "ibbi": "IBBI"}
+# dates never come from calendar aggregators (Chittorgarh stays allowed for NCD bid figures only, never dates)
+EVENT_BANNED_HOSTS = ("chittorgarh.com", "moneycontrol.com", "trendlyne.com")
+EVENT_ID = re.compile(r"^evt-[a-z0-9]+(?:-[a-z0-9]+)*$")
+EVENT_FIELDS = ("id", "title", "type", "group", "date", "date_end", "time", "time_text", "status", "status_note",
+                "supersedes", "entity", "entity_name", "agenda", "source", "sources", "story_id", "card_id", "reg_ref",
+                "outcome", "related_ids", "conditional", "public", "first_seen", "updated")
+_ISO = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_HHMM = re.compile(r"^\d{2}:\d{2}$")
+EVENT_COMMENT = re.compile(r"^\s*<!--\s*event\s*:(.*?)-->\s*$", re.I)
+
+
+def event_source_ok(url):
+    """A usable event date source: http(s), not banned, not a calendar aggregator."""
+    u = str(url or "").strip()
+    return u.startswith("http") and not banned(u) and not _on(_host(u), EVENT_BANNED_HOSTS)
+
+
+def _ev_src(s, name_fn=None):
+    if isinstance(s, str):
+        s = {"url": s}
+    if not isinstance(s, dict) or not event_source_ok(s.get("url")):
+        return None
+    out = {"name": s.get("name") or (name_fn(s["url"]) if name_fn else _host(s["url"])), "url": s["url"],
+           "tier": tier(s["url"])}
+    return out
+
+
+def _ev_tier1(ev):
+    return any((s or {}).get("tier") == 1 for s in ev.get("sources") or [])
+
+
+def _ev_end(ev):
+    return ev.get("date_end") or ev.get("date")
+
+
+def _ev_type_of(title):
+    t = title or ""
+    if re.search(r"\bcomments?\b|feedback|consultation", t, re.I):
+        return "comments-due"
+    if re.search(r"\bresults?\b|\bReg(?:ulation)? 52\b", t, re.I):
+        return "results-window"
+    if re.search(r"\beffective\b|take effect|takes effect|come into (?:force|effect)|comes into|\bappl(?:y|ies)\b|"
+                 r"goes live|\bin force\b|\blive\b", t, re.I):
+        return "circular-effective"
+    if re.search(r"\bEGM\b|extra-?ordinary general", t, re.I):
+        return "egm"
+    if re.search(r"\bAGM\b|annual general", t, re.I):
+        return "agm"
+    if re.search(r"record date", t, re.I):
+        return "record-date"
+    if re.search(r"\bboard\b", t, re.I):
+        return "board-meeting"
+    return "compliance-deadline"
+
+
+def _ev_entity_of(text, regulator=None):
+    r = (regulator or "").strip().lower()
+    if r in EVENT_ENTITIES:
+        return r
+    t = text or ""
+    for slug_, pat in (("muthoot-microfin", r"muthoot microfin"), ("muthoot-fincorp", r"muthoot fincorp|\bMFL\b"),
+                       ("muthoot-finance", r"muthoot finance"), ("manappuram", r"manappuram"),
+                       ("iifl-finance", r"\bIIFL\b"), ("shriram-finance", r"shriram finance"),
+                       ("bajaj-finance", r"bajaj finance"), ("sebi", r"\bSEBI\b|\bLODR\b"), ("ibbi", r"\bIBBI\b"),
+                       ("rbi", r"\bRBI\b|\bMPC\b")):
+        if re.search(pat, t, re.I):
+            return slug_
+    return None
+
+
+def _ev_norm(ev, X, problems, where):
+    """Validate / normalise one event in place. Returns the event or None (dropped, with a problem logged)."""
+    if not isinstance(ev, dict):
+        return None
+    eid = str(ev.get("id") or "").strip().lower()
+    if not EVENT_ID.match(eid) or len(eid) > 80:
+        problems.append(f"events {where}: bad id {eid!r}; dropped")
+        return None
+    ev["id"] = eid
+    if not _ISO.match(str(ev.get("date") or "")):
+        problems.append(f"events {eid}: no YYYY-MM-DD date; dropped")
+        return None
+    if ev.get("date_end") and (not _ISO.match(str(ev["date_end"])) or ev["date_end"] < ev["date"]):
+        problems.append(f"events {eid}: bad date_end {ev.get('date_end')!r}; removed")
+        ev.pop("date_end", None)
+    if ev.get("date_end") == ev.get("date"):
+        ev.pop("date_end", None)
+    if ev.get("time") and not _HHMM.match(str(ev["time"])):
+        problems.append(f"events {eid}: bad time {ev.get('time')!r}; removed")
+        ev.pop("time", None)
+    if ev.get("type") not in EVENT_TYPES_ALL:
+        problems.append(f"events {eid}: unknown type {ev.get('type')!r}; set to other")
+        ev["type"] = "other"
+    if ev.get("group") not in EVENT_GROUPS:
+        ev["group"] = EVENT_TYPE_GROUP.get(ev["type"], "company")
+    if ev.get("status") not in EVENT_STATUS:
+        ev["status"] = "upcoming"
+    ent = str(ev.get("entity") or "").strip().lower()
+    if ent not in EVENT_ENTITIES:
+        problems.append(f"events {eid}: entity {ent!r} is not a hub slug; dropped")
+        return None
+    ev["entity"] = ent
+    ev["entity_name"] = ev.get("entity_name") or EVENT_ENTITIES[ent]
+    name_fn = getattr(X, "source_name", None)
+    srcs = []
+    for s in ([ev.get("source")] if ev.get("source") else []) + list(ev.get("sources") or []):
+        so = _ev_src(s, name_fn)
+        if so and so["url"] not in [x["url"] for x in srcs]:
+            srcs.append(so)
+    srcs.sort(key=lambda s: s["tier"])  # stable: Tier-1 first
+    ev["sources"] = srcs
+    ev["source"] = srcs[0] if srcs else None
+    if not _ev_tier1(ev):
+        problems.append(f"events {eid}: no Tier-1 source; dropped")
+        return None
+    title = re.sub(r"\s+", " ", str(ev.get("title") or "")).strip()
+    if not title:
+        problems.append(f"events {eid}: no title; dropped")
+        return None
+    ev["title"] = title
+    ev["conditional"] = bool(ev.get("conditional"))
+    ev["public"] = ev.get("public") is not False
+    ev["related_ids"] = sorted({str(x).strip().lower() for x in ev.get("related_ids") or [] if str(x).strip()} - {eid})
+    oc = ev.get("outcome")
+    if isinstance(oc, dict):
+        so = _ev_src(oc.get("source"), name_fn) if oc.get("source") else None
+        ev["outcome"] = {"date": oc.get("date") if _ISO.match(str(oc.get("date") or "")) else None,
+                         "summary": oc.get("summary") or None, "story_id": oc.get("story_id") or None,
+                         "card_id": oc.get("card_id") or None, "source": so}
+    else:
+        ev["outcome"] = None
+    for k in ("date_end", "time", "time_text", "status_note", "supersedes", "agenda", "story_id", "card_id", "reg_ref"):
+        if ev.get(k) in ("", None):
+            ev.pop(k, None)
+    return {k: ev[k] for k in EVENT_FIELDS if k in ev}
+
+
+def _ev_same(a, b):
+    """True when two rows describe the same dated event (dedup of derived rows against seeded ones)."""
+    if a.get("date") != b.get("date") and _ev_end(a) != _ev_end(b):
+        return False
+    if a.get("entity") != b.get("entity"):
+        return False
+    ua = {s["url"].rstrip("/").lower() for s in a.get("sources") or []}
+    ub = {s["url"].rstrip("/").lower() for s in b.get("sources") or []}
+    if ua & ub:
+        return True
+    if a.get("story_id") and a.get("story_id") == b.get("story_id"):
+        return True
+    if a.get("reg_ref") and a.get("reg_ref") == b.get("reg_ref"):
+        return True
+    return _jaccard(_tokens(a.get("title", "")), _tokens(b.get("title", ""))) >= 0.5
+
+
+def _ev_kv(body):
+    out = {}
+    for part in (body or "").split(";"):
+        if "=" in part:
+            k, v = part.split("=", 1)
+            out[k.strip().lower().replace("-", "_")] = v.strip()
+        elif part.strip():
+            out[part.strip().lower()] = True
+    return out
+
+
+def event_comments(days_root, editions):
+    """[(edition, kv)] from `<!-- event: ... -->` lines in each edition's raw markdown, oldest edition first."""
+    out = []
+    root = Path(days_root)
+    for ed in sorted(editions):
+        d = root / ed
+        if not d.is_dir():
+            continue
+        for p in sorted(d.glob("*.md")):
+            try:
+                text = p.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            for line in text.split("\n"):
+                m = EVENT_COMMENT.match(line)
+                if m:
+                    out.append((ed, _ev_kv(m.group(1))))
+    return out
+
+
+def _ev_from_comment(kv, base):
+    """Apply one comment's keys onto a copy of `base` (existing event or {})."""
+    ev = json.loads(json.dumps(base)) if base else {}
+    simple = ("id", "title", "type", "group", "date", "date_end", "time", "time_text", "status", "status_note",
+              "supersedes", "entity", "entity_name", "agenda", "story_id", "card_id", "reg_ref")
+    alias = {"story": "story_id", "card": "card_id", "ref": "reg_ref", "note": "status_note", "end": "date_end"}
+    for k, v in kv.items():
+        k = alias.get(k, k)
+        if k in simple and v is not True:
+            ev[k] = v
+    for k in ("conditional", "public"):
+        if k in kv:
+            ev[k] = kv[k] is True or str(kv[k]).lower() in ("true", "yes", "1")
+    if kv.get("source"):
+        srcs = [{"url": kv["source"], "name": kv.get("source_name")}] + [s for s in ev.get("sources") or []
+                                                                          if s.get("url") != kv["source"]]
+        ev["sources"], ev["source"] = srcs, srcs[0]
+    if kv.get("related"):
+        ev["related_ids"] = sorted(set(ev.get("related_ids") or []) | {x.strip() for x in str(kv["related"]).split(",")})
+    if any(k in kv for k in ("outcome_card", "outcome_story", "outcome_summary", "outcome_source", "outcome_date")):
+        oc = dict(ev.get("outcome") or {})
+        for k in ("card", "story", "summary", "date"):
+            if kv.get("outcome_" + k) not in (None, True):
+                oc[{"card": "card_id", "story": "story_id"}.get(k, k)] = kv["outcome_" + k]
+        if kv.get("outcome_source") not in (None, True):
+            oc["source"] = {"url": kv["outcome_source"]}
+        ev["outcome"] = oc
+    return ev
+
+
+def _ncd_code(issue):
+    m = re.search(r"tranche\s+([ivxlc]+|\d+)\b", issue or "", re.I)
+    if not m:
+        return slug(issue or "", 20) or None
+    v = m.group(1).lower()
+    if v.isdigit():
+        return f"t{int(v)}"
+    vals = {"i": 1, "v": 5, "x": 10, "l": 50, "c": 100}
+    n, prev = 0, 0
+    for ch in reversed(v):
+        x = vals[ch]
+        n, prev = (n - x, prev) if x < prev else (n + x, x)
+    return f"t{n}"
+
+
+def derived_events(X, extras, threads, newest):
+    """Rows lifted from deadlines[], mfl_ncd, circular effective / comments_due and sourced story next."""
+    out = []
+    name_fn = getattr(X, "source_name", None)
+    for d in extras.get("deadlines") or []:
+        url = d.get("url")
+        if not (d.get("date") and url and tier(url) == 1 and event_source_ok(url)):
+            continue
+        if hasattr(X, "_index_url") and X._index_url(url):
+            continue
+        title = re.sub(r"\s*\((?:effective)\)\s*$", "", d.get("title") or "").strip()
+        ent = _ev_entity_of(title, d.get("regulator"))
+        if not ent:
+            continue
+        typ = _ev_type_of(title)
+        rng = None
+        if d.get("date_text"):
+            rng = d["date_text"]
+        out.append({"id": f"evt-{ent}-{slug(title, 40)}-{d['date']}", "title": _clip_title(title), "type": typ,
+                    "date": d["date"], "date_text_hint": rng, "status": "upcoming", "entity": ent,
+                    "sources": [{"url": url, "name": name_fn(url) if name_fn else None}],
+                    "reg_ref": d.get("ref_no") or None,
+                    "conditional": bool(re.search(r"if finali[sz]ed", d.get("title") or "", re.I)),
+                    "_derived": "deadlines"})
+    ncd = extras.get("mfl_ncd")
+    if isinstance(ncd, dict) and (ncd.get("source") or {}).get("url"):
+        code = _ncd_code(ncd.get("issue"))
+        url = ncd["source"]["url"]
+        if code and tier(url) == 1 and event_source_ok(url):
+            for k, typ, word in (("open", "ncd-open", "opens"), ("close", "ncd-close", "closes")):
+                if _ISO.match(str(ncd.get(k) or "")):
+                    out.append({"id": f"evt-mfl-ncd-{code}-{k}-{ncd[k]}",
+                                "title": f"Muthoot Fincorp {ncd.get('issue')} NCD issue {word}", "type": typ,
+                                "date": ncd[k], "status": "upcoming", "entity": "muthoot-fincorp",
+                                "sources": [{"url": url, "name": ncd["source"].get("name")}], "_derived": "mfl_ncd"})
+    for c in extras.get("latest_circulars") or []:
+        r = c.get("reg") or {}
+        url = r.get("url")
+        if not (url and tier(url) == 1 and event_source_ok(url)):
+            continue
+        ent = _ev_entity_of(c.get("title", ""), r.get("regulator"))
+        if not ent:
+            continue
+        for k, typ, suffix in (("effective", "circular-effective", "takes effect"),
+                               ("comments_due", "comments-due", "comments due")):
+            dt = r.get(k)
+            if _ISO.match(str(dt or "")) and dt >= newest:
+                out.append({"id": f"evt-{ent}-{slug(c.get('title', ''), 36)}-{typ}-{dt}",
+                            "title": _clip_title(f"{c.get('title', '')}: {suffix}"), "type": typ, "date": dt,
+                            "status": "upcoming", "entity": ent, "reg_ref": r.get("ref_no") or None,
+                            "card_id": c.get("id"), "sources": [{"url": url, "name": name_fn(url) if name_fn else None}],
+                            "_derived": "circulars"})
+    for t in (threads or {}).values():
+        try:
+            n = thread_next(t, newest)
+            n, _passed = expire_next(n, newest)
+        except Exception:  # never fatal
+            n = None
+        if not (n and n.get("date") and (n.get("source") or {}).get("url")):
+            continue
+        url = n["source"]["url"]
+        if tier(url) != 1 or not event_source_ok(url):
+            continue
+        what = n.get("what") or ""
+        ent = _ev_entity_of(what + " " + ((t.meta or {}).get("title") or ""))
+        if not ent:
+            continue
+        out.append({"id": f"evt-{ent}-{slug(what, 40)}-{n['date']}", "title": _clip_title(what),
+                    "type": _ev_type_of(what), "date": n["date"], "status": "upcoming", "entity": ent,
+                    "story_id": t.id, "sources": [{"url": url, "name": n["source"].get("name")}],
+                    "_derived": "story-next"})
+    return out
+
+
+def _clip_title(t, n=120):
+    t = re.sub(r"\s+", " ", t or "").strip()
+    return t if len(t) <= n else t[: n - 1].rsplit(" ", 1)[0] + "…"
+
+
+def _ev_core(ev):
+    return {k: v for k, v in ev.items() if k not in ("first_seen", "updated")}
+
+
+def events_export(X, days, extras, data_dir, private, problems, threads, newest):
+    """Builds the events map. Returns (events dict, seed ids)."""
+    data_dir = Path(data_dir)
+    try:
+        prev = json.loads((data_dir / EVENTS_FILE).read_text(encoding="utf-8")).get("events") or {}
+    except Exception:
+        prev = {}
+    try:
+        seed = json.loads((data_dir / EVENTS_SEED).read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        seed = {}
+    except Exception as exc:
+        problems.append(f"events: {EVENTS_SEED} unreadable ({exc!r})")
+        seed = {}
+    events = {}
+    for k, ev in prev.items():  # persistence layer: what an earlier run recorded stays unless replaced
+        e = _ev_norm(dict(ev), X, problems, f"previous {k}")
+        if e:
+            events[e["id"]] = e
+    seed_rows = seed.get("events") if isinstance(seed, dict) else None
+    if isinstance(seed_rows, dict):
+        seed_rows = [dict(v, id=v.get("id") or k) for k, v in seed_rows.items()]
+    seed_ids = set()
+    for ev in seed_rows or []:
+        e = _ev_norm(dict(ev), X, problems, "seed")
+        if e:
+            events[e["id"]] = e
+            seed_ids.add(e["id"])
+    for ev in derived_events(X, extras, threads, newest):
+        ev.pop("_derived", None)
+        ev.pop("date_text_hint", None)
+        e = _ev_norm(ev, X, problems, "derived")
+        if not e:
+            continue
+        if e["id"] in events:
+            continue  # same id already recorded (seed or earlier run); the derived copy never overrides it
+        dup = next((o for o in events.values() if _ev_same(o, e)), None)
+        if dup:
+            for k in ("story_id", "reg_ref", "card_id"):
+                if e.get(k) and not dup.get(k):
+                    dup[k] = e[k]
+            continue
+        e["first_seen"] = newest
+        events[e["id"]] = e
+    days_root = data_dir.parent / "days"
+    for ed, kv in event_comments(days_root, [d["id"] for d in days]):
+        eid = str(kv.get("id") or "").strip().lower()
+        if not eid:
+            problems.append(f"events {ed}: event comment without id; skipped")
+            continue
+        base = events.get(eid)
+        e = _ev_norm(_ev_from_comment(kv, base), X, problems, f"comment {ed}")
+        if not e:
+            continue
+        e.setdefault("first_seen", (base or {}).get("first_seen") or ed)
+        e["_comment_ed"] = ed
+        events[eid] = e
+    # supersedes: the old row becomes rescheduled and links to the new one
+    for e in list(events.values()):
+        old = e.get("supersedes")
+        if not old:
+            continue
+        if old == e["id"] or old not in events:
+            problems.append(f"events {e['id']}: supersedes unknown id {old!r}; removed")
+            e.pop("supersedes", None)
+            continue
+        o = events[old]
+        if o["status"] != "cancelled":
+            o["status"] = "rescheduled"
+        o["related_ids"] = sorted(set(o.get("related_ids") or []) | {e["id"]})
+        o.setdefault("status_note", f"Moved to {e['date']}")
+    # links into this edition's threads / cards only
+    cards = {c["id"] for d in days for c in d.get("cards") or []}
+    for e in events.values():
+        if e.get("story_id") and e["story_id"] not in (threads or {}):
+            e.pop("story_id")
+        if e.get("card_id") and e["card_id"] not in cards:
+            e.pop("card_id")
+        oc = e.get("outcome")
+        if oc:
+            if oc.get("story_id") and oc["story_id"] not in (threads or {}):
+                oc["story_id"] = None
+            if oc.get("card_id") and oc["card_id"] not in cards:
+                oc["card_id"] = None
+            if oc.get("story_id") and not oc.get("card_id"):  # first card of that thread on or after the event
+                t = threads[oc["story_id"]]
+                hit = next((c["id"] for ed, c in t.updates if ed > _ev_end(e) and c.get("id") in cards), None)  # the morning edition precedes a same-day event
+                oc["card_id"] = hit
+        # status: a regulatory or market date that has passed is done (the date itself is the event);
+        # company and debt events need a published outcome (or an explicit status) before they turn done
+        if e["status"] == "upcoming" and _ev_end(e) < newest and (e["group"] in ("regulation", "market") or e.get("outcome")):
+            e["status"] = "done"
+    if not private:
+        events = {k: v for k, v in events.items() if v.get("public")}
+    # related ids must resolve inside this edition's file
+    for e in events.values():
+        e["related_ids"] = [r for r in e.get("related_ids") or [] if r in events]
+    # first_seen / updated: stable across runs
+    for k, e in events.items():
+        ced = e.pop("_comment_ed", None)
+        p = prev.get(k)
+        e["first_seen"] = (p or {}).get("first_seen") or e.get("first_seen") or newest
+        if p and _ev_core(_ev_norm(dict(p), X, [], "prev") or {}) == _ev_core(e):
+            e["updated"] = p.get("updated") or e["first_seen"]
+        elif p:
+            e["updated"] = ced or newest
+        else:
+            e["updated"] = e.get("updated") or ced or e["first_seen"]
+        if e["updated"] < e["first_seen"]:
+            e["updated"] = e["first_seen"]
+    for e in events.values():
+        if not private:
+            for fld in ("title", "agenda", "status_note"):
+                if e.get(fld) and not voice_ok(e[fld]):
+                    problems.append(f"events {e['id']}: public {fld} fails the neutral-voice check")
+    ordered = dict(sorted(events.items(), key=lambda kv: (kv[1]["date"], kv[1].get("time") or "", kv[0])))
+    return {k: {f: v[f] for f in EVENT_FIELDS if f in v} for k, v in ordered.items()}, seed_ids
+
+
+def event_ref(e):
+    return {"title": e["title"], "date": e["date"], "status": e["status"], "entity": e["entity"], "type": e["type"]}
+
+
+def upcoming_events(events, newest):
+    """Events (status upcoming) whose date or date_end falls in [newest, newest + 7 days]."""
+    if not newest:
+        return []
+    hi = (_dt.date.fromisoformat(newest) + _dt.timedelta(days=EVENTS_UPCOMING_DAYS)).isoformat()
+    out = []
+    for e in events.values():
+        if e.get("status") != "upcoming":
+            continue
+        if newest <= e["date"] <= hi or (e.get("date_end") and newest <= e["date_end"] <= hi):
+            out.append(e)
+    return sorted(out, key=lambda e: (e["date"], e.get("time") or "", e["id"]))
+# ---- end events calendar ----
