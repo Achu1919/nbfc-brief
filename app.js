@@ -848,10 +848,10 @@ function cleanSum(t){try{return window.NBCU&&NBCU.cleanSum?NBCU.cleanSum(t):t;}c
 function cuBits(c){if(!c.raw||!window.NBCU)return null;try{return NBCU.cardBits(c.raw,c.day);}catch(e){return null;}}
 function storyCard(c,i){var h=HUB[c.cat],src=(c.src||[]).filter(function(x){return x&&x.u;}),X=cuBits(c);
   var srcHtml=X&&X.srcLine?X.srcLine:(src.length?'Source: '+src.slice(0,2).map(function(x){return '<a href="'+esc(x.u)+'" target="_blank" rel="noopener noreferrer">'+esc(x.l)+'</a>';}).join(', '):'Source in the full report');
-  var more='<a class="more press" href="'+esc(c.href)+'">Read full report<span class="sr">: '+esc(clip(c.t,60))+'</span> <span aria-hidden="true">\u2192</span></a>';
-  return '<article class="scard g" data-st'+(c.cat?' data-hub="'+c.cat+'"':'')+'>'+
+  var more=c.href?'<span class="tap-ch" aria-hidden="true">\u203a</span>':'';
+  return '<article class="scard g"'+(c.href?' data-tap':'')+' data-st'+(c.cat?' data-hub="'+c.cat+'"':'')+'>'+
     '<div class="tagrow">'+(c.cat?hubChip(c.cat):'<span class="hchip none"><span>News</span></span>')+(i===0?'<span class="kick">Top story</span>':X&&X.k.upd?'<span class="kick">Update</span>':'')+(X?X.chips:'')+'</div>'+
-    '<h3>'+esc(c.t)+'</h3>'+(c.sum&&cleanSum(noCites(stripMd(c.sum)))?'<p class="sum">'+esc(cleanSum(noCites(stripMd(c.sum))))+'</p>':'')+(c.imp?impLine(clip(noCites(stripMd(c.imp)),220),X&&X.label):'')+(X?X.deep:'')+
+    '<h3>'+(c.href?'<a class="tap-a" href="'+esc(c.href)+'">'+esc(c.t)+'</a>':esc(c.t))+'</h3>'+(c.sum&&cleanSum(noCites(stripMd(c.sum)))?'<p class="sum">'+esc(cleanSum(noCites(stripMd(c.sum))))+'</p>':'')+(c.imp?impLine(clip(noCites(stripMd(c.imp)),220),X&&X.label):'')+(X?X.deep:'')+
     (c.also&&c.also.length?'<p class="also">Also in: '+esc(c.also.join(', '))+'</p>':'')+
     (X&&X.badge?'<p class="by srcl">'+srcHtml+'</p>'+X.srcList+'<div class="sc-f">'+X.badge+more+'</div>':
       (X?X.srcList:'')+'<div class="sc-f"><span class="by'+(X&&X.srcLine?' srcl':'')+'">'+srcHtml+'</span>'+more+'</div>')+'</article>';}
@@ -878,7 +878,7 @@ function fillCircLater(){loadAgp();var el=document.getElementById('lcirc');if(!e
 /* hubs.js (Topics, hub and peer pages) loads on demand, after search.js (it reads the search index) */
 var HBP=null;
 function loadHubs(){if(window.NBHubs)return Promise.resolve();if(!HBP)HBP=loadSearch().then(function(){return loadScript('/hubs.js');}).catch(function(e){HBP=null;throw e;});return HBP;}
-var HUBV={topics:1,topic:1,peer:1};
+var HUBV={topics:1,topic:1,peer:1},HUBY={};/* HUBY: scroll position of each topic page, restored when Back returns to it */
 function tabOf(v){return HUBV[v]||v==='threads'?'topics':v==='search'?'':v==='week'?'read':v;}
 function hubsView(day){if(window.NBHubs)return NBHubs.html(S.view,S.key,PQ,day);
   return '<div class="hd" data-st="h"><p class="greet">Topics</p><h1>Topics</h1></div><div class="g card empty" data-st><h2>Topics are not available offline yet</h2><p>Open Topics once while online and they will work offline after that.</p></div>';}
@@ -919,6 +919,31 @@ function hit(root,qs){var q={};qs.split('&').forEach(function(x){var i=x.indexOf
   var y=el.getBoundingClientRect().top+scrollY-innerHeight*.3;window.scrollTo({top:Math.max(0,y),behavior:RM.matches?'auto':'smooth'});
   el.classList.remove('hit');void el.offsetWidth;el.classList.add('hit');setTimeout(function(){el.classList.remove('hit');},2600);return true;}
 
+/* ---------------- whole-card tap (feat/hub-pages, card tap) ----------------
+   A card marked [data-tap] has one real link on its title (a.tap-a): that is its keyboard stop, its accessible name and
+   what middle-/ctrl-click open. A tap anywhere else on the card follows that link, unless the tap began on a control
+   inside the card (links, buttons, chips, toggles, details), the pointer moved more than 10 px or the page or a
+   sideways scroller moved (a scroll or swipe), or text is selected (long-press selection on Android stays free). */
+(function(){var CTRL='a,button,input,select,textarea,summary,details,label,[role=button],[role=link],[role=tab],[contenteditable]',P=null,PT=0;
+  function card(t){var c=t&&t.closest?t.closest('[data-tap]'):null;return c&&c.querySelector('a.tap-a')?c:null;}
+  function onCtl(t,c){var x=t.closest(CTRL);return !!(x&&x!==c&&c.contains(x));}
+  function scrollers(t){var L=[];for(var e=t;e&&e!==document.body;e=e.parentElement){if(e.scrollWidth>e.clientWidth+2){var o=getComputedStyle(e).overflowX;if(o==='auto'||o==='scroll')L.push([e,e.scrollLeft]);}}return L;}
+  function unpress(){clearTimeout(PT);if(P&&P.c)P.c.classList.remove('pressing');}
+  document.addEventListener('pointerdown',function(e){unpress();P=null;if(e.button!==0)return;var c=card(e.target);if(!c)return;
+    P={c:c,x:e.clientX,y:e.clientY,sy:window.scrollY,sc:scrollers(e.target),ctl:onCtl(e.target,c),moved:false};
+    /* the pressed look waits a beat, so the start of a scroll does not flash it */
+    if(!P.ctl)PT=setTimeout(function(){if(P&&!P.moved)P.c.classList.add('pressing');},e.pointerType==='mouse'?0:70);},true);
+  document.addEventListener('pointermove',function(e){if(!P||P.moved)return;if(Math.abs(e.clientX-P.x)>10||Math.abs(e.clientY-P.y)>10){P.moved=true;unpress();}},true);
+  ['pointerup','pointercancel','dragstart'].forEach(function(t){document.addEventListener(t,function(e){if(t!=='pointerup'&&P)P.moved=true;var c=P&&P.c;clearTimeout(PT);if(c)setTimeout(function(){c.classList.remove('pressing');},t==='pointerup'?120:0);},true);});
+  window.addEventListener('scroll',function(){if(P&&Math.abs(window.scrollY-P.sy)>10){P.moved=true;unpress();}},{passive:true});
+  function swiped(p){if(p.moved||Math.abs(window.scrollY-p.sy)>10)return true;return p.sc.some(function(s){return Math.abs(s[0].scrollLeft-s[1])>10;});}
+  function go(e,c,newTab){var a=c.querySelector('a.tap-a');if(!a)return;if(newTab){window.open(a.href,'_blank','noopener');return;}a.click();}
+  document.addEventListener('click',function(e){if(e.defaultPrevented||e.button!==0)return;var c=card(e.target);if(!c||onCtl(e.target,c))return;
+    var p=P;P=null;if(p&&(p.c!==c||p.ctl||swiped(p)))return;
+    var s=window.getSelection&&getSelection();if(s&&!s.isCollapsed&&String(s).trim()&&c.contains(s.anchorNode))return;
+    go(e,c,e.ctrlKey||e.metaKey||e.shiftKey);});
+  document.addEventListener('auxclick',function(e){if(e.button!==1)return;var c=card(e.target);if(!c||onCtl(e.target,c))return;e.preventDefault();go(e,c,true);});})();
+
 /* ---------------- router ---------------- */
 var PQ='';/* the ?query part of the hash: search terms, or hl/sec for a deep link into an edition */
 function parse(){
@@ -928,7 +953,8 @@ function parse(){
   if(p[0]==='week')return {view:'week',day:id,key:p[1]||''};
   if(p[0]==='archive')return {view:'archive',day:id};
   if(p[0]==='topics')return {view:'topics',day:id};
-  if((p[0]==='topic'||p[0]==='peer')&&p[1])return {view:p[0],day:id,key:p[1]};
+  /* #/topic/<hub>/<entity>: one company, regulator or theme inside a hub (hubs.js); key is "hub/entity" */
+  if((p[0]==='topic'||p[0]==='peer')&&p[1])return {view:p[0],day:id,key:p[0]==='topic'&&p[2]?p[1]+'/'+p[2]:p[1]};
   if(p[0]==='latest')p[0]=id;
   if(p[0]&&/^\d{4}-\d{2}-\d{2}$/.test(p[0])){var d=M.byId[p[0]]?p[0]:id;
     if(p[1]==='markets')return {view:'markets',day:d};
@@ -940,7 +966,10 @@ function parse(){
   return {view:'today',day:S.day||id};}
 var first=true,TABS=['today','read','topics','markets','archive'],KEYS=['01-daily-watch','02-regulation','03-weekly-analysis'];
 /* direction: +1 = forward (new view enters from the right). Tabs by bar order, editions newer->older, Read desks by order. */
+/* topic pages by depth: Topics 0, a hub's list 1, an entity page 2 (#/peer/<slug> counts as 2) */
+function hubDepth(v,k){return v==='topics'?0:v==='peer'||String(k||'').indexOf('/')>0?2:1;}
 function dirFor(pv,pd,pk,v,d,k){
+  if(HUBV[pv]&&HUBV[v]&&pd===d&&(pv!==v||pk!==k)){var a0=hubDepth(pv,pk),b0=hubDepth(v,k);if(a0!==b0)return b0>a0?1:-1;}
   if(pv!==v){var a=TABS.indexOf(tabOf(v)),b=TABS.indexOf(tabOf(pv));if(a===b)return HUBV[v]&&v!=='topics'?1:-1;return a>b?1:-1;}
   if(pd!==d)return d<pd?1:-1;
   if(v==='read'&&pk!==k)return KEYS.indexOf(k)>KEYS.indexOf(pk)?1:-1;
@@ -1029,6 +1058,7 @@ function navNow(view){if(!view)return;var tv=tabOf(view);document.querySelectorA
   if(view!=='today'&&cbT)cbT.textContent=TTL[view]||'NBFC Brief';if(view==='archive'){if(tpE)tpE.textContent='Archive';var cbS=document.getElementById('cbS');if(cbS)cbS.textContent=M.days.length+' editions \u00b7 latest '+shortDay(M.days[0].id);}}
 function route(){
   var r=parse(),pv=S.view,pd=S.day,pk=S.key,my=++seq;
+  if(!first&&HUBV[pv])HUBY[pv+'|'+pk]=scrollY;
   if(pv==='archive'&&r.view!=='archive'&&!flying){if(CF)ARCH.i=CF.i;ARCH.y=scrollY;}
   if(!first&&r.view!==pv)navNow(r.view);
   /* old content stays on screen until the new view is built */
@@ -1048,7 +1078,8 @@ function route(){
       document.querySelectorAll('#tabbar a').forEach(function(a){var t=a.dataset.tab;
         a.href=t==='archive'?'#/archive':t==='topics'?'#/topics':t==='today'?'#/'+day.id:'#/'+day.id+'/'+t;
         if(t===tabOf(S.view))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
-      if(changed&&(pv!==S.view||pd!==S.day)){window.scrollTo(0,S.view==='archive'?ARCH.y||0:0);var hd=$('h1');if(hd){hd.setAttribute('tabindex','-1');hd.focus({preventScroll:true});}}
+      var hubK=HUBV[S.view]&&pv===S.view&&pk!==S.key,hubY=HUBV[S.view]&&dir<0?HUBY[S.view+'|'+S.key]:null;
+      if(changed&&(pv!==S.view||pd!==S.day||hubK)){window.scrollTo(0,S.view==='archive'?ARCH.y||0:hubY||0);var hd=$('h1');if(hd){hd.setAttribute('tabindex','-1');hd.focus({preventScroll:true});}}
       chromeBar(day);
       syncTabInd(!first);syncSegInd(segFrom);fit(true);
       var pc=$('.pill[aria-current=true]'),pl=pc&&pc.parentNode;
