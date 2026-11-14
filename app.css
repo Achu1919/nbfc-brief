@@ -970,7 +970,7 @@ a.tl-t{min-height:24px;padding:2px 0}a.tl-t:hover{text-decoration:underline}
 .evf .hsc{margin:0 calc(-1*var(--gut)) 0 0}
 .evf-s{margin:0;padding:2px var(--gut) 2px 0;scroll-padding:0 var(--gut) 0 0;scroll-snap-type:x proximity}
 .evf-s .pill{min-height:44px;scroll-snap-align:start}
-.evf-s .pill .num{color:inherit;opacity:.72}
+.evf-s .pill .num{color:var(--text-2)}.evf-s .pill[aria-pressed="true"] .num{color:inherit}
 /* list: days, then rows. Columns line up: when | who · kind | status, with the title under who */
 .evday{margin:0 0 14px}
 .evdh{display:flex;align-items:baseline;gap:10px;margin:16px 4px 8px;font-size:var(--t-13);font-weight:650;color:var(--text-1);letter-spacing:.01em}

@@ -91,6 +91,8 @@ function eName(e){var s=typeof e==='string'?e:e.entity;if(typeof e!=='string'&&e
   try{var L=window.NBSearch&&NBSearch.label;var n=L&&(L(REGS[s]?'regulators':'companies',s));if(n&&n!==s)return n;}catch(x){}return s?s.toUpperCase().length<6?s.toUpperCase():cap(s.replace(/-/g,' ')):'';}
 function eHref(s){if(!s)return '';if(s==='muthoot-fincorp')return '#/topic/muthoot-fincorp';if(REGS[s])return '#/topic/regulation/'+encodeURIComponent(s);return '#/topic/peers/'+encodeURIComponent(s);}
 function tLab(e){return TYPES[e.type][0];}
+/* 'Board meeting' -> 'board meeting'; acronyms (EGM, RBI MPC, NCD …) keep their case */
+function kindLow(e){var l=tLab(e);return /^[A-Z][a-z]/.test(l)?l.charAt(0).toLowerCase()+l.slice(1):l;}
 function gHub(e){return GHUB[e.group]||'cal';}
 function stChip(e){var past=e.status==='upcoming'&&end(e)<today();var k=past?'wait':e.status,l=past?'Awaiting outcome':STAT[e.status];
   return '<span class="st evst-'+k+'">'+esc(l)+'</span>';}
@@ -216,7 +218,9 @@ function evHtml(id){var foot=NB().foot();
         o.source?'<a href="'+esc(o.source.url)+'" target="_blank" rel="noopener noreferrer">'+esc(o.source.name)+' <span aria-hidden="true">\u2197</span><span class="sr"> (opens in a new tab)</span></a>':''].filter(Boolean).join('')+'</p></div></section>';}
   else if(e.status==='upcoming'&&ne<0)h+='<p class="note evcond" data-st>The date has passed. The outcome appears here once the filing or the story is published.</p>';
   if(e.src.length)h+='<section aria-labelledby="h-evs"><div class="sec" data-st><h2 id="h-evs">Official source</h2>'+(e.src.length>1?'<span class="aside num">'+e.src.length+' links</span>':'')+'</div><div class="g card evcard flush" data-st>'+srcLinks(e.src)+'</div></section>';
-  var th2=thread(e.story_id),ch2=cardHref(e.card_id),rel2=e.related.map(function(r){return E.by[r];}).filter(Boolean);
+  /* earlier dates of the same kind for this entity get their own list; Related keeps the rest (an issue's open / close / listing) */
+  var ear=E.list.filter(function(x){return x.id!==e.id&&x.entity===e.entity&&x.type===e.type&&x.date<e.date;}).reverse().slice(0,5);
+  var th2=thread(e.story_id),ch2=cardHref(e.card_id),rel2=e.related.map(function(r){return E.by[r];}).filter(function(x){return x&&ear.indexOf(x)<0&&!(x.entity===e.entity&&x.type===e.type);}).sort(cmp);
   if(th2||ch2||rel2.length||e.story_id){h+='<section aria-labelledby="h-evr"><div class="sec" data-st><h2 id="h-evr">Related</h2></div>';
     /* the thread card only links a thread that exists in this edition's stories.json (threadLater swaps it in once loaded) */
     if(th2)h+='<a class="g card evth press" data-st href="#/story/'+esc(th2.id)+'" data-hub="'+(th2.cat||gHub(e))+'"><span class="evth-k">Story thread</span><span class="evth-t">'+esc(th2.title||'Open the story timeline')+'</span>'+(th2.updates?'<span class="evth-m num">'+th2.updates.length+' updates'+(th2.last?' \u00b7 latest '+esc(dm(th2.last)):'')+'</span>':'')+'<span class="tap-ch" aria-hidden="true">\u203a</span></a>';
@@ -224,8 +228,9 @@ function evHtml(id){var foot=NB().foot();
     if(ch2)h+='<p class="note en-n" data-st><a href="'+esc(ch2)+'">The item in the '+esc(dDay(ch2.slice(2,12)))+' edition \u2192</a></p>';
     if(rel2.length)h+='<ul class="evrows g" role="list" data-st aria-label="Related dates">'+rel2.map(function(r){return row(r,'date');}).join('')+'</ul>';
     h+='</section>';}
-  var ear=E.list.filter(function(x){return x.id!==e.id&&x.entity===e.entity&&x.type===e.type&&x.date<e.date&&rel2.indexOf(x)<0;}).reverse().slice(0,5);
-  if(ear.length)h+='<section aria-labelledby="h-eve"><div class="sec" data-st><h2 id="h-eve">Earlier '+esc(tLab(e).toLowerCase())+' dates</h2><span class="aside">'+esc(eName(e))+'</span></div><ul class="evrows g" role="list" data-st>'+ear.map(function(r){return row(r,'date');}).join('')+'</ul></section>';
+  var nxt=E.list.filter(function(x){return x.entity===e.entity&&x.type===e.type&&x.date>e.date&&x.status==='upcoming';})[0];
+  if(nxt&&e.status!=='upcoming'&&!nx)h+='<p class="note en-n" data-st><a href="'+href(nxt)+'">Next '+esc(kindLow(e))+': '+esc(range(nxt,true))+' \u2192</a></p>';
+  if(ear.length)h+='<section aria-labelledby="h-eve"><div class="sec" data-st><h2 id="h-eve">Earlier '+esc(kindLow(e))+' dates</h2><span class="aside">'+esc(eName(e))+'</span></div><ul class="evrows g" role="list" data-st>'+ear.map(function(r){return row(r,'date');}).join('')+'</ul></section>';
   h+='<p class="note evfoot" data-st>Dates and times are IST, as published in the official source. Check the filing before relying on a date.</p>';
   return h+foot;}
 /* ---------- search documents (search.js adds them at load time; never stored) ---------- */
