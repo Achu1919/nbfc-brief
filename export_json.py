@@ -532,7 +532,7 @@ def tag_day(day: dict, raw_dir=None) -> dict:
 # ---- cards, reg, latest_circulars, deadlines, mfl_ncd, lessons (docs/DATA_FORMAT.md "Cards"); additive, never fatal ----
 REG_COMMENT = re.compile(r"^\s*<!--\s*reg:(.*?)-->\s*$", re.I)
 NCD_COMMENT = re.compile(r"^\s*<!--\s*ncd:(.*?)-->\s*$", re.I)
-ANY_COMMENT = re.compile(r"^\s*<!--\s*(?:tags|reg|ncd|story|stories|peer)\s*:.*-->\s*$", re.I)
+ANY_COMMENT = re.compile(r"^\s*<!--\s*(?:tags|reg|ncd|story|stories|peer|event)\s*:.*-->\s*$", re.I)
 EXT_COMMENT = re.compile(r"^\s*<!--\s*(story|stories|peer)\s*:(.*?)-->\s*$", re.I)  # content upgrade (content_upgrade.py)
 _DEEP_LINE = re.compile(r"^\W*(?:mfl view|deeper impact|blind spots?\s*\(private\)|mfl comparison)\b", re.I)
 CIRCULAR_SEED = "circulars_seed.json"
