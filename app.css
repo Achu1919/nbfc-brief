@@ -572,6 +572,9 @@ html.tfade body,html.tfade .g,html.tfade .lg,html.tfade .pill{transition:backgro
 .hchip::before{content:"";position:absolute;inset:-10px -2px}
 .hchip.none{color:var(--text-3);background:var(--surface-2);padding:0 9px}
 .kick,.fk{font-size:var(--t-12);font-weight:600;color:var(--text-3);letter-spacing:.02em}
+/* the kind label stays on the chip's line and truncates: wrapped under the chip at 360 it sat inside the chip's
+   enlarged touch area, so Android touch adjustment sent taps on it to the topic chip instead of opening the card */
+.tagrow .fk{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kick{text-transform:uppercase;letter-spacing:.06em}
 /* Today: story cards */
 .scards{display:grid;gap:12px}
