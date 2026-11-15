@@ -1821,8 +1821,12 @@ EVENT_ENTITIES = {"muthoot-fincorp": "Muthoot Fincorp", "muthoot-finance": "Muth
 EVENT_BANNED_HOSTS = ("chittorgarh.com", "moneycontrol.com", "trendlyne.com")
 EVENT_ID = re.compile(r"^evt-[a-z0-9]+(?:-[a-z0-9]+)*$")
 EVENT_FIELDS = ("id", "title", "type", "group", "date", "date_end", "time", "time_text", "status", "status_note",
-                "supersedes", "entity", "entity_name", "agenda", "source", "sources", "story_id", "card_id", "reg_ref",
-                "outcome", "related_ids", "conditional", "public", "first_seen", "updated")
+                "supersedes", "entity", "entity_name", "agenda", "special", "source", "sources", "story_id", "card_id",
+                "reg_ref", "outcome", "related_ids", "conditional", "public", "first_seen", "updated")
+# special=true marks a board meeting that is not the routine quarterly-results meeting (fund-raising, dividend-only,
+# capital or debt approvals, a committee of the board meeting on an issue), or one the filing itself calls special or
+# unscheduled. Only on type board-meeting; the title carries "(special)" and agenda holds the agenda as announced.
+EVENT_SPECIAL_TAG = "(special)"
 _ISO = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _HHMM = re.compile(r"^\d{2}:\d{2}$")
 EVENT_COMMENT = re.compile(r"^\s*<!--\s*event\s*:(.*?)-->\s*$", re.I)
@@ -1936,6 +1940,19 @@ def _ev_norm(ev, X, problems, where):
     if not title:
         problems.append(f"events {eid}: no title; dropped")
         return None
+    sp = ev.get("special")
+    sp = sp is True or str(sp).strip().lower() in ("true", "yes", "1")
+    if sp and ev["type"] != "board-meeting":
+        problems.append(f"events {eid}: special applies only to type board-meeting; removed")
+        sp = False
+    if sp:
+        ev["special"] = True
+        if EVENT_SPECIAL_TAG not in title.lower():
+            title = f"{title} {EVENT_SPECIAL_TAG}"
+        if not str(ev.get("agenda") or "").strip():
+            problems.append(f"events {eid}: special board meeting without the announced agenda")
+    else:
+        ev.pop("special", None)
     ev["title"] = title
     ev["conditional"] = bool(ev.get("conditional"))
     ev["public"] = ev.get("public") is not False
@@ -2012,7 +2029,7 @@ def _ev_from_comment(kv, base):
         k = alias.get(k, k)
         if k in simple and v is not True:
             ev[k] = v
-    for k in ("conditional", "public"):
+    for k in ("conditional", "public", "special"):
         if k in kv:
             ev[k] = kv[k] is True or str(kv[k]).lower() in ("true", "yes", "1")
     if kv.get("source"):

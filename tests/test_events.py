@@ -118,6 +118,18 @@ class LiveFile(unittest.TestCase):
         self.assertTrue(evs["evt-rbi-interest-rate-directions-2027-04-01"]["conditional"])
         self.assertFalse(any(e["conditional"] for k, e in evs.items() if k != "evt-rbi-interest-rate-directions-2027-04-01"))
 
+    def test_special_board_meetings(self):
+        evs = _load(CU.EVENTS_FILE)["events"]
+        mm = evs["evt-muthoot-microfin-board-2026-11-19"]
+        self.assertIs(mm.get("special"), True)
+        self.assertIn("(special)", mm["title"])
+        for k, e in evs.items():
+            if "special" in e:
+                self.assertIs(e["special"], True, k)
+                self.assertEqual(e["type"], "board-meeting", k)
+                self.assertIn("(special)", e["title"].lower(), k)
+                self.assertTrue(e.get("agenda"), k)
+
     def test_deadlines_keep_their_shape(self):
         for x in _load("latest.json")["deadlines"]:
             self.assertLessEqual(set(x), R.DEADLINE_KEYS, x)
@@ -218,6 +230,26 @@ class Exporter(unittest.TestCase):
         self.assertEqual([e["id"] for e in CU.upcoming_events(pub, "2026-11-14")],
                          ["evt-manappuram-record-date-2026-11-18", "evt-manappuram-edge-2026-11-21"])
 
+    def test_special_flag(self):
+        rows = [_seed_row(id="evt-manappuram-board-2026-11-20", type="board-meeting", date="2026-11-20",
+                          title="Manappuram Finance board meeting on fund raising", agenda="Fund raising", special=True),
+                _seed_row(id="evt-manappuram-egm-2026-11-21", type="egm", date="2026-11-21", title="EGM", special=True),
+                _seed_row(id="evt-manappuram-board-2026-11-22", type="board-meeting", date="2026-11-22",
+                          title="Manappuram Finance board meeting (special)", special=True)]
+        md = {"2026-11-14": "<!-- event: id=evt-manappuram-board-2026-11-30; date=2026-11-30; type=board-meeting; "
+                            "entity=manappuram; title=Manappuram Finance board meeting on an NCD issue; special; "
+                            f"agenda=Approve a public issue of NCDs; source={NSE} -->\n"}
+        evs, problems = _run(rows, md=md)
+        a = evs["evt-manappuram-board-2026-11-20"]
+        self.assertEqual((a["special"], a["title"]), (True, "Manappuram Finance board meeting on fund raising (special)"))
+        self.assertNotIn("special", evs["evt-manappuram-egm-2026-11-21"])
+        self.assertTrue(any("special applies only" in p for p in problems))
+        self.assertEqual(evs["evt-manappuram-board-2026-11-22"]["title"], "Manappuram Finance board meeting (special)")
+        self.assertTrue(any("without the announced agenda" in p for p in problems))
+        c = evs["evt-manappuram-board-2026-11-30"]
+        self.assertEqual((c["special"], c["title"]), (True, "Manappuram Finance board meeting on an NCD issue (special)"))
+        self.assertNotIn("special", evs["evt-manappuram-record-date-2026-11-18"] if "evt-manappuram-record-date-2026-11-18" in evs else {})
+
     def test_first_seen_and_updated_are_stable(self):
         evs, _ = _run([_seed_row()])
         again, _ = _run([_seed_row()], prev=evs, newest="2026-11-15")
@@ -243,6 +275,10 @@ class Exporter(unittest.TestCase):
         errs = " | ".join(R.event_errors(tmp))
         for frag in ("generated X", "public:false row", "supersedes unknown", "upcoming_events"):
             self.assertIn(frag, errs)
+        evs[e["id"]] = dict(e, type="egm", special=True)
+        (tmp / CU.EVENTS_FILE).write_text(json.dumps({"schema": "nbfc-events", "schema_version": 1, "generated": "G",
+                                                      "events": evs}), encoding="utf-8")
+        self.assertIn("special on type 'egm'", " | ".join(R.event_errors(tmp)))
 
 
 class Markdown(unittest.TestCase):

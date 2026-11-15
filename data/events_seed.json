@@ -364,12 +364,13 @@
   },
   {
    "id": "evt-muthoot-microfin-board-2026-11-19",
-   "title": "Muthoot Microfin board meeting on audited half-year accounts",
+   "title": "Muthoot Microfin board meeting on audited half-year accounts (special)",
    "type": "board-meeting",
    "group": "company",
    "date": "2026-11-19",
    "entity": "muthoot-microfin",
    "agenda": "Audited financial statements for the half years ended 30 Sep 2025 and 30 Sep 2026, for the preparation of restated consolidated financial statements of Muthoot Fincorp",
+   "special": true,
    "sources": [
     {
      "name": "NSE filing (board meeting intimation, 13 Nov)",
@@ -385,7 +386,7 @@
    "public": true,
    "conditional": false,
    "first_seen": "2026-11-14",
-   "updated": "2026-11-14"
+   "updated": "2026-11-15"
   },
   {
    "id": "evt-iifl-egm-2026-12-04",
@@ -408,7 +409,10 @@
    "public": true,
    "conditional": false,
    "first_seen": "2026-11-14",
-   "updated": "2026-11-14"
+   "updated": "2026-11-15",
+   "related_ids": [
+    "evt-iifl-finance-board-2026-11-10"
+   ]
   },
   {
    "id": "evt-bajaj-finance-qip-open-2026-11-11",
@@ -439,7 +443,547 @@
    "public": true,
    "conditional": false,
    "first_seen": "2026-11-14",
-   "updated": "2026-11-14"
+   "updated": "2026-11-15",
+   "related_ids": [
+    "evt-bajaj-finance-board-2026-10-01",
+    "evt-bajaj-finance-egm-2026-11-02"
+   ]
+  },
+  {
+   "id": "evt-bajaj-finance-board-2026-10-01",
+   "title": "Bajaj Finance board meeting on fund raising (special)",
+   "type": "board-meeting",
+   "group": "company",
+   "date": "2026-10-01",
+   "status": "done",
+   "entity": "bajaj-finance",
+   "agenda": "Raising funds through any or all of various methods including a preferential issue and a qualified institutions placement, subject to approvals including shareholders'",
+   "special": true,
+   "sources": [
+    {
+     "name": "NSE filing (board meeting intimation, 23 Sep)",
+     "url": "https://nsearchives.nseindia.com/corporate/BAJFINANCE_23092026203115_BSENSE_Prior_intimation.pdf"
+    }
+   ],
+   "story_id": "bajaj-finance-capital-raise-2026",
+   "related_ids": [
+    "evt-bajaj-finance-egm-2026-11-02",
+    "evt-bajaj-finance-pi-committee-2026-11-10",
+    "evt-bajaj-finance-qip-open-2026-11-11"
+   ],
+   "outcome": {
+    "date": "2026-10-01",
+    "summary": "Board approved a QIP of up to ₹11,700 crore and a preferential issue of warrants of up to ₹5,800 crore, subject to an EGM",
+    "story_id": "bajaj-finance-capital-raise-2026",
+    "card_id": null,
+    "source": {
+     "name": "NSE filing (board outcome, 1 Oct)",
+     "url": "https://nsearchives.nseindia.com/corporate/BAJFINANCE_01102026231622_Outcome_post_SE_Intimation_01102026_Final.pdf"
+    }
+   },
+   "public": true,
+   "conditional": false,
+   "first_seen": "2026-11-15",
+   "updated": "2026-11-15"
+  },
+  {
+   "id": "evt-iifl-finance-results-2026-10-15",
+   "title": "IIFL Finance board meeting: Q2 FY27 results",
+   "type": "results",
+   "group": "company",
+   "date": "2026-10-15",
+   "time": "11:15",
+   "time_text": "11:15 AM IST",
+   "status": "done",
+   "entity": "iifl-finance",
+   "agenda": "Consolidated and standalone unaudited financial results for the quarter and half year ended 30 Sep 2026; any other business with the permission of the Chair",
+   "sources": [
+    {
+     "name": "NSE filing (board meeting intimation, 7 Oct)",
+     "url": "https://nsearchives.nseindia.com/corporate/IIFL_07102026195352_SEIntimation_.pdf"
+    },
+    {
+     "name": "BSE filing (same intimation)",
+     "url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/d0c63e06-34f8-4cdf-abba-15214d3b6825.pdf"
+    }
+   ],
+   "outcome": {
+    "date": "2026-10-15",
+    "summary": "Board approved the consolidated and standalone unaudited results for the quarter and half year ended 30 Sep 2026",
+    "story_id": null,
+    "card_id": null,
+    "source": {
+     "name": "NSE filing (board outcome, 15 Oct)",
+     "url": "https://nsearchives.nseindia.com/corporate/IIFL_15102026155840_Intimation__.pdf"
+    }
+   },
+   "public": true,
+   "conditional": false,
+   "first_seen": "2026-11-15",
+   "updated": "2026-11-15"
+  },
+  {
+   "id": "evt-bajaj-finance-results-2026-10-19",
+   "title": "Bajaj Finance board meeting: Q2 FY27 results",
+   "type": "results",
+   "group": "company",
+   "date": "2026-10-19",
+   "time": "16:15",
+   "time_text": "4:15 PM IST",
+   "status": "done",
+   "entity": "bajaj-finance",
+   "agenda": "Unaudited standalone and consolidated results for the quarter and half year ended 30 Sep 2026",
+   "sources": [
+    {
+     "name": "NSE filing (board meeting intimation, 5 Oct)",
+     "url": "https://nsearchives.nseindia.com/corporate/BAJFINANCE_05102026190053_BFLPriorIntimationBMBSENSE05102026.pdf"
+    },
+    {
+     "name": "BSE filing (same intimation)",
+     "url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/7befbd0b-8d13-47e1-bf9f-3f91b13538c2.pdf"
+    }
+   ],
+   "outcome": {
+    "date": "2026-10-19",
+    "summary": "Board approved the Q2 results (approved at 4:55 PM IST) and an issue of 49,00,737 equity shares to the BFL Employee Welfare Trust under ESOS 2009",
+    "story_id": null,
+    "card_id": null,
+    "source": {
+     "name": "NSE filing (board outcome, 19 Oct)",
+     "url": "https://nsearchives.nseindia.com/corporate/BAJFINANCE_19102026172017_BMOutcome_19102026.pdf"
+    }
+   },
+   "public": true,
+   "conditional": false,
+   "first_seen": "2026-11-15",
+   "updated": "2026-11-15"
+  },
+  {
+   "id": "evt-shriram-finance-results-2026-10-23",
+   "title": "Shriram Finance board meeting: Q2 FY27 results",
+   "type": "results",
+   "group": "company",
+   "date": "2026-10-23",
+   "time": "11:00",
+   "time_text": "11 AM IST",
+   "status": "done",
+   "entity": "shriram-finance",
+   "agenda": "Unaudited standalone and consolidated results for the quarter and half year ended 30 Sep 2026; interim dividend for FY 2026-27, if any; periodical resource mobilisation plan for debt securities; postal ballot notice for raising funds through NCDs on private placement",
+   "sources": [
+    {
+     "name": "NSE filing (board meeting intimation, 16 Oct)",
+     "url": "https://nsearchives.nseindia.com/corporate/Mathew_16102026153907_BMIntimationSeptQrtr26.pdf"
+    },
+    {
+     "name": "BSE filing (same intimation)",
+     "url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/17c8e588-9ab6-42e5-853b-faef5205b686.pdf"
+    }
+   ],
+   "related_ids": [
+    "evt-shriram-finance-record-date-2026-10-29",
+    "evt-shriram-finance-dividend-2026-11-09",
+    "evt-shriram-finance-postal-ballot-2026-11-29"
+   ],
+   "outcome": {
+    "date": "2026-10-23",
+    "summary": "Board approved the Q2 results, an interim dividend of ₹6.50 per share (325%), a debt resource-mobilisation plan for 1 Nov 2026 to 31 Jan 2027, and a postal ballot to renew the ₹35,000 crore private-placement debenture limit",
+    "story_id": null,
+    "card_id": null,
+    "source": {
+     "name": "NSE filing (board outcome, 23 Oct)",
+     "url": "https://nsearchives.nseindia.com/corporate/Mathew_23102026143441_OutcomeofBoardMeetingOct23.pdf"
+    }
+   },
+   "public": true,
+   "conditional": false,
+   "first_seen": "2026-11-15",
+   "updated": "2026-11-15"
+  },
+  {
+   "id": "evt-mfl-board-2026-10-27",
+   "title": "Muthoot Fincorp board meeting on an interim dividend (special)",
+   "type": "board-meeting",
+   "group": "company",
+   "date": "2026-10-27",
+   "time": "15:00",
+   "time_text": "3 PM IST",
+   "status": "done",
+   "entity": "muthoot-fincorp",
+   "agenda": "Declaration of an interim dividend on equity shares for FY 2026-27, and other corporate/business matters (Reg 50(1) intimation to BSE, scrip 948016, 16 Oct 2026)",
+   "special": true,
+   "sources": [
+    {
+     "name": "Muthoot Fincorp investor page (Reg 50(1) intimation to BSE, 16 Oct; outcome, 27 Oct)",
+     "url": "https://www.muthootfincorp.com/investors"
+    }
+   ],
+   "outcome": {
+    "date": "2026-10-27",
+    "summary": "Board declared an interim dividend of 75% (₹1.50 per equity share of face value ₹2) for FY 2026-27",
+    "story_id": null,
+    "card_id": null,
+    "source": {
+     "name": "Muthoot Fincorp investor page (Reg 51 outcome to BSE, 27 Oct)",
+     "url": "https://www.muthootfincorp.com/investors"
+    }
+   },
+   "public": true,
+   "conditional": false,
+   "first_seen": "2026-11-15",
+   "updated": "2026-11-15"
+  },
+  {
+   "id": "evt-shriram-finance-record-date-2026-10-29",
+   "title": "Shriram Finance interim dividend record date",
+   "type": "record-date",
+   "group": "company",
+   "date": "2026-10-29",
+   "status": "done",
+   "entity": "shriram-finance",
+   "agenda": "Record date for the interim dividend of ₹6.50 per equity share (face value ₹2) for FY 2026-27",
+   "sources": [
+    {
+     "name": "NSE filing (record date, 23 Oct)",
+     "url": "https://nsearchives.nseindia.com/corporate/Mathew_23102026172848_BSENSE_Record_Date_Intimation.pdf"
+    },
+    {
+     "name": "BSE filing (same intimation)",
+     "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/8c442b77-bd9b-428e-96aa-f5187e162ebb.pdf"
+    }
+   ],
+   "related_ids": [
+    "evt-shriram-finance-results-2026-10-23",
+    "evt-shriram-finance-dividend-2026-11-09"
+   ],
+   "outcome": {
+    "date": "2026-11-09",
+    "summary": "Interim dividend paid on 9 Nov 2026 to members on the register as of 29 Oct 2026",
+    "story_id": null,
+    "card_id": null,
+    "source": {
+     "name": "NSE filing (dividend paid, 9 Nov)",
+     "url": "https://nsearchives.nseindia.com/corporate/Mathew_09112026160603_BSENSE_InterimDividend_2026_27.pdf"
+    }
+   },
+   "public": true,
+   "conditional": false,
+   "first_seen": "2026-11-15",
+   "updated": "2026-11-15"
+  },
+  {
+   "id": "evt-muthoot-finance-results-2026-10-31",
+   "title": "Muthoot Finance board meeting: Q2 FY27 results",
+   "type": "results",
+   "group": "company",
+   "date": "2026-10-31",
+   "time": "10:30",
+   "time_text": "10:30 AM IST",
+   "status": "done",
+   "entity": "muthoot-finance",
+   "agenda": "Unaudited financial results for the quarter and half year ended 30 Sep 2026",
+   "sources": [
+    {
+     "name": "NSE filing (board meeting intimation, 27 Oct)",
+     "url": "https://nsearchives.nseindia.com/corporate/MUTHOOTFIN_27102026110502_BMintimation.pdf"
+    },
+    {
+     "name": "BSE filing (same intimation)",
+     "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/6d2e9690-460c-483f-84c4-d0aa6a4e776a.pdf"
+    }
+   ],
+   "outcome": {
+    "date": "2026-10-31",
+    "summary": "Board approved the limited-reviewed standalone and consolidated results for the quarter and half year ended 30 Sep 2026",
+    "story_id": null,
+    "card_id": null,
+    "source": {
+     "name": "NSE filing (board outcome, 31 Oct)",
+     "url": "https://nsearchives.nseindia.com/corporate/MUTHOOTFIN_31102026151723_MFIN_BM_Outcome_Cover_Final-sd.pdf"
+    }
+   },
+   "public": true,
+   "conditional": false,
+   "first_seen": "2026-11-15",
+   "updated": "2026-11-15"
+  },
+  {
+   "id": "evt-bajaj-finance-egm-2026-11-02",
+   "title": "Bajaj Finance EGM on the QIP and preferential issue",
+   "type": "egm",
+   "group": "company",
+   "date": "2026-11-02",
+   "time": "12:45",
+   "time_text": "12:45 PM IST",
+   "status": "done",
+   "entity": "bajaj-finance",
+   "agenda": "Special resolutions: preferential issue of warrants to Bajaj Finserv (promoter and holding company); issue of securities through a qualified institutions placement. Cut-off date 26 Oct 2026",
+   "sources": [
+    {
+     "name": "NSE filing (EGM notice, 9 Oct)",
+     "url": "https://nsearchives.nseindia.com/corporate/BAJFINANCE_09102026224649_SEIntimationEGMNotice.pdf"
+    },
+    {
+     "name": "BSE filing (same notice)",
+     "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/b73749ee-b99f-4e1c-bcb8-3503bbed193a.pdf"
+    }
+   ],
+   "story_id": "bajaj-finance-capital-raise-2026",
+   "related_ids": [
+    "evt-bajaj-finance-board-2026-10-01",
+    "evt-bajaj-finance-qip-open-2026-11-11"
+   ],
+   "outcome": {
+    "date": "2026-11-04",
+    "summary": "Both special resolutions passed with the requisite majority (scrutinizer's report dated 3 Nov 2026)",
+    "story_id": "bajaj-finance-capital-raise-2026",
+    "card_id": null,
+    "source": {
+     "name": "NSE filing (voting results, 4 Nov)",
+     "url": "https://nsearchives.nseindia.com/corporate/BAJFINANCE_04112026152849_SEintimationsScrutinizersReportSignedForUpload.pdf"
+    }
+   },
+   "public": true,
+   "conditional": false,
+   "first_seen": "2026-11-15",
+   "updated": "2026-11-15"
+  },
+  {
+   "id": "evt-muthoot-microfin-results-2026-11-05",
+   "title": "Muthoot Microfin board meeting: Q2 FY27 results",
+   "type": "results",
+   "group": "company",
+   "date": "2026-11-05",
+   "time": "13:50",
+   "time_text": "1:50 PM IST",
+   "status": "done",
+   "entity": "muthoot-microfin",
+   "agenda": "Financial results for the quarter and half year ended 30 Sep 2026 with the limited review report; any other matter with the permission of the Chairperson",
+   "sources": [
+    {
+     "name": "NSE filing (board meeting intimation, 23 Oct)",
+     "url": "https://nsearchives.nseindia.com/corporate/muthootmicrofin_23102026131900_PriorintimationBoardMeeting05112026SD.pdf"
+    },
+    {
+     "name": "BSE filing (same intimation)",
+     "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/98abf88a-8e23-4fe0-ae4d-5f0c2be94f47.pdf"
+    }
+   ],
+   "related_ids": [
+    "evt-muthoot-microfin-postal-ballot-2026-12-13"
+   ],
+   "outcome": {
+    "date": "2026-11-05",
+    "summary": "Board approved the Q2 results and a material related-party transaction with Muthoot Fincorp of up to ₹2,500 crore for one year, subject to a postal ballot",
+    "story_id": null,
+    "card_id": null,
+    "source": {
+     "name": "NSE filing (board outcome, 5 Nov)",
+     "url": "https://nsearchives.nseindia.com/corporate/muthootmicrofin_05112026165815_OutcomeofBMSeptember302026SD.pdf"
+    }
+   },
+   "public": true,
+   "conditional": false,
+   "first_seen": "2026-11-15",
+   "updated": "2026-11-15"
+  },
+  {
+   "id": "evt-shriram-finance-dividend-2026-11-09",
+   "title": "Shriram Finance interim dividend paid",
+   "type": "dividend",
+   "group": "company",
+   "date": "2026-11-09",
+   "status": "done",
+   "entity": "shriram-finance",
+   "agenda": "Payment of the FY 2026-27 interim dividend of ₹6.50 per equity share; the board had said payout would be made before 20 Nov 2026",
+   "sources": [
+    {
+     "name": "NSE filing (dividend paid, 9 Nov)",
+     "url": "https://nsearchives.nseindia.com/corporate/Mathew_09112026160603_BSENSE_InterimDividend_2026_27.pdf"
+    },
+    {
+     "name": "BSE filing (same)",
+     "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/60737d9b-9abf-4596-941f-afd0b4a0dcee.pdf"
+    }
+   ],
+   "related_ids": [
+    "evt-shriram-finance-results-2026-10-23",
+    "evt-shriram-finance-record-date-2026-10-29"
+   ],
+   "outcome": {
+    "date": "2026-11-09",
+    "summary": "Interim dividend of ₹6.50 per share paid on 9 Nov 2026",
+    "story_id": null,
+    "card_id": null,
+    "source": {
+     "name": "NSE filing (dividend paid, 9 Nov)",
+     "url": "https://nsearchives.nseindia.com/corporate/Mathew_09112026160603_BSENSE_InterimDividend_2026_27.pdf"
+    }
+   },
+   "public": true,
+   "conditional": false,
+   "first_seen": "2026-11-15",
+   "updated": "2026-11-15"
+  },
+  {
+   "id": "evt-bajaj-finance-pi-committee-2026-11-10",
+   "title": "Bajaj Finance PI 2026 Special Committee of the Board on warrant pricing (special)",
+   "type": "board-meeting",
+   "group": "company",
+   "date": "2026-11-10",
+   "time": "10:15",
+   "time_text": "10:15 AM IST",
+   "status": "done",
+   "entity": "bajaj-finance",
+   "agenda": "Approve the price at which warrants are issued to Bajaj Finserv, the promoter and holding company, under the preferential issue",
+   "special": true,
+   "sources": [
+    {
+     "name": "NSE filing (committee meeting intimation, 5 Nov)",
+     "url": "https://nsearchives.nseindia.com/corporate/BAJFINANCE_05112026175132_BFLPRIORINTIMATIONPIPRICING2026.pdf"
+    },
+    {
+     "name": "BSE filing (same intimation)",
+     "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/191d3534-ded0-412c-9b3e-a8fbe7c38d5a.pdf"
+    }
+   ],
+   "story_id": "bajaj-finance-capital-raise-2026",
+   "related_ids": [
+    "evt-bajaj-finance-board-2026-10-01"
+   ],
+   "outcome": {
+    "date": "2026-11-10",
+    "summary": "Committee approved 5,74,25,740 warrants to Bajaj Finserv at ₹1,010 each, about ₹5,800 crore",
+    "story_id": "bajaj-finance-capital-raise-2026",
+    "card_id": null,
+    "source": {
+     "name": "NSE filing (committee outcome, 10 Nov)",
+     "url": "https://nsearchives.nseindia.com/corporate/BAJFINANCE_10112026121523_BFL_Reg_30_Outcome_PricingofPIpostVRFinal.pdf"
+    }
+   },
+   "public": true,
+   "conditional": false,
+   "first_seen": "2026-11-15",
+   "updated": "2026-11-15"
+  },
+  {
+   "id": "evt-iifl-finance-board-2026-11-10",
+   "title": "IIFL Finance board meeting on fund raising (special)",
+   "type": "board-meeting",
+   "group": "company",
+   "date": "2026-11-10",
+   "time": "11:15",
+   "time_text": "11:15 AM IST",
+   "status": "done",
+   "entity": "iifl-finance",
+   "agenda": "Growth plans and raising funds by debt, rights issue, preferential issue, QIP or other permissible modes; convening an EGM for member approval of the fund raising",
+   "special": true,
+   "sources": [
+    {
+     "name": "NSE filing (board meeting intimation, 5 Nov)",
+     "url": "https://nsearchives.nseindia.com/corporate/IIFL_05112026232453_SEIntimation_Final.pdf"
+    },
+    {
+     "name": "BSE filing (same intimation)",
+     "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/e165777d-5dfc-46c9-b133-1ddea84cebc8.pdf"
+    }
+   ],
+   "story_id": "iifl-finance-blackstone-raise-2026",
+   "related_ids": [
+    "evt-iifl-egm-2026-12-04"
+   ],
+   "outcome": {
+    "date": "2026-11-10",
+    "summary": "Board approved a preferential issue of 8,55,48,173 CCPS and 2,10,00,000 warrants for about ₹6,414 crore, a higher authorised capital, and an EGM on 4 Dec 2026",
+    "story_id": "iifl-finance-blackstone-raise-2026",
+    "card_id": null,
+    "source": {
+     "name": "NSE filing (board outcome, 10 Nov)",
+     "url": "https://nsearchives.nseindia.com/corporate/IIFL_10112026160231_SEIntimation_Final.pdf"
+    }
+   },
+   "public": true,
+   "conditional": false,
+   "first_seen": "2026-11-15",
+   "updated": "2026-11-15"
+  },
+  {
+   "id": "evt-mfl-results-2026-11-14",
+   "title": "Muthoot Fincorp board meeting: Q2 FY27 results",
+   "type": "results",
+   "group": "company",
+   "date": "2026-11-14",
+   "status": "upcoming",
+   "status_note": "No outcome or results filing seen on the company's investor page as of 15 Nov 2026",
+   "entity": "muthoot-fincorp",
+   "agenda": "Unaudited financial results for the quarter and half year ended 30 Sep 2026, and other corporate/business matters (Reg 50(1) intimation to BSE, scrip 948016, 2 Nov 2026)",
+   "sources": [
+    {
+     "name": "Muthoot Fincorp investor page (Reg 50(1) intimation to BSE, 2 Nov)",
+     "url": "https://www.muthootfincorp.com/investors"
+    }
+   ],
+   "public": true,
+   "conditional": false,
+   "first_seen": "2026-11-15",
+   "updated": "2026-11-15"
+  },
+  {
+   "id": "evt-shriram-finance-postal-ballot-2026-11-29",
+   "title": "Shriram Finance postal ballot: remote e-voting closes",
+   "type": "other",
+   "group": "company",
+   "date": "2026-11-29",
+   "time": "17:00",
+   "time_text": "5 PM IST",
+   "status": "upcoming",
+   "entity": "shriram-finance",
+   "agenda": "Special resolution to renew the limit for issuing debentures on private placement up to ₹35,000 crore for one year. Remote e-voting 9 AM IST 31 Oct to 5 PM IST 29 Nov 2026; cut-off date 23 Oct 2026; results on or before 6 PM IST 30 Nov 2026",
+   "sources": [
+    {
+     "name": "NSE filing (postal ballot notice, 30 Oct)",
+     "url": "https://nsearchives.nseindia.com/corporate/Mathew_30102026190701_NSEBSEPostalBallotNotice.pdf"
+    },
+    {
+     "name": "BSE filing (same notice)",
+     "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/136e1569-9f98-4fa0-be87-c0f533bb730a.pdf"
+    }
+   ],
+   "related_ids": [
+    "evt-shriram-finance-results-2026-10-23"
+   ],
+   "public": true,
+   "conditional": false,
+   "first_seen": "2026-11-15",
+   "updated": "2026-11-15"
+  },
+  {
+   "id": "evt-muthoot-microfin-postal-ballot-2026-12-13",
+   "title": "Muthoot Microfin postal ballot: remote e-voting closes",
+   "type": "other",
+   "group": "company",
+   "date": "2026-12-13",
+   "time": "17:00",
+   "time_text": "5 PM IST",
+   "status": "upcoming",
+   "entity": "muthoot-microfin",
+   "agenda": "Approval of material related-party transactions with Muthoot Fincorp, the holding company. Remote e-voting 9 AM IST 14 Nov to 5 PM IST 13 Dec 2026; cut-off date 6 Nov 2026; results on or before 5 PM IST 15 Dec 2026",
+   "sources": [
+    {
+     "name": "NSE filing (postal ballot notice, 13 Nov)",
+     "url": "https://nsearchives.nseindia.com/corporate/muthootmicrofin_13112026170655_PostalBallotNoticeNov2026SD.pdf"
+    },
+    {
+     "name": "BSE filing (same notice)",
+     "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/a0a1606c-bbcd-49b0-90bd-185b50370f72.pdf"
+    }
+   ],
+   "related_ids": [
+    "evt-muthoot-microfin-results-2026-11-05"
+   ],
+   "public": true,
+   "conditional": false,
+   "first_seen": "2026-11-15",
+   "updated": "2026-11-15"
   },
   {
    "id": "evt-sebi-reg52-q2-2026-11-14",

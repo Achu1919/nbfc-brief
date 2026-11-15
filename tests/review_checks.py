@@ -362,6 +362,15 @@ def event_errors(data_dir: Path):
                     errs.append(f"{w}: public {fk} is not neutral: {e[fk]!r}")
                 if e.get(fk) and BAD_TITLE.search(e[fk]) and fk == "title":
                     errs.append(f"{w}: title wording {e[fk]!r}")
+        if "special" in e:
+            if e["special"] is not True:
+                errs.append(f"{w}: special must be true or absent")
+            elif e.get("type") != "board-meeting":
+                errs.append(f"{w}: special on type {e.get('type')!r}; only board-meeting")
+            elif CU.EVENT_SPECIAL_TAG not in str(e.get("title") or "").lower():
+                errs.append(f"{w}: special meeting title lacks {CU.EVENT_SPECIAL_TAG}")
+            elif not str(e.get("agenda") or "").strip():
+                errs.append(f"{w}: special meeting without the announced agenda")
         if not private and e.get("public") is False:
             errs.append(f"{w}: public:false row in the public edition")
         end = e.get("date_end") or e.get("date") or ""
