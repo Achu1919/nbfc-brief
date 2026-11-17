@@ -926,6 +926,28 @@
   "sammaan-capital-gold-loan-2026": {
    "title": "Sammaan Capital gold-loan entry",
    "regulators": []
+  },
+  "sebi-icdr-review-2026": {
+   "title": "SEBI review of ICDR capital-raising rules",
+   "regulators": [
+    "sebi"
+   ]
+  },
+  "rbi-tata-sons-upper-layer-2026": {
+   "title": "RBI and Tata Sons Upper Layer listing",
+   "regulators": [
+    "rbi"
+   ]
+  },
+  "india-wpi-inflation-2026": {
+   "title": "India wholesale inflation (WPI)",
+   "regulators": []
+  },
+  "reg-sebi-pr-no-73-2026": {
+   "title": "SEBI PMAC sub-group on ICDR review",
+   "regulators": [
+    "sebi"
+   ]
   }
  },
  "2026-10-23-rules-35": {
