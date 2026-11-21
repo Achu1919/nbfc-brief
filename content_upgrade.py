@@ -1023,7 +1023,10 @@ def stories_export(X, days, data_dir, private, problems, deadlines=None, latest_
         for ed in editions:
             if ed < first_ed:
                 continue
-            last = [c for e, c in t.cards if e <= ed and c.get("reg")][-1]
+            cands = [c for e, c in t.cards if e <= ed and c.get("reg")]
+            if not cands:  # a thread's older cards can predate its first reg-bearing card
+                continue
+            last = cands[-1]
             lc = lifecycle_at(last["reg"]["lifecycle"] if last["reg"]["lifecycle"] in ("draft", "superseded", "withdrawn") else "final",
                               last["reg"].get("effective") or eff, ed, bool(imm.search(t.reg.get("_text") or "")))
             if not t.lc_history or t.lc_history[-1]["lifecycle"] != lc:
@@ -1227,7 +1230,10 @@ def thread_obj(t, asof, continued_by, deadlines=None):
     if any(c.get("_auto_joined") for e, c in t.cards):
         o["auto_joined"] = True
     if t.reg:
-        last = [c for e, c in t.cards if c.get("reg") and e <= asof][-1]
+        cands = [c for e, c in t.cards if c.get("reg") and e <= asof]
+        if not cands:  # the thread's first reg-bearing card is newer than this as-of
+            return o
+        last = cands[-1]
         hist = [h for h in t.lc_history if h["date"] <= asof]
         o["reg"] = {"ref_no": t.reg.get("ref_no"), "regulator": t.reg.get("regulator"),
                     "lifecycle": hist[-1]["lifecycle"] if hist else last["reg"].get("lifecycle"),
@@ -1254,7 +1260,10 @@ def continuing_at(threads, asof, continued_by, deadlines=None):
         if t.reg:
             hist = [h for h in t.lc_history if h["date"] <= asof]
             changed = bool(len(hist) > 1 and _days(asof, hist[-1]["date"]) <= CIRCULAR_CHANGE_DAYS)
-            last = [c for e, c in t.cards if c.get("reg") and e <= asof][-1]
+            cands = [c for e, c in t.cards if c.get("reg") and e <= asof]
+            if not cands:  # a thread's older cards can predate its first reg-bearing card
+                continue
+            last = cands[-1]
             dl = last["reg"].get("deadline")
             dl_now, near = _deadline_at(last["reg"].get("comments_due"), last["reg"].get("effective") or t.reg.get("effective"),
                                         hist[-1]["lifecycle"] if hist else last["reg"].get("lifecycle"), asof)
@@ -1364,8 +1373,9 @@ def _enrich_circulars(X, lcs, cards_by_id, threads, newest):
                 if k in day:
                     c[k] = day[k]
         t = threads.get(sid)
-        if t and t.reg:
-            last = [x for e, x in t.cards if x.get("reg") and e <= newest][-1]
+        cands = [x for e, x in t.cards if x.get("reg") and e <= newest] if (t and t.reg) else []
+        if cands:
+            last = cands[-1]
             hist = [h for h in t.lc_history if h["date"] <= newest]
             lc = hist[-1]["lifecycle"] if hist else last["reg"].get("lifecycle")
             dl, near = _deadline_at(last["reg"].get("comments_due"), r.get("effective") or last["reg"].get("effective"), lc, newest)
