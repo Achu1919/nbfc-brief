@@ -2121,8 +2121,11 @@ def derived_events(X, extras, threads, newest):
                                ("comments_due", "comments-due", "comments due")):
             dt = r.get(k)
             if _ISO.match(str(dt or "")) and dt >= newest:
+                # A circular title that already ends in ':' or '—' would become '...: takes effect', which reads as junk
+                # in the public calendar. Join on the trimmed stem instead of appending to the raw title.
+                stem = re.sub(r"\s*[:—–-]\s*$", "", (c.get("title") or "").strip())
                 out.append({"id": f"evt-{ent}-{slug(c.get('title', ''), 36)}-{typ}-{dt}",
-                            "title": _clip_title(f"{c.get('title', '')}: {suffix}"), "type": typ, "date": dt,
+                            "title": _clip_title(f"{stem} {suffix}" if stem else suffix), "type": typ, "date": dt,
                             "status": "upcoming", "entity": ent, "reg_ref": r.get("ref_no") or None,
                             "card_id": c.get("id"), "sources": [{"url": url, "name": name_fn(url) if name_fn else None}],
                             "_derived": "circulars"})
