@@ -1772,7 +1772,7 @@ _MON_ABBR = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct
 
 def as_of_display(raw):
     """'2026-11-02 1849 GMT (2026-11-03 00:19 IST)' -> '2 Nov, 18:49 GMT'; date only -> '2 Nov'; else None."""
-    m = re.match(r"^\s*(\d{4})-(\d{2})-(\d{2})(?:[ T]+(\d{1,2}):?(\d{2})(?::\d{2})?)?\s*(GMT|UTC|IST|Z)?\b", str(raw or ""))
+    m = re.match(r"^\s*(\d{4})-(\d{2})-(\d{2})(?:[ T]+(\d{1,2}):?(\d{2})(?::\d{2})?)?\s*(GMT|UTC|IST|Z|EST|EDT|ET|CST|CDT|CT|PST|PDT|PT)?\b", str(raw or ""))
     if not m or not 1 <= int(m.group(2)) <= 12:
         return None
     s = f"{int(m.group(3))} {_MON_ABBR[int(m.group(2)) - 1]}"
